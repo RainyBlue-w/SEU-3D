@@ -1,16 +1,27 @@
 import dash
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
+import dash_daq as daq
+import dash_ag_grid as dag
+import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+import feffery_antd_components as fac
+import dash_bootstrap_components as dbc
+import feffery_utils_components as fuc
+from dash_extensions.enrich import Output, Input, html, DashProxy, LogTransform, DashLogger
+
 
 dbc_css = "/home/wuc/dashapps/css/dbc.min.css"
-app = Dash(
+app = DashProxy(
   __name__, 
   external_stylesheets=[
-    dbc.themes.BOOTSTRAP,
-    "/home/wuc/dashapps/css/dbc.min.css",
+    dbc.themes.BOOTSTRAP
   ],
   external_scripts = [
     {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
+  ],
+  transforms=[
+    LogTransform()
   ],
   use_pages=True
 )
@@ -35,10 +46,10 @@ header = dbc.NavbarSimple(
     style = {"height": "6vh"}
 )
 
-app.layout = html.Div([
+app.layout = dmc.NotificationsProvider(html.Div([
     header,
     dash.page_container
-])
+]))
 
 
 

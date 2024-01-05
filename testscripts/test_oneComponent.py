@@ -6,6 +6,10 @@ from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
 import dash_ag_grid as dag
+import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, DashBlueprint
+
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -533,4 +537,38 @@ if __name__ == "__main__":
       port = '8053',
       debug = True
     )
+# %%
+
+
+app = Dash()
+
+app.layout = dmc.NotificationsProvider(
+  html.Div([
+    html.Div(id='notification'),
+    dbc.Input(value='akar-icons:circle-check', id='icon'),
+    dbc.Input(value='green', id='color'),
+    dbc.Button('show', id='button')
+  ])
+)
+
+@app.callback(
+  Output('notification', 'children'),
+  State('icon', 'value'),
+  State('color', 'value'),
+  Input('button', 'n_clicks')
+)
+def return_icon(icon, color, click):
+  return dmc.Notification(
+        title="Features don't exits",
+        id = 'series_list_featureNoExit',
+        action = 'show',
+        message = 'Test Icon',
+        color=color,
+        icon=DashIconify(icon=icon),
+      )
+  
+app.run_server(
+  host = '10.193.0.208',
+  port='8053'
+)
 # %%

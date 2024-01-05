@@ -2,7 +2,7 @@
 
 from math import isnan
 import math
-from dash import Dash, dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
+from dash import Dash, dcc, html, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
@@ -12,7 +12,7 @@ from dash_iconify import DashIconify
 import feffery_antd_components as fac
 import dash_bootstrap_components as dbc
 import feffery_utils_components as fuc
-from dash_extensions.enrich import Output, Input, html, DashProxy, LogTransform, DashLogger
+from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger
 
 import plotly.express as px
 import plotly.graph_objects as go

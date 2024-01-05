@@ -7,11 +7,14 @@ dash.register_page(__name__, path='/')
 # In[] env
 from math import isnan
 import math
-from dash import Dash, dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
+from dash import Dash, dcc, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
+import dash_mantine_components as dmc
 import dash_ag_grid as dag
+from dash_iconify import DashIconify
+from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, DashBlueprint
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -1932,7 +1935,7 @@ def cal_moranRes(click, filter1, filter2, filter3, stage, featureType):
     (Output('spatial_inputButton_featureName_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
     (Output('spatial_input_featureName_series', 'disabled', allow_duplicate=True),True, False),
   ],
-  prevent_initial_call = True
+  prevent_initial_call = True,
 )
 def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, stage):
   if pattern is None:
@@ -1962,6 +1965,7 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
 @callback(
   Output('spatial_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Output('spatial_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
+  Output('notifications-container', 'children'),
   State('spatial_dropdown_featureType_series', 'value'),
   State('spatial_textarea_featureLists_series', 'value'),
   Input('spatial_inputButton_featureLists_series_plot', 'n_clicks'),
@@ -1978,9 +1982,10 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
     (Output('spatial_inputButton_featureName_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
     (Output('spatial_input_featureName_series', 'disabled', allow_duplicate=True),True, False),
   ],
-  prevent_initial_call = True
+  prevent_initial_call = True,
+  log=True,
 )
-def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage):
+def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage, dash_logger: DashLogger):
   if names is None:
     raise PreventUpdate
 
@@ -1988,12 +1993,25 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
 
     names = re.split(", |,| |\n|\'|\"|#|-|_|%|$|@|\(|\)|\||^|&", names)
     names = [i for i in names if i]
+    names = list(set(names))
 
     if featureType == 'Gene':
       adata = exp_data[stage]
     elif featureType == 'Regulon':
       adata = auc_mtx[stage]
-
+      
+    names_out = [i for i in names if (i not in adata.var_names) or (i not in genes_min_pval.loc[stage].index)]
+    if(names_out):
+      note = dmc.Notification(
+        title="Features don't exits",
+        id = 'series_list_featureNoExit',
+        action = 'show',
+        message = ','.join(names_out),
+        color='red',
+        icon=DashIconify(icon="akar-icons:circle-x"),
+      )
+      return no_update, no_update, note
+    
     with futures.ThreadPoolExecutor(max_workers=8) as executor:
       t1 = executor.submit(show_features_spatial_regularExp, adata, stage,  'plotFeatureSeries', featureType,
                             features=names, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
@@ -2001,7 +2019,7 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
                             features=names, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
       img_dir1 = t1.result()
       img_dir2 = t2.result()
-    return Image.open(img_dir1), Image.open(img_dir2)
+    return Image.open(img_dir1), Image.open(img_dir2), no_update
   else:
     raise PreventUpdate
 
@@ -2135,488 +2153,14 @@ tabs = dbc.Col(
 )
 
 layout = dbc.Container(
-  [
-    dbc.Row([
-      dbc.Col([
-        tabs,
-      ], width=12)
-    ],)
-  ],
+    [
+      html.Div(id='notifications-container'),
+      dbc.Row([
+        dbc.Col([
+          tabs,
+        ], width=12)
+      ],)
+    ],
   fluid=True,
   className="Container-all",
 )
-
-
-
-
-# In[] callbacks/3D :
-
-# @callback(
-#   Output('spatial_dropdown_featureName3D', 'options'),
-
-#   Input('spatial_dropdown_featureName3D', 'search_value'),
-#   Input('spatial_dropdown_featureType3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value')
-# )
-# def update_spatial_dropdown_featureName3D(search, featureType, stage):
-#   if not search:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#     if not search:
-#       opts = exp_data[stage].var_names
-#     else:
-#       opts = exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
-#   elif featureType == 'Regulon':
-#     if not search:
-#       opts = auc_data[stage].var_names
-#     else:
-#       opts = auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
-  
-#   return opts
-
-# @callback(
-#   Output('3D_multiGenes_geneR', 'options'),
-#   Input('3D_multiGenes_geneR', 'search_value'),
-#   Input('spatial_dropdown_featureType3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value')
-# )
-# def update_spatial_multiGeneR_featureName3D(search, featureType, stage):
-#   if not search:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#     if not search:
-#       opts = exp_data[stage].var_names
-#     else:
-#       opts = exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
-#   elif featureType == 'Regulon':
-#     if not search:
-#       opts = auc_data[stage].var_names
-#     else:
-#       opts = auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
-  
-#   return opts
-
-# @callback(
-#   Output('3D_multiGenes_geneG', 'options'),
-#   Input('3D_multiGenes_geneG', 'search_value'),
-#   Input('spatial_dropdown_featureType3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value')
-# )
-# def update_spatial_multiGeneG_featureName3D(search, featureType, stage):
-#   if not search:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#     if not search:
-#       opts = exp_data[stage].var_names
-#     else:
-#       opts = exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
-#   elif featureType == 'Regulon':
-#     if not search:
-#       opts = auc_data[stage].var_names
-#     else:
-#       opts = auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
-  
-#   return opts
-
-# @callback(
-#   Output('3D_multiGenes_geneB', 'options'),
-#   Input('3D_multiGenes_geneB', 'search_value'),
-#   Input('spatial_dropdown_featureType3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value')
-# )
-# def update_spatial_multiGeneB_featureName3D(search, featureType, stage):
-#   if not search:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#     if not search:
-#       opts = exp_data[stage].var_names
-#     else:
-#       opts = exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
-#   elif featureType == 'Regulon':
-#     if not search:
-#       opts = auc_data[stage].var_names
-#     else:
-#       opts = auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
-  
-#   return opts
-
-# @callback(
-#   Output('if_plotSingleFeature_3D', 'value'),
-#   Output('if_plotMultiFeature_3D', 'value'),
-#   Output('spatial_dropdown_featureName3D', 'disabled'),
-#   Output('3D_singleGene_plot', 'disabled'),
-#   Output('3D_multiGenes_plot', 'disabled'),
-  
-#   Input('if_plotSingleFeature_3D', 'value'),
-#   Input('if_plotMultiFeature_3D', 'value'),
-  
-#   State('if_plotSingleFeature_3D', 'value'),
-#   State('if_plotMultiFeature_3D', 'value'),
-  
-#   prevent_initial_call=True
-# )
-# def swicher_link_between_single2multiGenesPlot3D(single, multi, ss, sm):
-#   id = ctx.triggered_id
-#   if ss==sm:
-#     value = (single, not multi, not single, not single, multi) if id == 'if_plotSingleFeature_3D' else (not single, multi, single, single, not multi)
-#   else:
-#     value = (single, multi, not single, not single, not multi)
-#   return value
-
-# @callback(
-#   Output('spatial_plotFeature3D_graph', 'figure'),
-  
-#   State('spatial_dropdown_featureType3D', 'value'),
-#   State('spatial_dropdown_featureName3D', 'value'),
-#   Input('3D_singleGene_plot', 'n_clicks'),
-#   Input('spatial_dropdown_stage3D', 'value'),
-#   Input('spatial_checklist_germLayer3D', 'value'),
-#   Input('spatial_onlyExpressed_toggle3D', 'on'),
-#   State('hideAxis_switcher', 'on'),
-#   Input('slice_button', 'n_clicks'),
-#   Input('recover_button', 'n_clicks'),
-#   State('store_range', 'data'),
-#   Input('3D_multiGenes_plot', 'n_clicks'),
-#   State('store_multiGeneInfo', 'data'),
-#   State('if_plotMultiFeature_3D', 'value'),
-# )
-# def update_spatial_plotFeature3D_graph(featureType, name, splot, stage, germs, hideZero, hideAxis,
-#                                       slice,recover,range, mplot, mgenes_info, ifmulti):
-#   if name is None:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-
-#   adata = adata[[i in germs for i in adata.obs.germ_layer]]
-
-#   if hideZero:
-#     adata = adata[adata[:,name].X!=0]
-  
-#   if ctx.triggered_id and 'slice_button' in ctx.triggered_id:
-#     print('slice',ctx.triggered_id)
-#     adata = adata[(adata.obs.x >= range['x_min']) & 
-#                   (adata.obs.x <= range['x_max']) & 
-#                   (adata.obs.y >= range['y_min']) & 
-#                   (adata.obs.y <= range['y_max']) & 
-#                   (adata.obs.z >= range['z_min']) & 
-#                   (adata.obs.z <= range['z_max'])]
-
-#   if ifmulti:
-#     fig = show_multiFeatures_spatial_3D(adata, mgenes_info, embedding = coord_data[stage].loc[:,['x', 'y', 'z']])
-#   else:
-#     fig = show_feature_spatial_3D(adata,name, embedding = coord_data[stage].loc[:,['x', 'y', 'z']], sort=True, ascending=True)
-
-#   if hideAxis:
-#     fig.update_layout(
-#       scene = dict(
-#         xaxis={'visible': False},
-#         yaxis={'visible': False},
-#         zaxis={'visible': False},
-#       )
-#     )
-
-#   return fig
-
-# @callback(
-#   Output('store_multiGeneInfo', 'data'),
-#   Input('3D_multiGenes_geneR', 'value'),
-#   Input('3D_multiGenes_geneG', 'value'),
-#   Input('3D_multiGenes_geneB', 'value')
-# )  
-# def store_multiGenesInfo(geneR,geneG,geneB):
-#   genes_dict = {
-#     'R': geneR, 'G': geneG, 'B': geneB
-#   }
-#   return genes_dict
-  
-# @callback(
-#   Output('spatial_plotFeature3D_graph_ctp', 'figure'),
-#   State('spatial_dropdown_featureType3D', 'value'),
-#   State('spatial_dropdown_featureName3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value'),
-#   Input('spatial_checklist_germLayer3D', 'value'),
-#   Input('spatial_onlyExpressed_toggle3D', 'on'),
-#   State('hideAxis_switcher', 'on'),
-#   Input('slice_button', 'n_clicks'),
-#   Input('recover_button', 'n_clicks'),
-#   State('store_range', 'data'),
-#   # background=True,
-#   # manager=background_callback_manager,
-# )
-# def update_spatial_plotFeature3D_ctpGraph(featureType, name, stage, germs, hideZero, hideAxis,
-#                                           slice,recover,range):
-
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-
-#   adata = adata[[i in germs for i in adata.obs.germ_layer]]
-  
-#   if hideZero:
-#     adata = adata[adata[:,name].X!=0]
-  
-#   if ctx.triggered_id and 'slice_button' in ctx.triggered_id:
-#     adata = adata[(adata.obs.x >= range['x_min']) & 
-#                   (adata.obs.x <= range['x_max']) & 
-#                   (adata.obs.y >= range['y_min']) & 
-#                   (adata.obs.y <= range['y_max']) & 
-#                   (adata.obs.z >= range['z_min']) & 
-#                   (adata.obs.z <= range['z_max'])]
-
-#   fig = show_celltype_spatial_3D(adata, embedding = coord_data[stage][['x', 'y', 'z']])
-  
-#   if hideAxis:
-#     fig.update_layout(
-#       scene = dict(
-#         xaxis={'visible': False},
-#         yaxis={'visible': False},
-#         zaxis={'visible': False},
-#       )
-#     )
-#   return fig
- 
-# @callback(
-#     Output("spatial_plotFeature3D_graph_ctp", "figure", allow_duplicate=True),
-#     Input("spatial_plotFeature3D_graph", "relayoutData"),
-#     prevent_initial_call=True
-# )
-# def update_relayout(data):   
-#     if data and 'scene.camera' in data:
-#         patch = Patch()
-#         patch['layout']['scene']['camera'] = data['scene.camera']
-#         return patch
-#     else:
-#         raise PreventUpdate
-    
-# @callback(
-#     Output("spatial_plotFeature3D_graph", "figure", allow_duplicate=True),
-    
-#     Input("spatial_plotFeature3D_graph_ctp", "restyleData"),
-#     State("spatial_plotFeature3D_graph_ctp", "figure"),
-#     State('spatial_dropdown_featureType3D', 'value'),
-#     State('spatial_dropdown_featureName3D', 'value'),
-#     State('spatial_dropdown_stage3D', 'value'),
-#     State('spatial_checklist_germLayer3D', 'value'),
-#     State('spatial_onlyExpressed_toggle3D', 'on'),
-#     State('hideAxis_switcher', 'on'),
-#     State('slice_button', 'n_clicks'),
-#     State('recover_button', 'n_clicks'),
-#     State('store_range', 'data'),
-#     State('store_multiGeneInfo', 'data'),
-#     State('if_plotMultiFeature_3D', 'value'),
-#     prevent_initial_call=True,
-# )
-# def update_restyle_legendClicking(restyle, fig, featureType, name, stage, germs, hideZero, hideAxis,
-#                                       slice,recover,range, mgenes_info, ifmulti):
-#   show_ctps = [ i['name'] for i in fig['data'] if (
-#                 (i['type']!='mesh3d') and 
-#                 ('visible' not in i or i['visible'] == True) 
-#               )]
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-
-#   adata = adata[[(adata.obs.loc[i,'germ_layer'] in germs and 
-#                   adata.obs.loc[i,'celltype'] in show_ctps) 
-#                   for i in adata.obs_names]]
-#   if hideZero:
-#     adata = adata[adata[:,name].X!=0]
-  
-#   if ctx.triggered_id and 'slice_button' in ctx.triggered_id:
-#     print('slice',ctx.triggered_id)
-#     adata = adata[(adata.obs.x >= range['x_min']) & 
-#                   (adata.obs.x <= range['x_max']) & 
-#                   (adata.obs.y >= range['y_min']) & 
-#                   (adata.obs.y <= range['y_max']) & 
-#                   (adata.obs.z >= range['z_min']) & 
-#                   (adata.obs.z <= range['z_max'])]
-      
-#   if ifmulti:
-#     fig = show_multiFeatures_spatial_3D(adata, mgenes_info, embedding = coord_data[stage].loc[:,['x', 'y', 'z']])
-#   else:
-#     fig = show_feature_spatial_3D(adata,name, embedding = coord_data[stage].loc[:,['x', 'y', 'z']], sort=True, ascending=True)
- 
-#   if hideAxis:
-#     fig.update_layout(
-#       scene = dict(
-#         xaxis={'visible': False},
-#         yaxis={'visible': False},
-#         zaxis={'visible': False},
-#       )
-#     )
-
-#   return fig
-
-# @callback(
-#   Output('spatial_plotFeature3D_expViolin', 'figure'),
-#   State('spatial_dropdown_featureType3D', 'value'),
-#   Input('spatial_dropdown_featureName3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value'),
-#   Input('slice_button', 'n_clicks'),
-#   Input('recover_button', 'n_clicks'),
-#   State('store_range', 'data'),
-#   Input('3D_multiGenes_plot', 'n_clicks'),
-#   State('store_multiGeneInfo', 'data')
-# )
-# def update_spatial_plotFeature3D_expViolin(featureType, name, stage, slice, recover, range, mplot, mgenes_info):
-#   if name is None:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-#   else:
-#     raise PreventUpdate
-
-#   triggered =ctx.triggered_id
-#   if triggered and 'slice_button' in triggered:
-#     adata = adata[(adata.obs.x >= range['x_min']) & 
-#                   (adata.obs.x <= range['x_max']) & 
-#                   (adata.obs.y >= range['y_min']) & 
-#                   (adata.obs.y <= range['y_max']) & 
-#                   (adata.obs.z >= range['z_min']) & 
-#                   (adata.obs.z <= range['z_max'])]
-
-#   if ctx.triggered_id and '3D_multiGenes_plot' in ctx.triggered_id and mplot:
-#     fig = show_multiFeatures_expViolin(adata, mgenes_info)
-#   else:
-#     fig = show_expViolin(adata,name)
-
-#   return fig
-
-# @callback(
-#   Output('spatial_plotFeature3D_ctpExpViolin', 'figure'),
-#   State('spatial_dropdown_featureType3D', 'value'),
-#   Input('spatial_dropdown_featureName3D', 'value'),
-#   Input('spatial_dropdown_stage3D', 'value'),
-#   Input('slice_button', 'n_clicks'),
-#   Input('recover_button', 'n_clicks'),
-#   State('store_range', 'data'),
-#   Input('3D_multiGenes_plot', 'n_clicks'),
-#   State('store_multiGeneInfo', 'data')
-# )
-# def update_spatial_plotFeature3D_ctpExpViolin(featureType, name, stage,  slice, recover, range, mplot, mgenes_info):
-#   if name is None:
-#     raise PreventUpdate
-  
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-#   else:
-#     raise PreventUpdate
-
-#   triggered = ctx.triggered_id
-#   if triggered and 'slice_button' in triggered:
-#     adata = adata[(adata.obs.x >= range['x_min']) & 
-                  
-#                   (adata.obs.x <= range['x_max']) & 
-#                   (adata.obs.y >= range['y_min']) & 
-#                   (adata.obs.y <= range['y_max']) & 
-#                   (adata.obs.z >= range['z_min']) & 
-#                   (adata.obs.z <= range['z_max'])]
-
-#   if ctx.triggered_id and '3D_multiGenes_plot' in ctx.triggered_id and mplot:
-#     fig = show_multiFeatures_ctpExpViolin(adata, mgenes_info)
-#   else:
-#     fig = show_ctpExpViolin(adata,name)
-    
-#   return fig
-
-
-# # Hide axies
-# @callback(
-#   Output('spatial_plotFeature3D_graph', 'figure', allow_duplicate=True),
-#   Output('spatial_plotFeature3D_graph_ctp', 'figure', allow_duplicate=True),
-#   Input('hideAxis_switcher', 'on'),
-#   prevent_initial_call = True
-# )
-# def switch_hideAxis(hideAxis):
-#   patch = Patch()
-#   if hideAxis:
-#     patch['layout']['scene']['xaxis']['visible'] = False
-#     patch['layout']['scene']['yaxis']['visible'] = False
-#     patch['layout']['scene']['zaxis']['visible'] = False
-#   else:
-#     patch['layout']['scene'] = dict(
-#         xaxis = {
-#                 'visible': True,
-#                 'backgroundcolor' :"white",
-#                 'showbackground': True,
-#                 'zerolinecolor': 'grey',
-#                 'gridcolor': 'grey',
-#                 'nticks': 6},
-#         yaxis = {
-#                 'visible': True,
-#                 'backgroundcolor' :"white",
-#                 'showbackground': True,
-#                 'zerolinecolor': 'grey',
-#                 'gridcolor': 'grey',
-#                 'nticks': 6},
-#         zaxis = {
-#                 'visible': True,
-#                 'backgroundcolor' :"white",
-#                 'showbackground': True,
-#                 'zerolinecolor': 'grey',
-#                 'gridcolor': 'grey',
-#                 'nticks': 6},
-#         bgcolor = 'white'
-#       )
-
-#   return patch, patch
-
-# # Store xyz ranges
-# @callback(
-#   Output('store_range', 'data'),
-#   Input('x_rangeSlider', 'value'),
-#   Input('y_rangeSlider', 'value'),
-#   Input('z_rangeSlider', 'value'),
-# )
-# def store_xyzRange(x_range,y_range,z_range):
-#   return  {'x_min': x_range[0], 'x_max': x_range[1], 
-#            'y_min': y_range[0], 'y_max': y_range[1], 
-#            'z_min': z_range[0], 'z_max': z_range[1]}
-  
-# # Show selector box
-# @callback(
-  
-#   Output('spatial_plotFeature3D_graph', 'figure', allow_duplicate=True),
-#   Output('spatial_plotFeature3D_graph_ctp', 'figure', allow_duplicate=True),
-  
-#   Input('previewSelectorBox_switcher', 'on'),
-#   Input('store_range', 'data'),
-  
-#   prevent_initial_call = True
-# )
-# def switch_showSelectorBox(showBox, range):
-#   patch = Patch()
-#   if showBox:
-#     patch['data'][-1] = go.Mesh3d(
-#         x=[range['x_min'], range['x_min'], range['x_min'], range['x_min'], range['x_max'], range['x_max'], range['x_max'], range['x_max']],
-#         y=[range['y_min'], range['y_max'], range['y_min'], range['y_max'], range['y_min'], range['y_max'], range['y_min'], range['y_max']],
-#         z=[range['z_min'], range['z_min'], range['z_max'], range['z_max'], range['z_min'], range['z_min'], range['z_max'], range['z_max']],
-#         i = [0, 1, 0, 0, 0, 0, 2, 2, 7, 7, 7, 7],
-#         j = [1, 2, 4, 1, 4, 2, 3, 6, 4, 4, 1, 1],
-#         k = [2, 3, 5, 5, 6, 6, 7, 7, 6, 5, 3, 5],
-#         color='black', opacity=0.60
-#       )
-#     return patch, patch
-#   else:
-#     if patch['data'][-1] == go.Mesh3d(x=[0,0], y=[0,0], z=[0,0]):
-#       raise PreventUpdate
-#     else:
-#       patch['data'][-1] = go.Mesh3d(x=[0,0], y=[0,0], z=[0,0])
-#     return patch, patch
-
-
-
