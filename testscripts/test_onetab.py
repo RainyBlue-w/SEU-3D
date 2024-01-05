@@ -12,6 +12,7 @@ from dash_iconify import DashIconify
 import feffery_antd_components as fac
 import dash_bootstrap_components as dbc
 import feffery_utils_components as fuc
+from dash_extensions.enrich import Output, Input, html, DashProxy, LogTransform, DashLogger
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -52,8 +53,8 @@ exp_data = {
   'E8.0': sc.read_h5ad("/rad/wuc/dash_data/spatial/matrix_data/E8.0_HC0.5_min400.h5ad")
 }
 
-for stage,data in exp_data.items():
-    data.obs.celltype = pd.Categorical(data.obs.celltype)
+# for stage, data in exp_data.items():
+  
 
 coord_data = {
   'E7.5': pd.read_csv('/rad/wuc/dash_data/spatial/spatial_coordinate.embryo_E7.5.csv', sep=' '),
@@ -113,7 +114,7 @@ def show_expViolin(adata, feature, **kws):
     )
   )
   
-  fig.update_traces(orientation='h', side='positive', points='all', marker_size=2.5)
+  fig.update_traces(orientation='h', side='positive', points=False, marker_size=2.5)
   fig.update_layout(xaxis_showgrid=False, yaxis_showgrid=True)
   return fig
 
@@ -151,7 +152,7 @@ def show_multiFeatures_expViolin(adata, features_dict, color_dict=None,**kws):
 
   for color,feature in features_dict.items():
     data = adata[:,feature].to_df()[feature]
-    data = data[data>0]
+    # data = data[data>0]
     color = color_dict[color]
     fig.add_trace(
       go.Violin(
@@ -275,14 +276,16 @@ def cal_moran_3D(adata):
 
 # In[] app
 
-app = Dash(
+app = DashProxy(
   __name__, 
   external_stylesheets=[
-    dbc.themes.BOOTSTRAP,
-    "/home/wuc/dashapps/css/dbc.min.css",
+    dbc.themes.BOOTSTRAP
   ],
   external_scripts = [
     {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
+  ],
+  transforms=[
+    LogTransform()
   ]
 )
 
@@ -468,13 +471,19 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   ),
                 ], width=6),
               ]),
-            ])
+              
+            ]),
+            
           ],
           isOpen=True,
-          title='Basic options',
+          title='Select data',
           forceRender=True,
           style={'font-size': 16, 'font-family': 'Segoe UI',}
         ),
+        # Slicer
+        # fac.AntdCollapse(
+          
+        # ),
         # Single gene
         fac.AntdCollapse(
           [
@@ -582,16 +591,16 @@ spatial_tab_plotFeature3D = dbc.Tab(
         ],align = "center", width=7)
       ]),
       # violin
-      fuc.FefferyLazyLoad(dbc.Row([
+      dbc.Row([
         dbc.Col([
-          dbc.Label( 'Normalized expression(non-zero) in all celltypes(left)'),
+          dbc.Label( 'Normalized expression in all celltypes(left)'),
           dbc.Label('and in each celltype(right):'),
           dmc.LoadingOverlay(dcc.Graph(figure={}, id="FIGURE_expViolin_3D"))
         ], align='center', width=4),
         dbc.Col([
           dmc.LoadingOverlay(dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D"))
         ], align='center', width=8)
-      ]))
+      ])
     ],width=10),
   ])],
   label = "Plot feature(3D)",
@@ -980,7 +989,7 @@ def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow,
   cellsfilter = list(set(cellsExpFilter) & set(cellsObsFilter))
   cellsfilter.sort()
   adata =  exp_data[stage][cellsfilter]
-  celltype_all = adata.obs['celltype'].unique().to_list()
+  celltype_all = list(adata.obs['celltype'].unique())
   
   id = ctx.triggered_id
  
@@ -988,15 +997,20 @@ def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow,
   if (not ctpNow) or ('STORE_cellsObsFilter_3D' in id) or ('SWITCH_hideZero_3D' in id):
     ctpNow = celltype_all
     restyle = [{'visible': [True]}, [0]]
+
     
   if (('BUTTON_singlePlot_3D' in id) or ('BUTTON_multiPlot_3D' in id)) and hideZero:
     ctpNow = celltype_all
     restyle = [{'visible': [True]}, [0]]
+
+    
 # ------------------
   if(restyle):
+
     for index,order in enumerate(restyle[1]):
       if index != len(celltype_all):
         ctpNow[order] = None if restyle[0]['visible'][index] == 'legendonly' else celltype_all[order]
+
 
   cells = adata.obs_names[[True if i in ctpNow else False for i in adata.obs.celltype ]].to_list()
   
@@ -1183,7 +1197,6 @@ app.layout = dbc.Container(
     ],)
   ],
   fluid=True,
-  className="SET-all",
 )
 
 if __name__ == '__main__':
@@ -1195,4 +1208,43 @@ if __name__ == '__main__':
   )
   
 
-# In[]
+# In[] test set/bool speed
+
+adata = exp_data['E7.75']
+
+cells = adata.obs_names.to_list()
+a = np.random.choice(cells, size=22000, replace=False)
+b = np.random.choice(cells, size=22000, replace=False)
+c = np.random.choice(cells, size=22000, replace=False)
+d = np.random.choice([True, False], size=len(cells))
+e = np.random.choice([True, False], size=len(cells))
+f = np.random.choice([True, False], size=len(cells))
+
+
+# %%
+adata = exp_data['E7.75']
+tmp = list(set(a) & set(b) & set(c))
+adata = adata[tmp]
+# %%
+adata = exp_data['E7.75']
+adata = adata[d&e&f]
+
+# %%
+stage = 'E7.75'
+featureType = 'Gene'
+cellsObs = a
+cellsExp = b
+cellsCtp = c
+ifmulti = False
+sname = 'T'
+
+if featureType == 'Gene':
+    adata = exp_data[stage]
+elif featureType == 'Regulon':
+    adata = auc_data[stage]
+
+cells_to_use = list(set(cellsObs) & set(cellsExp) & set(cellsCtp))
+adata = adata[cells_to_use]
+
+if not ifmulti:
+  fig = show_expViolin(adata, sname)
