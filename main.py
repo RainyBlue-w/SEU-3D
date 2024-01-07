@@ -1,14 +1,7 @@
 import dash
-from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
-import dash_daq as daq
-import dash_ag_grid as dag
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
-import feffery_antd_components as fac
-import dash_bootstrap_components as dbc
-import feffery_utils_components as fuc
-from dash_extensions.enrich import Output, Input, html, DashProxy, LogTransform, DashLogger
+from dash_extensions.enrich import html, DashProxy, LogTransform, ServersideOutputTransform
 
 
 dbc_css = "/home/wuc/dashapps/css/dbc.min.css"
@@ -21,7 +14,7 @@ app = DashProxy(
     {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
   ],
   transforms=[
-    LogTransform()
+    LogTransform(), ServersideOutputTransform(),
   ],
   use_pages=True
 )

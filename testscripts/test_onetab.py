@@ -12,7 +12,7 @@ from dash_iconify import DashIconify
 import feffery_antd_components as fac
 import dash_bootstrap_components as dbc
 import feffery_utils_components as fuc
-from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger
+from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, Serverside, ServersideOutputTransform
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -285,7 +285,7 @@ app = DashProxy(
     {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
   ],
   transforms=[
-    LogTransform()
+    LogTransform(), ServersideOutputTransform()
   ]
 )
 
@@ -324,6 +324,8 @@ SET_STORE_JSONtoPlot_3D = html.Div(
     dcc.Store(data=ctp_cmap, id='STORE_ctpCmap_3D'),
     dcc.Store(id='STORE_ctpToShow_3D'),
     dcc.Store(id='STORE_cellsCtpFilter_3D'),
+    dcc.Store(id='STORE_cellsForExp_3D'),
+    dcc.Store(id='STORE_cellsForCtp_3D'),
     dcc.Store(id='test'),
   ]
 )
@@ -444,136 +446,133 @@ spatial_tab_plotFeature3D = dbc.Tab(
   [dbc.Row([
     # options
     dbc.Col([
-      html.Div([
+      dmc.AccordionMultiple(
+        children=[
         # Basic options
-        fac.AntdCollapse(
-          [
-            html.Div([
-              dbc.Row([
-                dbc.Col([
-                  dbc.Label("Feature type"),
-                  dcc.Dropdown(
-                      ['Gene', 'Regulon'],
-                      'Gene',
-                      id="DROPDOWN_featureType_3D",
-                      clearable=False,
-                      searchable=True,
-                  ),
-                ], width=6),
-                dbc.Col([
-                  dbc.Label("Stage"),
-                  dcc.Dropdown(
-                      ['E7.5', 'E7.75', 'E8.0'],
-                      'E7.75',
-                      id="DROPDOWN_stage_3D",
-                      clearable=False,
-                      searchable=True,
-                  ),
-                ], width=6),
-              ]),
-              
-            ]),
-            
-          ],
-          isOpen=True,
-          title='Select data',
-          forceRender=True,
-          style={'font-size': 16, 'font-family': 'Segoe UI',}
-        ),
-        # Slicer
-        # fac.AntdCollapse(
-          
-        # ),
-        # Single gene
-        fac.AntdCollapse(
-          [
-            html.Div([
-              dbc.Row(
-                [
+          dmc.AccordionItem(
+            [
+              dmc.AccordionControl('Select data'),
+              dmc.AccordionPanel([
+                dbc.Row([
                   dbc.Col([
+                    dbc.Label("Feature type"),
                     dcc.Dropdown(
-                      options = exp_data['E7.75'].var_names,
-                      value = 'Cdx1',
-                      id="DROPDOWN_singleName_3D",
-                      clearable=False
+                        ['Gene', 'Regulon'],
+                        'Gene',
+                        id="DROPDOWN_featureType_3D",
+                        clearable=False,
+                        searchable=True,
                     ),
-                  ], width=8),
+                  ], width=6),
                   dbc.Col([
-                    dbc.Button('Plot', id='BUTTON_singlePlot_3D', n_clicks=0, color='dark', disabled=False),
-                  ], width=4),
-                ],className="mb-4",
-              )
-            ])
-          ],
-          isOpen=True,
-          title='Plot single feature',
-          forceRender=True,
-          style={'font-size': 16, 'font-family': 'Segoe UI',}
-        ),
-        # Multi genes
-        fac.AntdCollapse(
-          [
-            html.Div([
-              dbc.Col([
-                dbc.Row([
-                  dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
-                                      id='DROPDOWN_multiNameR_3D'),
-                          width=10),
-                  dbc.Col(dbc.Badge("R", color='danger'),width=2),
+                    dbc.Label("Stage"),
+                    dcc.Dropdown(
+                        ['E7.5', 'E7.75', 'E8.0'],
+                        'E7.75',
+                        id="DROPDOWN_stage_3D",
+                        clearable=False,
+                        searchable=True,
+                    ),
+                  ], width=6),
                 ]),
-                dbc.Row([
-                  dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
-                                      id='DROPDOWN_multiNameG_3D'), 
-                          width=10),
-                  dbc.Col(dbc.Badge("G", color='success'),width=2),
-                ]),
-                dbc.Row([
-                  dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
-                                      id='DROPDOWN_multiNameB_3D'), 
-                          width=10),
-                  dbc.Col(dbc.Badge("B", color='primary'),width=2),
-                ]),
-                dbc.Row([
-                  dbc.Button('Plot', id='BUTTON_multiPlot_3D', n_clicks=0, color='dark', disabled=False),
-                ], justify='center'),
-                dcc.Store(id='STORE_multiNameInfo_3D')
-              ],)
-            ])
-          ],
-          isOpen=False,
-          title='Plot multi features',
-          forceRender=True,
-          style={'font-size': 16, 'font-family': 'Segoe UI',}
-        ),
-        # Moran
-        fac.AntdCollapse(
-          [
-            html.Div([
-              dbc.Row([
-                dbc.Col(dbc.Button('calculate\nSVGs', id='BUTTON_calMoran_3D', color='dark', disabled=False), width=6),
-                dbc.Col(dbc.Button('Show\nresult', id='BUTTON_showMoran_3D', color='primary', disabled=False), width=6),
               ]),
-              dbc.Offcanvas(
-                [dash_table.DataTable(
-                  id='DATATABLE_moranRes_3D',
-                  sort_action="native", page_action='native', filter_action="native",
-                  page_current= 0, page_size= 20, fill_width=True,
-                  style_cell={'textAlign': 'center'},
-                  style_table={'overflowX': 'auto'},
-                  # style_cell={'padding-right': '10px', 'padding-left': '10px',
-                  # 'text-align': 'center', 'marginLeft': 'auto', 'marginRight': 'auto'})],
-                )],
-                title = 'SVGs:',
-                placement='end', scrollable=True, backdrop=False, is_open=False,
-                id = 'OFFCANVAS_moranRes_3D',
-              ),
-            ]),
-          ],
-          isOpen=False,
-          title='Calculate SVG(moran)',
-          style={'font-size': 16, 'font-family': 'Segoe UI',}
-        )
-      ], style = {'position':'fixed', 'width':'30vh', 'overflowY': 'overlay', 'maxHeight': '90vh'}),
+            ],
+            value = 'Select data',
+          ),
+          # Single gene
+          dmc.AccordionItem(
+            [
+              dmc.AccordionControl('Plot single feature'),
+              dmc.AccordionPanel([
+                dbc.Row(
+                  [
+                    dbc.Col([
+                      dcc.Dropdown(
+                        options = exp_data['E7.75'].var_names,
+                        value = 'Cdx1',
+                        id="DROPDOWN_singleName_3D",
+                        clearable=False
+                      ),
+                    ], width=8),
+                    dbc.Col([
+                      dbc.Button('Plot', id='BUTTON_singlePlot_3D', n_clicks=0, color='dark', disabled=False),
+                    ], width=4),
+                  ],className="mb-4",
+                )
+              ])
+            ],
+            value = 'Plot single feature',
+          ),
+          # Multi genes
+          dmc.AccordionItem(
+            [
+              dmc.AccordionControl('Plot multi features'),
+              dmc.AccordionPanel([
+                dbc.Col([
+                  dbc.Row([
+                    dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
+                                        id='DROPDOWN_multiNameR_3D'),
+                            width=10),
+                    dbc.Col(dbc.Badge("R", color='danger'),width=2),
+                  ]),
+                  dbc.Row([
+                    dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
+                                        id='DROPDOWN_multiNameG_3D'), 
+                            width=10),
+                    dbc.Col(dbc.Badge("G", color='success'),width=2),
+                  ]),
+                  dbc.Row([
+                    dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
+                                        id='DROPDOWN_multiNameB_3D'), 
+                            width=10),
+                    dbc.Col(dbc.Badge("B", color='primary'),width=2),
+                  ]),
+                  dbc.Row([
+                    dbc.Button('Plot', id='BUTTON_multiPlot_3D', n_clicks=0, color='dark', disabled=False),
+                  ], justify='center'),
+                  dcc.Store(id='STORE_multiNameInfo_3D')
+                ],)
+              ])
+            ],
+            value = 'Plot multi features',
+          ),
+          # Moran
+          dmc.AccordionItem(
+            [
+              dmc.AccordionControl('Calculate SVG(moran)'),
+              dmc.AccordionPanel([
+                dbc.Row([
+                  dbc.Col(dbc.Button('calculate\nSVGs', id='BUTTON_calMoran_3D', color='dark', disabled=False), width=6),
+                  dbc.Col(dbc.Button('Show\nresult', id='BUTTON_showMoran_3D', color='primary', disabled=False), width=6),
+                ]),
+                dbc.Offcanvas(
+                  [dash_table.DataTable(
+                    id='DATATABLE_moranRes_3D',
+                    sort_action="native", page_action='native', filter_action="native",
+                    page_current= 0, page_size= 20, fill_width=True,
+                    style_cell={'textAlign': 'center'},
+                    style_table={'overflowX': 'auto'},
+                    # style_cell={'padding-right': '10px', 'padding-left': '10px',
+                    # 'text-align': 'center', 'marginLeft': 'auto', 'marginRight': 'auto'})],
+                  )],
+                  title = 'SVGs:',
+                  placement='end', scrollable=True, backdrop=False, is_open=False,
+                  id = 'OFFCANVAS_moranRes_3D',
+                ),
+              ]),
+            ],
+            value = 'Calculate SVG(moran)',
+          )
+        ], 
+        style = {
+          'root': {
+            'position':'fixed','width':'30vh', 'overflowY': 'overlay', 'maxHeight': '90vh'
+          },
+          'item': {
+            'border': '1px solid', 'borderColor': dmc.theme.DEFAULT_COLORS['gray'][2],
+          }
+        }
+      ),
     ], width=2),
     # viewer
     dbc.Col([
@@ -595,10 +594,10 @@ spatial_tab_plotFeature3D = dbc.Tab(
         dbc.Col([
           dbc.Label( 'Normalized expression in all celltypes(left)'),
           dbc.Label('and in each celltype(right):'),
-          dmc.LoadingOverlay(dcc.Graph(figure={}, id="FIGURE_expViolin_3D"))
+          dcc.Graph(figure={}, id="FIGURE_expViolin_3D")
         ], align='center', width=4),
         dbc.Col([
-          dmc.LoadingOverlay(dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D"))
+          dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D")
         ], align='center', width=8)
       ])
     ],width=10),
@@ -757,6 +756,23 @@ app.clientside_callback(
 )
 
 # store_cellsInfo_forJSONtoPlot (download: ~2.5M,500ms ; compute 250ms)
+ 
+@app.callback(
+  Output('STORE_obs_3D', 'data'),
+  Input('DROPDOWN_stage_3D', 'value'),
+  Input('DROPDOWN_featureType_3D', 'value'),
+)
+def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
+  if featureType == 'Gene':
+    adata = exp_data[stage]
+  elif featureType == 'Regulon':
+    adata = auc_data[stage]
+  else:
+    raise PreventUpdate
+  
+  obs = adata.obs[['x','y','z','germ_layer','celltype']]
+  return obs.to_dict('index')
+
 @app.callback(
   Output('STORE_cellsObsFilter_3D', 'data'),
   
@@ -789,25 +805,8 @@ def store_cellsInfo_forJSONtoPlot_3D(sliceRange, germs, stage, featureType):
     if_ingerms = [ True if i in germs else False for i in obs['germ_layer'] ]
   else:
     raise PreventUpdate
-
   obsnames_filt = adata.obs_names[if_inSliceRange & if_ingerms]
-  return obsnames_filt
-  
-@app.callback(
-  Output('STORE_obs_3D', 'data'),
-  Input('DROPDOWN_stage_3D', 'value'),
-  Input('DROPDOWN_featureType_3D', 'value'),
-)
-def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
-  if featureType == 'Gene':
-    adata = exp_data[stage]
-  elif featureType == 'Regulon':
-    adata = auc_data[stage]
-  else:
-    raise PreventUpdate
-  
-  obs = adata.obs[['x','y','z','germ_layer','celltype']]
-  return obs.to_dict('index')
+  return Serverside(obsnames_filt)
 
 # store_expInfo_forJSONtoPlot (download: <0.43M,<80ms; compute 320ms)
 @app.callback(
@@ -837,7 +836,6 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
   else:
     raise PreventUpdate
 
-  
   def return_single():
     ifmulti = False
     exp = adata[:,sname].to_df()
@@ -876,16 +874,16 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       if not ifmulti:
         ifmulti,exp,cellsExpFilter = return_single()
         exp = exp.to_dict('index')
-        return (cellsExpFilter, exp, no_update, ifmulti, no_update)
+        return (Serverside(cellsExpFilter), exp, no_update, ifmulti, no_update)
       else:
         ifmulti,_,cellsExpFilter,mixcolor = return_multi()
-        return (cellsExpFilter, no_update, no_update, ifmulti, mixcolor)
+        return (Serverside(cellsExpFilter), no_update, no_update, ifmulti, mixcolor)
 
     elif 'BUTTON_singlePlot_3D' in btn_id:
       ifmulti,exp,cellsExpFilter = return_single()
       exp = exp.to_dict('index')
       if hideZero:
-        return (cellsExpFilter, exp, no_update, ifmulti, no_update)
+        return (Serverside(cellsExpFilter), exp, no_update, ifmulti, no_update)
       else:
         return (no_update, exp, no_update, ifmulti, no_update)
     
@@ -893,7 +891,7 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       ifmulti,_,cellsExpFilter,mixcolor = return_multi()
       # exp = return_multiExp()
       if hideZero:
-        return (cellsExpFilter, no_update, no_update, ifmulti, mixcolor)
+        return (Serverside(cellsExpFilter), no_update, no_update, ifmulti, mixcolor)
       else:
         return (no_update, no_update, no_update, ifmulti, mixcolor)
     
@@ -901,20 +899,20 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       
       if not hideZero:
         cellsExpFilter = adata.obs_names.to_list()
-        return (cellsExpFilter, no_update, no_update, no_update, no_update)
+        return (Serverside(cellsExpFilter), no_update, no_update, no_update, no_update)
       
       else:
         if not ifmulti:
           _,_,cellsExpFilter = return_single()
-          return (cellsExpFilter, no_update, no_update, no_update, no_update)
+          return (Serverside(cellsExpFilter), no_update, no_update, no_update, no_update)
         else:
           _,_,cellsExpFilter,_ = return_multi()
-          return (cellsExpFilter, no_update, no_update, no_update, no_update)
+          return (Serverside(cellsExpFilter), no_update, no_update, no_update, no_update)
 
   else:
       ifmulti,exp,cellsExpFilter = return_single()
       exp = exp.to_dict('index')
-      return (cellsExpFilter, exp, no_update, ifmulti, no_update)
+      return (Serverside(cellsExpFilter), exp, no_update, ifmulti, no_update)
 
 # plot_3Dfigure_exp
 app.clientside_callback(
@@ -924,9 +922,7 @@ app.clientside_callback(
   ),
   Output("FIGURE_3Dexpression", "figure"),
   Input('STORE_obs_3D', 'data'),
-  Input('STORE_cellsObsFilter_3D', 'data'),
-  Input('STORE_cellsExpFilter_3D', 'data'),
-  Input('STORE_cellsCtpFilter_3D', 'data'),
+  Input('STORE_cellsForExp_3D', 'data'),
   Input('STORE_singleExp_3D', 'data'),
   Input('STORE_ifmulti_3D', 'data'),
   Input('STORE_mixedColor_3D', 'data'),
@@ -936,7 +932,6 @@ app.clientside_callback(
 )
 
 # plot_3Dfigure_ctp
-
 app.clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
@@ -944,8 +939,7 @@ app.clientside_callback(
   ),
   Output("FIGURE_3Dcelltype", "figure"),
   Input('STORE_obs_3D', 'data'),
-  Input('STORE_cellsObsFilter_3D', 'data'),
-  Input('STORE_cellsExpFilter_3D', 'data'),
+  Input('STORE_cellsForCtp_3D', 'data'),
   State('SWITCH_hideAxes_3D', 'on'),
   State('SWITCH_previewBox_3D', 'on'),
   State('STORE_previewRange_3D', 'data'),
@@ -1014,7 +1008,20 @@ def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow,
 
   cells = adata.obs_names[[True if i in ctpNow else False for i in adata.obs.celltype ]].to_list()
   
-  return (ctpNow, cells)
+  return (Serverside(ctpNow), Serverside(cells))
+
+# find intersection of 3-filter
+@app.callback(
+  Output('STORE_cellsForExp_3D', 'data'),
+  Output('STORE_cellsForCtp_3D', 'data'),
+  Input('STORE_cellsObsFilter_3D', 'data'),
+  Input('STORE_cellsExpFilter_3D', 'data'),
+  Input('STORE_cellsCtpFilter_3D', 'data'),
+)
+def intersection_of_filter(obsFilter, expFilter, ctpFilter):
+  exp = list(set(obsFilter) & set(expFilter) & set(ctpFilter))
+  ctp = list(set(obsFilter) & set(expFilter))
+  return (exp, ctp)
 
 # hide axes
 @app.callback(
@@ -1071,26 +1078,23 @@ def update_previewBox(showBox, preRange):
   Output('FIGURE_expViolin_3D', 'figure'),
   Input('DROPDOWN_featureType_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value'),
-  Input('STORE_cellsExpFilter_3D', 'data'),
-  Input('STORE_cellsObsFilter_3D', 'data'),
-  Input('STORE_cellsCtpFilter_3D', 'data'),
+  Input('STORE_cellsForExp_3D', 'data'),
   Input('STORE_ifmulti_3D', 'data'),
   Input('BUTTON_singlePlot_3D', 'n_clicks'),
   Input('BUTTON_multiPlot_3D', 'n_clicks'),
   State('DROPDOWN_singleName_3D', 'value'),
   State('STORE_multiNameInfo_3D', 'data'),
   backgroud = True,
-  manager = background_callback_manager
+  manager = background_callback_manager,
 )
-def update_spatial_plotFeature3D_expViolin(featureType, stage, cellsExp, cellsObs, cellsCtp, ifmulti, splot, mplot, sname, minfo):
+def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
   
   if featureType == 'Gene':
       adata = exp_data[stage]
   elif featureType == 'Regulon':
       adata = auc_data[stage]
   
-  cells_to_use = list(set(cellsObs) & set(cellsExp) & set(cellsCtp))
-  adata = adata[cells_to_use]
+  adata = adata[cells]
 
   if not ifmulti:
     fig = show_expViolin(adata, sname)
@@ -1103,31 +1107,28 @@ def update_spatial_plotFeature3D_expViolin(featureType, stage, cellsExp, cellsOb
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('DROPDOWN_featureType_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value'),
-  Input('STORE_cellsExpFilter_3D', 'data'),
-  Input('STORE_cellsObsFilter_3D', 'data'),
-  Input('STORE_cellsCtpFilter_3D', 'data'),
+  Input('STORE_cellsForExp_3D', 'data'),
   Input('STORE_ifmulti_3D', 'data'),
   Input('BUTTON_singlePlot_3D', 'n_clicks'),
   Input('BUTTON_multiPlot_3D', 'n_clicks'),
   State('DROPDOWN_singleName_3D', 'value'),
   State('STORE_multiNameInfo_3D', 'data'),
   backgroud = True,
-  manager = background_callback_manager
+  manager = background_callback_manager,
 )
-def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cellsExp, cellsObs, cellsCtp, ifmulti, splot, mplot, sname, minfo):
+def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
   if featureType == 'Gene':
       adata = exp_data[stage]
   elif featureType == 'Regulon':
       adata = auc_data[stage]
-  
-  cells_to_use = list(set(cellsObs) & set(cellsExp) & set(cellsCtp))
-  adata = adata[cells_to_use]
+
+  adata = adata[cells]
 
   if not ifmulti:
     fig = show_ctpExpViolin(adata, sname)
   else:
     fig = show_multiFeatures_ctpExpViolin(adata, minfo)
-    
+
   return fig
 
 # moran SVG offcanvas
@@ -1145,9 +1146,7 @@ def show_moranRes_offcanvas(click):
   Output('DATATABLE_moranRes_3D', 'columns'),
   
   Input('BUTTON_calMoran_3D', 'n_clicks'),
-  State('STORE_cellsCtpFilter_3D', 'data'),
-  State('STORE_cellsExpFilter_3D', 'data'),
-  State('STORE_cellsObsFilter_3D', 'data'),
+  State('STORE_cellsForExp_3D', 'data'),
   State('DROPDOWN_stage_3D', 'value'),
   State('DROPDOWN_featureType_3D', 'value'),
   prevent_initial_call=True,
@@ -1161,14 +1160,12 @@ def show_moranRes_offcanvas(click):
     (Output('OFFCANVAS_moranRes_3D', 'is_open'), False, True),
   ]
 )
-def cal_moranRes(click, filter1, filter2, filter3, stage, featureType):
+def cal_moranRes(click, cells, stage, featureType):
   
   if featureType == 'Gene':
     adata = exp_data[stage]
   elif featureType == 'Regulon':
     adata = auc_data[stage]
-
-  cells = list( set(filter1) & set(filter2) & set(filter3) )
   
   df = cal_moran_3D(adata[cells])
   df = df.reset_index(names='Feature')

@@ -150,19 +150,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             return dict
         },
 
-        exp_3Dscatter: function(obs, obsFilter, expFilter, ctpFilter, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange){
-            tid = window.dash_clientside.callback_context.triggered.map((obj) => (obj['prop_id']))
-            console.log('func: exp_3Dscatter:', tid);
-
-            if (expFilter) {
-                var expSet = new Set(expFilter)
-                var cells = obsFilter.filter(item => expSet.has(item))
-            } else {
-                var cells = obsFilter
-            }
-
-            var ctpSet = new Set(ctpFilter)
-            cells = cells.filter(item => ctpSet.has(item))
+        exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange){
 
             figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes)
             figExp = push_previewBox(figExp, preview, preRange, hideAxes)
@@ -170,16 +158,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             return figExp
         },
 
-        ctp_3Dscatter: function (obs, obsFilter, expFilter, hideAxes, preview, preRange, ctp_cmap){
-            tid = window.dash_clientside.callback_context.triggered.map((obj) => (obj['prop_id']))
-            console.log('func: ctp_3Dscatter:', tid);
-
-            if (expFilter) {
-                var expSet = new Set(expFilter)
-                var cells = obsFilter.filter(item => expSet.has(item))
-            } else {
-                var cells = obsFilter
-            }
+        ctp_3Dscatter: function (obs, cells, hideAxes, preview, preRange, ctp_cmap){
 
             figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes)
             figCtp = push_previewBox(figCtp, preview, preRange, hideAxes)

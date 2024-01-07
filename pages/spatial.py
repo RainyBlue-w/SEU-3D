@@ -7,21 +7,18 @@ dash.register_page(__name__, path='/')
 # In[] env
 from math import isnan
 import math
-from dash import Dash, dcc, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
+from dash import dcc, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
 import dash_mantine_components as dmc
-import dash_ag_grid as dag
 from dash_iconify import DashIconify
-from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, DashBlueprint
+from dash_extensions.enrich import Output, Input, html, callback
 
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly
 from plotly.subplots import make_subplots
 from plotnine import *
-import plotnine.options
 
 from PIL import Image
 import dash_bootstrap_components as dbc
@@ -33,15 +30,10 @@ import numpy as np
 # import loompy as lp
 import h5py
 import json
-import time
 
 import squidpy as sq
 
-from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-import matplotlib.pyplot as plt
 import re
-import seaborn as sns
 from concurrent import futures
 from typing import List, Dict, Tuple
 import diskcache
@@ -1983,9 +1975,8 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
     (Output('spatial_input_featureName_series', 'disabled', allow_duplicate=True),True, False),
   ],
   prevent_initial_call = True,
-  log=True,
 )
-def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage, dash_logger: DashLogger):
+def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage):
   if names is None:
     raise PreventUpdate
 
@@ -1999,7 +1990,8 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
       adata = exp_data[stage]
     elif featureType == 'Regulon':
       adata = auc_mtx[stage]
-      
+    
+    
     names_out = [i for i in names if (i not in adata.var_names) or (i not in genes_min_pval.loc[stage].index)]
     if(names_out):
       note = dmc.Notification(
