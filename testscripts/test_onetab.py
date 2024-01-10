@@ -2,7 +2,9 @@
 
 from math import isnan
 import math
+from functools import reduce
 from dash import Dash, dcc, html, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
+from dash import ALL, MATCH, ALLSMALLER
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
@@ -13,6 +15,7 @@ import feffery_antd_components as fac
 import dash_bootstrap_components as dbc
 import feffery_utils_components as fuc
 from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, Serverside, ServersideOutputTransform
+from dash_extensions.enrich import MultiplexerTransform
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -110,12 +113,18 @@ def show_expViolin(adata, feature, **kws):
       x=data, y0=f'{feature}({len(data)})', box_visible=True, 
       line_color='black', meanline_visible=True,
       fillcolor='lightseagreen', opacity=0.6,
-      pointpos = 1.5, jitter=0.2, **kws
+      jitter=0.1, **kws,  marker_size=2.5, points='outliers',
     )
   )
   
-  fig.update_traces(orientation='h', side='positive', points=False, marker_size=2.5)
-  fig.update_layout(xaxis_showgrid=False, yaxis_showgrid=True)
+  fig.update_traces(orientation='h', side='positive', width=1.5)
+  fig.update_layout(
+    plot_bgcolor = 'rgba(200,200,200,0.1)', showlegend=False
+  ).update_yaxes(
+    gridcolor='rgba(200,200,200,0.6)', gridwidth=1,
+  ).update_xaxes(
+    dtick=1, gridcolor='#ffffff', gridwidth=1, griddash='solid'
+  )
   return fig
 
 def show_ctpExpViolin(adata, feature, **kws):
@@ -139,46 +148,45 @@ def show_ctpExpViolin(adata, feature, **kws):
   )
   return fig
 
-def show_multiFeatures_expViolin(adata, features_dict, color_dict=None,**kws):
-  if not color_dict:
-    color_dict = {'R': 'tomato', 'G': 'springgreen', 'B': 'skyblue'}
+def show_multiFeatures_expViolin(adata, features_dict, **kws):
+  
   fig = go.Figure()
   
-  tmp = {}
-  for key,value  in features_dict.items():
-      if value:
-          tmp[key] = value
-  features_dict = tmp
+  filt_dict = {}
+  for color,feature  in features_dict.items():
+      if feature:
+          filt_dict[color] = feature
 
-  for color,feature in features_dict.items():
-    data = adata[:,feature].to_df()[feature]
-    # data = data[data>0]
-    color = color_dict[color]
+  for color in list(filt_dict.keys())[::-1]:
+    data = adata[:,filt_dict[color]].to_df()[filt_dict[color]]
     fig.add_trace(
       go.Violin(
-        x=data, y0=f'{feature}({len(data)})', box_visible=True, 
-        line_color='black', meanline_visible=True,
-        fillcolor=color, opacity=0.6,
-        pointpos = 1.5, jitter=0.2, **kws
+        x=data, y0=f'{filt_dict[color]}({len(data)})', box_visible=False, 
+        line_color='black', meanline_visible=False,
+        fillcolor=color, opacity=0.6, marker_size=2.5, points='outliers',
+         jitter=0.1, **kws
       )
     )
-  fig.update_traces(orientation='h', side='positive', points=False, 
-                    width=1.2)
-  fig.update_layout(showlegend=False,xaxis_showgrid=False, yaxis_showgrid=True)
+  fig.update_traces(orientation='h', side='positive', width=1.5)
+  fig.update_layout(
+    plot_bgcolor = 'rgba(200,200,200,0.1)', showlegend=False
+  ).update_yaxes(
+    gridcolor='rgba(200,200,200,0.6)', gridwidth=1,
+  ).update_xaxes(
+    dtick=1, gridcolor='#ffffff', gridwidth=1, griddash='solid'
+  )
+  
   return fig
 
 def show_multiFeatures_ctpExpViolin(adata, features_dict, *kws):
   
   from plotly.subplots import make_subplots
   
-  tmp = {}
-  for key,value  in features_dict.items():
-      if value:
-          tmp[key] = value
-  features_dict = tmp
-  features = list(features_dict.values())
-  ngenes = len(features_dict.keys())
-  fig = make_subplots(1, ngenes)
+  filt_dict = {}
+  for color,feature  in features_dict.items():
+      if feature:
+          filt_dict[color] = feature
+  features = list(filt_dict.values())
 
   pdf = pd.concat([adata[:,features].to_df(), adata.obs.celltype], axis=1)
   pdf = pdf.melt(id_vars='celltype')
@@ -228,16 +236,13 @@ def multiGenes_show_color(adata, genes_dict):
   exp = adata[:, genes].to_df()
   exp.columns = colors
 
-  delta = 244 - exp.div(exp.max(axis=0), axis=1)*244
-  delta[others] = 244
+  delta = exp.div(exp.max(axis=0), axis=1)*244
+  delta[others] = 0
 
-  def color_geoMean(a,b):
-    a = 244-a
-    b = 244-b
+  def delta_geoMean(a,b):
     geoMean = numpy.sqrt((a**2+b**2)/2)
     # geoMean = ((a**3+b**3)/2)**(1/3)
-    color = 244 - geoMean
-    return color
+    return geoMean
   def mean(a,b, c=None):
     if c:
       return (a+b+c)/3
@@ -247,24 +252,72 @@ def multiGenes_show_color(adata, genes_dict):
   if len(colors)==1:
     color = pd.DataFrame({
         colors[0] : 244,
-        others[0] : delta[colors[0]],
-        others[1] : delta[colors[0]],
+        others[0] : 244-delta[colors[0]],
+        others[1] : 244-delta[colors[0]],
     })
   elif len(colors)==2:
     color = pd.DataFrame({
-        colors[0] : delta[colors[1]],
-        colors[1] : delta[colors[0]],
-        others[0] : color_geoMean(delta[colors[1]],delta[colors[0]]),
+        colors[0] : 244-delta[colors[1]],
+        colors[1] : 244-delta[colors[0]],
+        others[0] : 244-delta_geoMean(delta[colors[1]],delta[colors[0]]),
     })
   elif len(colors)==3:
     color = pd.DataFrame({
-        'R' : color_geoMean(delta['G'], delta['B']),
-        'G' : color_geoMean(delta['R'], delta['B']),
-        'B' : color_geoMean(delta['R'], delta['G']),
+        'R' : 244-delta_geoMean(delta['G'], delta['B']),
+        'G' : 244-delta_geoMean(delta['R'], delta['B']),
+        'B' : 244-delta_geoMean(delta['R'], delta['G']),
     })
   
   color['RGBA'] = color.apply(vector_to_rgba, axis=1)
   return color['RGBA']
+
+def hex_to_rgbList(hex_color):
+  hex_color = hex_color.replace(' ', '').replace('#', '')
+  if len(hex_color) == 6:
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+  return [r,g,b]
+
+def mix_multipy(color, alpha):
+
+  def multipy(x,y):
+    return x*y/255
+
+  def mix(x, y):
+    alpha = x[3]+y[3]-x[3]*y[3]
+    if alpha==0:
+      return [244,244,244, 0]
+    else:
+      R = np.round( (x[3]*(1-y[3])*x[0]+x[3]*y[3]*multipy(x[0],y[0])+(1-x[3])*y[3]*y[0])/alpha).astype(int)
+      G = np.round( (x[3]*(1-y[3])*x[1]+x[3]*y[3]*multipy(x[1],y[1])+(1-x[3])*y[3]*y[1])/alpha).astype(int) 
+      B = np.round( (x[3]*(1-y[3])*x[2]+x[3]*y[3]*multipy(x[2],y[2])+(1-x[3])*y[3]*y[2])/alpha).astype(int)
+      return [R,G,B,alpha]
+
+  array = []
+  for c,a in zip(color, alpha):
+    array.append(c.copy())
+    array[-1].append(a)
+
+  res = reduce(mix, array)
+  res = f'rgb{res[0],res[1],res[2]}'
+
+  return res
+
+def color_mixer(adata, genes_dict):
+  import numpy
+  genes_dict_copy = genes_dict.copy()
+  _ = [genes_dict_copy.pop(color) for color in genes_dict.keys() if not genes_dict[color]]
+  colors = [hex_to_rgbList(c) for c in genes_dict_copy.keys()]
+  genes = list(genes_dict_copy.values())
+  
+  exp = adata[:,genes].to_df()
+  
+  alpha = exp.div(exp.max(axis=0), axis=1)
+  
+  cell_colors = alpha.apply( axis=1, func=lambda row: mix_multipy(colors,row))
+  
+  return cell_colors
 
 def cal_moran_3D(adata):
   tmp = adata.copy()
@@ -285,10 +338,10 @@ app = DashProxy(
     {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
   ],
   transforms=[
-    LogTransform(), ServersideOutputTransform()
-  ]
+    LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
+  ],
+  # prevent_initial_callbacks=True
 )
-
 
 header = dbc.NavbarSimple(
     [
@@ -306,9 +359,24 @@ header = dbc.NavbarSimple(
     brand="Omics-viewer",
     color="dark",
     dark=True,
-    sticky='top',
+    # sticky='top',
     style = {"height": "6vh"}
 )
+
+# In[] styles
+
+style_dmcGrid = {
+  'textAlign': 'center'
+}
+
+colorPicker_swatches = [
+  "#25262b", "#868e96", "#fa5252", "#e64980", "#be4bdb", "#7950f2", "#4c6ef5",
+  '#225ea8', "#228be6", "#15aabf", "#12b886", "#40c057", "#82c91e", "#fab005", "#fd7e14",
+]
+
+initColor_multiName = [
+  "#fa5252", "#228be6", "#40c057", "#fd7e14", "#be4bdb", "#e64980", "#15aabf", "#fab005", "#868e96", 
+]
 
 # In[] widgets
 
@@ -422,8 +490,8 @@ SET_topViewer_controler_3D = html.Div([
           dbc.Col(daq.BooleanSwitch(on=False, id='SWITCH_previewBox_3D'),width=4)
         ]),
         dbc.Row([
-          dbc.Col(dbc.Button('Slice', color='danger', id='BUTTON_slice_3D'),width=4),
-          dbc.Col(dbc.Button('Recover', color='success', id='BUTTON_recover_3D'),width=4),
+          dbc.Col(dmc.Button('Slice', color='red', id='BUTTON_slice_3D', n_clicks=0),width=4),
+          dbc.Col(dmc.Button('Recover', color='teal', id='BUTTON_recover_3D', n_clicks=0),width=4),
         ])
       ], width=2),
       dbc.Col([
@@ -439,100 +507,181 @@ SET_topViewer_controler_3D = html.Div([
   SET_STORE_Ranges_3D,
 ], className='mb-4')
 
+def iconHover_colorPicker(init_color: str, id: Dict, swatches: List[str]):
+  return dmc.HoverCard(
+    openDelay=200,
+    position='right',
+    children=[
+      dmc.HoverCardTarget(
+        dmc.ActionIcon(
+          DashIconify(icon = 'akar-icons:circle-fill', color=init_color, width=48),
+          variant='transparent', id=id['dmc_ActionIcon'], mt=3)
+      ),
+      dmc.HoverCardDropdown([
+        dmc.ColorPicker(id=id['dmc_ColorPicker'], format='hex', value=init_color, swatches=swatches),
+        dmc.TextInput(value=init_color, id=id['dmc_TextInput']),
+      ]),
+    ]
+  )
 
 # In[] tab
 
 spatial_tab_plotFeature3D = dbc.Tab(
-  [dbc.Row([
+  [dmc.Grid([
     # options
-    dbc.Col([
+    dmc.Col([
       dmc.AccordionMultiple(
         children=[
-        # Basic options
+          # Select data
           dmc.AccordionItem(
             [
               dmc.AccordionControl('Select data'),
               dmc.AccordionPanel([
-                dbc.Row([
-                  dbc.Col([
+                dmc.Grid([
+                  dmc.Col([
                     dbc.Label("Feature type"),
                     dcc.Dropdown(
-                        ['Gene', 'Regulon'],
-                        'Gene',
-                        id="DROPDOWN_featureType_3D",
-                        clearable=False,
-                        searchable=True,
+                      ['Gene', 'Regulon'],
+                      'Gene',
+                      id="DROPDOWN_featureType_3D",
+                      clearable=False,
+                      searchable=True,
                     ),
-                  ], width=6),
-                  dbc.Col([
+                  ], span=6),
+                  dmc.Col([
                     dbc.Label("Stage"),
                     dcc.Dropdown(
-                        ['E7.5', 'E7.75', 'E8.0'],
-                        'E7.75',
-                        id="DROPDOWN_stage_3D",
-                        clearable=False,
-                        searchable=True,
+                      ['E7.5', 'E7.75', 'E8.0'],
+                      'E7.75',
+                      id="DROPDOWN_stage_3D",
+                      clearable=False,
+                      searchable=True,
                     ),
-                  ], width=6),
-                ]),
+                  ], span=6),
+                  dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
+                ], gutter='xs'),
               ]),
             ],
             value = 'Select data',
           ),
-          # Single gene
+          # Slicer
+          dmc.AccordionItem(
+            [
+              dmc.AccordionControl('Slicer'),
+              dmc.AccordionPanel(
+                [
+                  
+                ],
+              ),
+            ],
+            value = 'Slicer'
+          ),
+          # Single feature
           dmc.AccordionItem(
             [
               dmc.AccordionControl('Plot single feature'),
               dmc.AccordionPanel([
-                dbc.Row(
-                  [
-                    dbc.Col([
-                      dcc.Dropdown(
-                        options = exp_data['E7.75'].var_names,
-                        value = 'Cdx1',
-                        id="DROPDOWN_singleName_3D",
-                        clearable=False
-                      ),
-                    ], width=8),
-                    dbc.Col([
-                      dbc.Button('Plot', id='BUTTON_singlePlot_3D', n_clicks=0, color='dark', disabled=False),
-                    ], width=4),
-                  ],className="mb-4",
-                )
+                dmc.Grid([
+                  dmc.Col([
+                    dcc.Dropdown(
+                      options = exp_data['E7.75'].var_names,
+                      value = 'Cdx1',
+                      id="DROPDOWN_singleName_3D",
+                      clearable=False
+                    ),
+                  ], span=10),
+                  dmc.Col([
+                    iconHover_colorPicker(
+                      id={
+                        'dmc_ActionIcon': 'ACTIONICON_colorSingle_3D', 
+                        'dmc_ColorPicker': 'COLORPICKER_single_3D', 
+                        'dmc_TextInput': 'TEXT_colorSingle_3D',
+                        },
+                      init_color='#225ea8', swatches=colorPicker_swatches,
+                    )
+                  ], span=2),
+                  dmc.Col([
+                    dmc.Button('Plot', id='BUTTON_singlePlot_3D', color='dark', 
+                               leftIcon=DashIconify(icon="carbon:chart-scatter")),
+                  ], span=4),
+                ], gutter='xs')
               ])
             ],
             value = 'Plot single feature',
           ),
-          # Multi genes
+          # Multi features
           dmc.AccordionItem(
             [
               dmc.AccordionControl('Plot multi features'),
               dmc.AccordionPanel([
-                dbc.Col([
-                  dbc.Row([
-                    dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
-                                        id='DROPDOWN_multiNameR_3D'),
-                            width=10),
-                    dbc.Col(dbc.Badge("R", color='danger'),width=2),
-                  ]),
-                  dbc.Row([
-                    dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
-                                        id='DROPDOWN_multiNameG_3D'), 
-                            width=10),
-                    dbc.Col(dbc.Badge("G", color='success'),width=2),
-                  ]),
-                  dbc.Row([
-                    dbc.Col(dcc.Dropdown(options = exp_data['E7.75'].var_names,
-                                        id='DROPDOWN_multiNameB_3D'), 
-                            width=10),
-                    dbc.Col(dbc.Badge("B", color='primary'),width=2),
-                  ]),
-                  dbc.Row([
-                    dbc.Button('Plot', id='BUTTON_multiPlot_3D', n_clicks=0, color='dark', disabled=False),
-                  ], justify='center'),
-                  dcc.Store(id='STORE_multiNameInfo_3D')
-                ],)
-              ])
+                html.Div(
+                  [
+                    dmc.Grid([
+                      dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 0}), span=10),
+                      dmc.Col(
+                        dmc.HoverCard(
+                          openDelay=200,
+                          position='right',
+                          children=[
+                            dmc.HoverCardTarget(
+                              dmc.ActionIcon(
+                                DashIconify(icon = 'akar-icons:circle-fill', color=initColor_multiName[0], width=48), variant='transparent', 
+                                            id={'type':'ACTIONICON_colorSingle_3D', 'index': 0}, mt=3)
+                            ),
+                            dmc.HoverCardDropdown([
+                              dmc.ColorPicker(id={'type': 'COLORPICKER_single_3D', 'index': 0}, 
+                                              format='hex', value=initColor_multiName[0], swatches=colorPicker_swatches),
+                              dmc.TextInput(value=initColor_multiName[0], id={'type': 'TEXT_colorSingle_3D', 'index': 0}),
+                            ]),
+                          ]
+                        ),
+                        span=2
+                      ),
+                    ]),
+                    dmc.Grid([
+                      dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 1}), span=10),
+                      dmc.Col(
+                        dmc.HoverCard(
+                          openDelay=200,
+                          position='right',
+                          children=[
+                            dmc.HoverCardTarget(
+                              dmc.ActionIcon(
+                                DashIconify(icon = 'akar-icons:circle-fill', color=initColor_multiName[1], width=48), variant='transparent', 
+                                            id={'type':'ACTIONICON_colorSingle_3D', 'index': 1}, mt=3)
+                            ),
+                            dmc.HoverCardDropdown([
+                              dmc.ColorPicker(id={'type': 'COLORPICKER_single_3D', 'index': 1}, 
+                                              format='hex', value=initColor_multiName[1], swatches=colorPicker_swatches),
+                              dmc.TextInput(value=initColor_multiName[1], id={'type': 'TEXT_colorSingle_3D', 'index': 1}),
+                            ]),
+                          ]
+                        ),
+                        span=2
+                      ),
+                    ]),
+                  ],
+                  id = 'DIV_multiNameDynamic_3D',
+                ),
+                dcc.Store(data=2, id='STORE_multiNameCurNumber'),
+                dmc.Grid(
+                  [
+                    dmc.Col(dmc.Button(
+                      'Add', id='BUTTON_addFeature_3D', color='teal', fullWidth=True,
+                      leftIcon=DashIconify(icon="material-symbols:add-box-outline")
+                    ), span=6),
+                    dmc.Col(dmc.Button(
+                      'Delete', id='BUTTON_deleteFeature_3D', color='red', fullWidth=True,
+                      leftIcon=DashIconify(icon="material-symbols:chips-outline")
+                    ), span=6),
+                    dmc.Col(dmc.Button(
+                      'Plot', id='BUTTON_multiPlot_3D', color='dark', fullWidth=True,
+                      leftIcon=DashIconify(icon="carbon:chart-scatter"),
+                    ), span=12),
+                  ]
+                ),
+                dcc.Store(id='STORE_multiNameInfo_3D'),
+              ]),
             ],
             value = 'Plot multi features',
           ),
@@ -541,9 +690,16 @@ spatial_tab_plotFeature3D = dbc.Tab(
             [
               dmc.AccordionControl('Calculate SVG(moran)'),
               dmc.AccordionPanel([
-                dbc.Row([
-                  dbc.Col(dbc.Button('calculate\nSVGs', id='BUTTON_calMoran_3D', color='dark', disabled=False), width=6),
-                  dbc.Col(dbc.Button('Show\nresult', id='BUTTON_showMoran_3D', color='primary', disabled=False), width=6),
+                dmc.Grid([
+                  dmc.Col(
+                    dmc.Button('Calculate', id='BUTTON_calMoran_3D', color='dark', disabled=False),
+                    span=6
+                  ),
+                  dmc.Col(
+                    dmc.Button('Result', id='BUTTON_showMoran_3D', disabled=False),
+                    span=6
+                  ),
+                  dmc.Text('Using current cells to calculate SVGs', color='gray', italic=True),
                 ]),
                 dbc.Offcanvas(
                   [dash_table.DataTable(
@@ -552,8 +708,6 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     page_current= 0, page_size= 20, fill_width=True,
                     style_cell={'textAlign': 'center'},
                     style_table={'overflowX': 'auto'},
-                    # style_cell={'padding-right': '10px', 'padding-left': '10px',
-                    # 'text-align': 'center', 'marginLeft': 'auto', 'marginRight': 'auto'})],
                   )],
                   title = 'SVGs:',
                   placement='end', scrollable=True, backdrop=False, is_open=False,
@@ -564,18 +718,15 @@ spatial_tab_plotFeature3D = dbc.Tab(
             value = 'Calculate SVG(moran)',
           )
         ], 
-        style = {
-          'root': {
-            'position':'fixed','width':'30vh', 'overflowY': 'overlay', 'maxHeight': '90vh'
-          },
-          'item': {
-            'border': '1px solid', 'borderColor': dmc.theme.DEFAULT_COLORS['gray'][2],
-          }
-        }
+        # style = { 'position':'fixed','width':'40vh', 'overflowY': 'overlay', 'maxHeight': '100vh',
+        #   'item': {
+        #     'border': '1px solid', 'borderColor': dmc.theme.DEFAULT_COLORS['gray'][2],
+        #   }
+        # }
       ),
-    ], width=2),
+    ], span=2),
     # viewer
-    dbc.Col([
+    dmc.Col([
       SET_topViewer_controler_3D,
       SET_STORE_JSONtoPlot_3D,
       # scatter3d
@@ -600,7 +751,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
           dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D")
         ], align='center', width=8)
       ])
-    ],width=10),
+    ],span=10),
   ])],
   label = "Plot feature(3D)",
   tab_id = "spatial_tab_plotFeature3D",
@@ -615,6 +766,21 @@ spatial_tabs = dbc.Card(
 )
 
 # In[] callbacks
+
+# update_dataSummary
+@app.callback(
+  Output('TEXT_dataSummary_3D', 'children'),
+  Input('DROPDOWN_featureType_3D', 'value'),
+  Input('DROPDOWN_stage_3D', 'value')
+)
+def update_dataSummary_3D(featureType, stage):
+  if featureType == 'Gene':
+    adata = exp_data[stage]
+  elif featureType == 'Regulon':
+    adata = auc_data[stage]
+    
+  str = f'{adata.shape[0]}(cells) × {adata.shape[1]}(features)'
+  return str
 
 # update_nameOptions
 @app.callback(
@@ -641,12 +807,13 @@ def update_nameOptions_single_3D(search, featureType, stage):
   return opts
 
 @app.callback(
-  Output('DROPDOWN_multiNameR_3D', 'options'),
-  Input('DROPDOWN_multiNameR_3D', 'search_value'),
+  Output({'type': 'DROPDOWN_multiName_3D', 'index': MATCH}, 'options'),
+  Input({'type': 'DROPDOWN_multiName_3D', 'index': MATCH}, 'search_value'),
   Input('DROPDOWN_featureType_3D', 'value'),
-  Input('DROPDOWN_stage_3D', 'value')
+  Input('DROPDOWN_stage_3D', 'value'),
+  prevent_initial_call=True,
 )
-def update_nameOptions_multiR_3D(search, featureType, stage):
+def update_nameOptions_multi_3D(search, featureType, stage):
   if not search:
     raise PreventUpdate
   
@@ -663,65 +830,61 @@ def update_nameOptions_multiR_3D(search, featureType, stage):
   
   return opts
 
+# add & delte components for multiName
 @app.callback(
-  Output('DROPDOWN_multiNameG_3D', 'options'),
-  Input('DROPDOWN_multiNameG_3D', 'search_value'),
-  Input('DROPDOWN_featureType_3D', 'value'),
-  Input('DROPDOWN_stage_3D', 'value')
+  Output('DIV_multiNameDynamic_3D', 'children'),
+  Output('STORE_multiNameCurNumber', 'data'),
+  Input('BUTTON_addFeature_3D', 'n_clicks'),
+  Input('BUTTON_deleteFeature_3D', 'n_clicks'),
+  State('STORE_multiNameCurNumber', 'data'),
+  State('DROPDOWN_featureType_3D', 'value'),
+  State('DROPDOWN_stage_3D', 'value'),
+  prevent_initial_call = True,
 )
-def update_nameOptions_multiG_3D(search, featureType, stage):
-  if not search:
-    raise PreventUpdate
+def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
   
   if featureType == 'Gene':
-    if not search:
-      opts = exp_data[stage].var_names
-    else:
-      opts = exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
+    opts = exp_data[stage].var_names
   elif featureType == 'Regulon':
-    if not search:
-      opts = auc_data[stage].var_names
-    else:
-      opts = auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
+    opts = auc_data[stage].var_names
   
-  return opts
+  id = ctx.triggered_id
 
-@app.callback(
-  Output('DROPDOWN_multiNameB_3D', 'options'),
-  Input('DROPDOWN_multiNameB_3D', 'search_value'),
-  Input('DROPDOWN_featureType_3D', 'value'),
-  Input('DROPDOWN_stage_3D', 'value')
-)
-def update_nameOptions_multiB_3D(search, featureType, stage):
-  if not search:
-    raise PreventUpdate
+  nextIndex = curNumber
+  nextColor = initColor_multiName[int(nextIndex % len(initColor_multiName))]
   
-  if featureType == 'Gene':
-    if not search:
-      opts = exp_data[stage].var_names
-    else:
-      opts = exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
-  elif featureType == 'Regulon':
-    if not search:
-      opts = auc_data[stage].var_names
-    else:
-      opts = auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
-  
-  return opts
+  patch_children = Patch()
+  if 'BUTTON_addFeature_3D' in id:
+    patch_children.append(
+      dmc.Grid([
+        dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': nextIndex}), span=10),
+        dmc.Col(
+          dmc.HoverCard(
+            openDelay=200,
+            position='right',
+            children=[
+              dmc.HoverCardTarget(
+                dmc.ActionIcon(
+                  DashIconify(icon = 'akar-icons:circle-fill', color=nextColor, width=48), variant='transparent', 
+                              id={'type':'ACTIONICON_colorSingle_3D', 'index': nextIndex}, mt=3)
+              ),
+              dmc.HoverCardDropdown([
+                dmc.ColorPicker(id={'type': 'COLORPICKER_single_3D', 'index': nextIndex}, 
+                                format='hex', value=nextColor, swatches=colorPicker_swatches),
+                dmc.TextInput(value=nextColor, id={'type': 'TEXT_colorSingle_3D', 'index': nextIndex}),
+              ]),
+            ]
+          ),
+          span=2
+        ),
+      ])
+    )
+    nextNumber = curNumber+1
+  elif 'BUTTON_deleteFeature_3D' in id:
+    del patch_children[nextIndex-1]
+    nextNumber = curNumber-1 if curNumber>0 else 0
 
-# store_multiNameInfo
-app.clientside_callback(
-  '''
-  function(R,G,B){
-    var dict = {'R': R, 'G': G, 'B': B};
-    return dict
-  }
-  ''',
-  Output('STORE_multiNameInfo_3D', 'data'),
-  Input('DROPDOWN_multiNameR_3D', 'value'),
-  Input('DROPDOWN_multiNameG_3D', 'value'),
-  Input('DROPDOWN_multiNameB_3D', 'value')
-)
+  return patch_children, nextNumber
 
 # store_previewRange
 app.clientside_callback(
@@ -737,17 +900,9 @@ app.clientside_callback(
 
 # store_sliceRange
 app.clientside_callback(
-  '''
-  function(slice, recover, previewRange, maxRange){
-    const id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
-    console.log(id)
-    if(id.includes('BUTTON_slice_3D.n_clicks')){
-      return previewRange
-    } else {
-      return maxRange
-    }
-  }
-  ''',
+  ClientsideFunction(
+    namespace='plotFunc_3Dtab',
+    function_name='store_sliceRange'),
   Output('STORE_sliceRange_3D', 'data'),
   Input('BUTTON_slice_3D', 'n_clicks'),
   Input('BUTTON_recover_3D', 'n_clicks'),
@@ -756,7 +911,7 @@ app.clientside_callback(
 )
 
 # store_cellsInfo_forJSONtoPlot (download: ~2.5M,500ms ; compute 250ms)
- 
+
 @app.callback(
   Output('STORE_obs_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -825,7 +980,6 @@ def store_cellsInfo_forJSONtoPlot_3D(sliceRange, germs, stage, featureType):
   State('DROPDOWN_singleName_3D', 'value'),
   State('STORE_multiNameInfo_3D', 'data'),
   State('STORE_ifmulti_3D', 'data'),
-
 )
 def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType, sname, minfo, ifmulti):
 
@@ -840,19 +994,19 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
     ifmulti = False
     exp = adata[:,sname].to_df()
     if hideZero:
-      cellsExpFilter = adata.obs_names[(exp>0)[sname]].to_list()
+      cellsExpFilter = exp[(exp>0)[sname]].index.to_list()
     else:
-      cellsExpFilter = adata.obs_names.to_list()
+      cellsExpFilter = exp.index.to_list()
     return (ifmulti, exp, cellsExpFilter)
   
   def return_multi():
     ifmulti = True
-    mixColor = dict(zip( adata.obs_names, multiGenes_show_color(adata, minfo)))
+    mixColor = color_mixer(adata, minfo)
     if hideZero:
-      cellsExpFilter = adata.obs_names[[ i != 'rgba(244,244,244,1)' for i in mixColor.values()]].to_list()
+      cellsExpFilter = mixColor[mixColor!='rgb(244, 244, 244)'].index.to_list()
     else:
-      cellsExpFilter = adata.obs_names.to_list()
-    return (ifmulti, [], cellsExpFilter, mixColor) 
+      cellsExpFilter = mixColor.index.to_list()
+    return (ifmulti, [], cellsExpFilter, mixColor.to_dict()) 
   
   def return_multiExp():
     tmp = {}
@@ -931,6 +1085,62 @@ app.clientside_callback(
   State('STORE_previewRange_3D', 'data'),
 )
 
+# colorpicker for singleExp
+@app.callback(
+  Output('ACTIONICON_colorSingle_3D', 'children'),
+  Output('FIGURE_3Dexpression', 'figure'),
+  Input('COLORPICKER_single_3D', 'value'),
+)
+def colorpicker_for_singleExp_3D(color):
+  patch = Patch()
+  patch['layout']['coloraxis']['colorscale'][1][1] = color
+  icon = DashIconify(icon = 'akar-icons:circle-fill', color=color, width=48)
+  return icon, patch
+
+@app.callback(
+  Output('TEXT_colorSingle_3D', 'value'),
+  Output('COLORPICKER_single_3D', 'value'),
+  Input('TEXT_colorSingle_3D', 'value'),
+  Input('COLORPICKER_single_3D', 'value'),
+  prevent_initial_call=True,
+)
+def linkage_colorPickerAndTextSingle_3D(value1, value2):
+  id = ctx.triggered_id
+  if id == 'TEXT_colorSingle_3D':
+    return no_update, value1
+  else:
+    return value2, no_update
+
+# colopicker for multiExp
+
+@app.callback(
+  Output('STORE_multiNameInfo_3D', 'data'),
+  Input({'type': 'COLORPICKER_single_3D', 'index': ALL}, 'value'),
+  Input({'type': 'DROPDOWN_multiName_3D', 'index': ALL}, 'value'),
+)
+def store_multiNameInfo_3D(colors, genes):
+  return dict(zip(colors, genes))
+
+@app.callback(
+  Output({'type':'ACTIONICON_colorSingle_3D', 'index': MATCH}, 'children'),
+  Output({'type': 'TEXT_colorSingle_3D', 'index': MATCH}, 'value'),
+  Output({'type': 'COLORPICKER_single_3D', 'index': MATCH}, 'value'),
+  Input({'type': 'TEXT_colorSingle_3D', 'index': MATCH}, 'value'),
+  Input({'type': 'COLORPICKER_single_3D', 'index': MATCH}, 'value'),
+  prevent_initial_call=True,
+)
+def linkage_colorPickerAndTextMulti_3D(value1, value2):
+  id = ctx.triggered_id
+  
+  if id['type'] == 'TEXT_colorSingle_3D':
+    color = value1
+    icon = DashIconify(icon = 'akar-icons:circle-fill', color=color, width=48)
+    return icon, no_update, color
+  else:
+    color = value2
+    icon = DashIconify(icon = 'akar-icons:circle-fill', color=color, width=48)
+    return icon, color, no_update
+
 # plot_3Dfigure_ctp
 app.clientside_callback(
   ClientsideFunction(
@@ -952,17 +1162,25 @@ app.clientside_callback(
   Output("FIGURE_3Dcelltype", "figure", allow_duplicate=True),
   Input("FIGURE_3Dexpression", "relayoutData"),
   Input("FIGURE_3Dcelltype", "relayoutData"),
-  prevent_initial_call=True
+  prevent_initial_call=True,
+  backgroud=True,
+  manager=background_callback_manager
 )
 def update_relayout(expLayout, ctpLayout):
   tid = ctx.triggered_id
   patch = Patch()
   if tid == 'FIGURE_3Dexpression':
-    patch['layout']['scene']['camera'] = expLayout['scene.camera']
-    return no_update, patch
+    if 'scene.camera' in expLayout:
+      patch['layout']['scene']['camera'] = expLayout['scene.camera']
+      return no_update, patch
+    else:
+      raise PreventUpdate
   if tid == 'FIGURE_3Dcelltype':
-    patch['layout']['scene']['camera'] = ctpLayout['scene.camera']
-    return patch, no_update
+    if 'scene.camera' in ctpLayout:
+      patch['layout']['scene']['camera'] = ctpLayout['scene.camera']
+      return patch, no_update
+    else:
+      raise PreventUpdate
 
 # sync restyle between exp and ctp figure
 @app.callback(
@@ -1154,9 +1372,8 @@ def show_moranRes_offcanvas(click):
   manager = background_callback_manager,
   running = [
     (Output('BUTTON_showMoran_3D', 'disabled'), True, False),
-    (Output('BUTTON_calMoran_3D', 'children'), 'Waiting...\n(<1min)', 'Calculate\n(SVGs)'),
-    (Output('BUTTON_calMoran_3D', 'color'), 'danger', 'dark'),
-    (Output('BUTTON_calMoran_3D', 'disabled'), True, False),
+    (Output('BUTTON_calMoran_3D', 'children'), '< 1min', 'Calculate'),
+    (Output('BUTTON_calMoran_3D', 'loading'), True, False),
     (Output('OFFCANVAS_moranRes_3D', 'is_open'), False, True),
   ]
 )
@@ -1205,43 +1422,107 @@ if __name__ == '__main__':
   )
   
 
-# In[] test set/bool speed
+# In[] test color-mix algorithm
 
-adata = exp_data['E7.75']
+from functools import reduce
 
-cells = adata.obs_names.to_list()
-a = np.random.choice(cells, size=22000, replace=False)
-b = np.random.choice(cells, size=22000, replace=False)
-c = np.random.choice(cells, size=22000, replace=False)
-d = np.random.choice([True, False], size=len(cells))
-e = np.random.choice([True, False], size=len(cells))
-f = np.random.choice([True, False], size=len(cells))
+def hex_to_rgbList(hex_color):
+  hex_color = hex_color.replace(' ', '').replace('#', '')
+  if len(hex_color) == 6:
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+  return [r,g,b]
 
+def mix_multipy(color, alpha):
+
+  def multipy(x,y):
+    return x*y/255
+
+  def mix(x, y):
+    alpha = x[3]+y[3]-x[3]*y[3]
+    if alpha==0:
+      return [244,244,244, 0]
+    else:
+      R = np.round( (x[3]*(1-y[3])*x[0]+x[3]*y[3]*multipy(x[0],y[0])+(1-x[3])*y[3]*y[0])/alpha).astype(int)
+      G = np.round( (x[3]*(1-y[3])*x[1]+x[3]*y[3]*multipy(x[1],y[1])+(1-x[3])*y[3]*y[1])/alpha).astype(int) 
+      B = np.round( (x[3]*(1-y[3])*x[2]+x[3]*y[3]*multipy(x[2],y[2])+(1-x[3])*y[3]*y[2])/alpha).astype(int)
+      return [R,G,B,alpha]
+
+  array = []
+  for c,a in zip(color, alpha):
+    array.append(c.copy())
+    array[-1].append(a)
+
+  res = reduce(mix, array)
+  res = f'rgb{res[0],res[1],res[2]}'
+
+  return res
+
+def color_mixer(adata, genes_dict):
+  import numpy
+  genes_dict_copy = genes_dict.copy()
+  _ = [genes_dict_copy.pop(color) for color in genes_dict.keys() if not genes_dict[color]]
+  colors = [hex_to_rgbList(c) for c in genes_dict_copy.keys()]
+  genes = list(genes_dict_copy.values())
+  
+  exp = adata[:,genes].to_df()
+  
+  alpha = exp.div(exp.max(axis=0), axis=1)
+  
+  cell_colors = alpha.apply( axis=1, func=lambda row: mix_multipy(colors,row))
+  
+  return cell_colors
+
+adata = exp_data['E7.5']
+
+genes_dict = {
+  '#228be6': 'T',
+  '#40c057': 'Foxf1',
+  '#fa5252': 'Lefty2',
+}
+
+mixColor = color_mixer(adata, genes_dict)
+
+fig = go.Figure()
+
+fig.add_trace(
+  go.Scatter3d(
+    x=adata.obs['x'], y=adata.obs['y'], z=adata.obs['z'],
+    mode = 'markers',
+    marker = dict(
+      color =mixColor,
+      size = 2
+    )
+  )
+)
+
+fig.update_layout(
+  scene = dict(
+    xaxis_visible=False,
+    yaxis_visible=False,
+    zaxis_visible=False,
+  )
+)
 
 # %%
-adata = exp_data['E7.75']
-tmp = list(set(a) & set(b) & set(c))
-adata = adata[tmp]
+import plotly.graph_objects as go
+fig = go.Figure()
+fig.add_trace(
+  go.Scatter3d(
+    x = [0,1,1], y=[0,1,0], z=[0,1,1],
+    mode = 'markers',
+    marker = dict( color = ['rgba(200,150,100,0.8)', 'rgba(100,200,150,0.8)' ])
+  )
+)
 # %%
-adata = exp_data['E7.75']
-adata = adata[d&e&f]
-
+import plotly.graph_objects as go
+fig = go.Figure()
+fig.add_trace(
+  go.Scatter3d(
+    x = [0,1], y=[0,1], z=[0,1],
+    mode = 'markers',
+    marker = dict( color = ['rgba(200,150,100,1)', 'rgba(100,200,150,1)' ])
+  )
+)
 # %%
-stage = 'E7.75'
-featureType = 'Gene'
-cellsObs = a
-cellsExp = b
-cellsCtp = c
-ifmulti = False
-sname = 'T'
-
-if featureType == 'Gene':
-    adata = exp_data[stage]
-elif featureType == 'Regulon':
-    adata = auc_data[stage]
-
-cells_to_use = list(set(cellsObs) & set(cellsExp) & set(cellsCtp))
-adata = adata[cells_to_use]
-
-if not ifmulti:
-  fig = show_expViolin(adata, sname)

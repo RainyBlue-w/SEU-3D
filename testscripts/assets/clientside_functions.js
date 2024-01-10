@@ -18,7 +18,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
     } else {
         var colors = pick(mixcolor, cells)
     }
-
+    console.log(colors)
     var figExp = {
         'data': [
             {
@@ -34,7 +34,6 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
             'coloraxis': {
                 'colorscale': [
                     [0.00, "rgb(244,244,244)"],
-                    [0.05, "rgb(244, 244, 244)"],
                     [1.00, "rgb(34, 94, 168)"],
                 ],
             },
@@ -141,13 +140,22 @@ function push_previewBox(fig, preview, preRange){
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     plotFunc_3Dtab: {
         store_previewRange: function (x_range, y_range, z_range) {
-            console.log(z_range)
             var dict = {
                 'x_min': x_range[0], 'x_max': x_range[1],
                 'y_min': y_range[0], 'y_max': y_range[1],
                 'z_min': z_range[0], 'z_max': z_range[1],
             }
             return dict
+        },
+
+        store_sliceRange: function(slice, recover, previewRange, maxRange){
+            var id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
+            console.log(id)
+            if(id.includes('BUTTON_slice_3D.n_clicks')){
+            return previewRange
+            } else {
+            return maxRange
+            }
         },
 
         exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange){

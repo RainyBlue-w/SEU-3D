@@ -969,7 +969,7 @@ spatial_textarea_featureLists_series = html.Div(
     dbc.Col(
       [
         dbc.Textarea(id = "spatial_textarea_featureLists_series",
-          placeholder="paste feature names here(seperated by any charactor)\ne.g.  A  B,C,  D\nE##F--G_H,#I@KK%%G%(U),(V)|(W)\"X\",\"Y\"^Q*I",
+          placeholder="paste feature names here(seperated by any charactor)\ne.g.  A  B,C,  D\nE##G_H,#I@KK%%G%(U),(V)|(W)\"X\",\"Y\"^Q*I",
           rows=8, className="mb-3",),
         dbc.Button('Plot', id='spatial_inputButton_featureLists_series_plot',
                           n_clicks=0, color='primary'),
@@ -1982,7 +1982,7 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
 
   if click:
 
-    names = re.split(", |,| |\n|\'|\"|#|-|_|%|$|@|\(|\)|\||^|&", names)
+    names = re.split(", |,| |\n|\'|\"|#|_|%|$|@|\(|\)|\||^|&", names)
     names = [i for i in names if i]
     names = list(set(names))
 
@@ -1999,10 +1999,11 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
         id = 'series_list_featureNoExit',
         action = 'show',
         message = ','.join(names_out),
-        color='red',
-        icon=DashIconify(icon="akar-icons:circle-x"),
+        color='orange',
+        icon=DashIconify(icon="akar-icons:circle-alert"),
       )
-      return no_update, no_update, note
+
+    names = list(set(names) - set(names_out))
     
     with futures.ThreadPoolExecutor(max_workers=8) as executor:
       t1 = executor.submit(show_features_spatial_regularExp, adata, stage,  'plotFeatureSeries', featureType,
@@ -2011,7 +2012,7 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
                             features=names, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
       img_dir1 = t1.result()
       img_dir2 = t2.result()
-    return Image.open(img_dir1), Image.open(img_dir2), no_update
+    return Image.open(img_dir1), Image.open(img_dir2), note
   else:
     raise PreventUpdate
 
