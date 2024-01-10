@@ -472,6 +472,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
           children=[
             # Select data
             fac.AntdCollapse(
+              isOpen = True,
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
@@ -504,6 +505,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
             ),
             # Plot options
             fac.AntdCollapse(
+              isOpen = True,
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
@@ -642,6 +644,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
             ),
             # Slicer
             fac.AntdCollapse(
+              isOpen = False,
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
@@ -695,6 +698,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
             ),
             # Moran
             fac.AntdCollapse(
+              isOpen = False,
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,

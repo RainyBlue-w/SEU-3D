@@ -9,7 +9,7 @@ const getObjFirstItem = (obj) => {
     for(let i in obj) return obj[i];
 }
 
-function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
+function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection) {
 
     var filtObs = pick(obs, cells)
     if (!ifmulti) {
@@ -18,7 +18,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
     } else {
         var colors = pick(mixcolor, cells)
     }
-
+    console.log(colors)
     var figExp = {
         'data': [
             {
@@ -34,10 +34,10 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
             'coloraxis': {
                 'colorscale': [
                     [0.00, "rgb(244,244,244)"],
-                    [0.05, "rgb(244, 244, 244)"],
                     [1.00, "rgb(34, 94, 168)"],
                 ],
             },
+            autosize: false,
             // 'uirevision': 'constant',
             margin: {l: 10, r: 0, t: 0, b: 0},
             scene: {
@@ -53,7 +53,13 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
                     'visible': !hideAxes,
                     'backgroundcolor': "white", 'showbackground': true, 'zerolinecolor': 'grey', 'fixedrange': true, 'gridcolor': 'grey', 'nticks': 6
                 },
-                bgcolor: 'white'
+                bgcolor: 'white',
+                camera: {
+                    projection: {
+                        type: projection
+                    } 
+                },
+                aspectmode: 'manual'
             }
         }
     }
@@ -61,7 +67,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
     return figExp
 }
 
-function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes){
+function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
     var filtObs = pick(obs, cells)
     var filtObs_group = filtObs.groupBy(({ celltype }) => celltype)
     var figCtp = {
@@ -75,6 +81,7 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes){
                 tracegroupgap: 0,
             },
             margin: {l: 0, r: 10, t: 0, b: 0,},
+            autosize: false,
             scene: {
                 xaxis: {
                     'visible': !hideAxes,
@@ -88,7 +95,13 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes){
                     'visible': !hideAxes,
                     'backgroundcolor': "white", 'showbackground': true, 'zerolinecolor': 'grey', 'fixedrange': true, 'gridcolor': 'grey', 'nticks': 6
                 },
-                bgcolor: 'white'
+                bgcolor: 'white',
+                camera: {
+                    projection: {
+                        type: projection
+                    } 
+                },
+                aspectmode: 'manual'
             },
         }
     }
@@ -141,7 +154,6 @@ function push_previewBox(fig, preview, preRange){
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     plotFunc_3Dtab: {
         store_previewRange: function (x_range, y_range, z_range) {
-            console.log(z_range)
             var dict = {
                 'x_min': x_range[0], 'x_max': x_range[1],
                 'y_min': y_range[0], 'y_max': y_range[1],
@@ -150,44 +162,33 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             return dict
         },
 
-        exp_3Dscatter: function(obs, obsFilter, expFilter, ctpFilter, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange){
-            tid = window.dash_clientside.callback_context.triggered.map((obj) => (obj['prop_id']))
-            console.log('func: exp_3Dscatter:', tid);
-
-            if (expFilter) {
-                var expSet = new Set(expFilter)
-                var cells = obsFilter.filter(item => expSet.has(item))
+        store_sliceRange: function(slice, recover, previewRange, maxRange){
+            var id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
+            console.log(id)
+            if(id.includes('BUTTON_slice_3D.n_clicks')){
+            return previewRange
             } else {
-                var cells = obsFilter
+            return maxRange
             }
+        },
 
-            var ctpSet = new Set(ctpFilter)
-            cells = cells.filter(item => ctpSet.has(item))
+        exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange, projection){
 
-            figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes)
+            figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection)
             figExp = push_previewBox(figExp, preview, preRange, hideAxes)
 
             return figExp
         },
 
-        ctp_3Dscatter: function (obs, obsFilter, expFilter, hideAxes, preview, preRange, ctp_cmap){
-            tid = window.dash_clientside.callback_context.triggered.map((obj) => (obj['prop_id']))
-            console.log('func: ctp_3Dscatter:', tid);
+        ctp_3Dscatter: function (obs, cells, hideAxes, preview, preRange, ctp_cmap, projection){
 
-            if (expFilter) {
-                var expSet = new Set(expFilter)
-                var cells = obsFilter.filter(item => expSet.has(item))
-            } else {
-                var cells = obsFilter
-            }
-
-            figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes)
+            figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection)
             figCtp = push_previewBox(figCtp, preview, preRange, hideAxes)
 
             return figCtp
         },
 
-        singleExpCtp_violin: function (obs, obsFilter, expFilter, singleExp, ifmulti, ctp_map){
+        singleExpCtp_violin: function (obs, obsFilter, expFilter, ctpFilter, singleExp, ifmulti, ctp_map){
             if (expFilter) {
                 var expSet = new Set(expFilter)
                 var intersection = obsFilter.filter(item => expSet.has(item))
