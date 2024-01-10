@@ -1,15 +1,21 @@
 # In[] env
+
 from math import isnan
 import math
-from dash import Dash, dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
+from functools import reduce
+from dash import Dash, dcc, html, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
+from dash import ALL, MATCH, ALLSMALLER
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_daq as daq
 import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, DashBlueprint
-
+import feffery_antd_components as fac
+import dash_bootstrap_components as dbc
+import feffery_utils_components as fuc
+from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, Serverside, ServersideOutputTransform
+from dash_extensions.enrich import MultiplexerTransform
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -19,7 +25,6 @@ from plotnine import *
 import plotnine.options
 
 from PIL import Image
-import dash_bootstrap_components as dbc
 import scanpy as sc
 import os
 import pandas as pd
@@ -28,6 +33,7 @@ import numpy as np
 # import loompy as lp
 import h5py
 import json
+import time
 
 import squidpy as sq
 
@@ -611,3 +617,67 @@ fig.add_trace(
     marker = dict( color = ['rgba(200,150,100,1)', 'rgba(100,200,150,1)' ])
   )
 )
+
+# %%
+
+from dash import html
+from dash import dcc
+import dash_mantine_components as dmc
+import feffery_antd_components as fac
+from dash_extensions.enrich import DashProxy
+from dash_iconify import DashIconify
+
+app = DashProxy()
+
+app.layout = dmc.Grid(
+  [
+    dmc.Col(
+      [
+        html.Span(
+          fac.AntdSpace(
+            [
+              fac.AntdCollapse(
+                fac.AntdPopover(
+                  placement='right',
+                  children = [
+                    dmc.ActionIcon(
+                      DashIconify(icon = 'akar-icons:circle-fill', color='#fa5252', width=48),
+                      variant='transparent', mt=3
+                    )
+                  ],
+                  content = [
+                      dmc.ColorPicker(format='hex', value='#fa5252'),
+                      dmc.TextInput(value='#fa5252'),
+                  ],
+                  # popupContainer = 'parent',
+                ),
+                title='test',
+              ),
+              fac.AntdCollapse(title='test2'),
+              fac.AntdCollapse(title='test3'),
+              fac.AntdCollapse(title='test3'),
+              fac.AntdCollapse(title='test3'),
+              fac.AntdCollapse(title='test3'),
+              fac.AntdCollapse(title='test3'),
+            ],
+            direction='vertical',
+            style={'position': 'fixed', 'width': '20vh', 'overflow-y': 'auto', 'max-height': '40vh'},
+          ),
+        ),
+      ],
+      span=2
+    ),
+    dmc.Col(
+      [
+        dcc.Graph(figure={}),
+        dmc.Text('This is a `dmc.Text` component'),
+        dmc.RangeSlider(),
+        dcc.Graph(figure={})
+      ],
+      span=10
+    )
+  ]
+)
+
+app.run_server(host='10.193.0.208', port='8053')
+# %%

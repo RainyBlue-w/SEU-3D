@@ -9,7 +9,7 @@ const getObjFirstItem = (obj) => {
     for(let i in obj) return obj[i];
 }
 
-function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
+function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection) {
 
     var filtObs = pick(obs, cells)
     if (!ifmulti) {
@@ -37,6 +37,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
                     [1.00, "rgb(34, 94, 168)"],
                 ],
             },
+            autosize: false,
             // 'uirevision': 'constant',
             margin: {l: 10, r: 0, t: 0, b: 0},
             scene: {
@@ -52,7 +53,13 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
                     'visible': !hideAxes,
                     'backgroundcolor': "white", 'showbackground': true, 'zerolinecolor': 'grey', 'fixedrange': true, 'gridcolor': 'grey', 'nticks': 6
                 },
-                bgcolor: 'white'
+                bgcolor: 'white',
+                camera: {
+                    projection: {
+                        type: projection
+                    } 
+                },
+                aspectmode: 'manual'
             }
         }
     }
@@ -60,7 +67,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes) {
     return figExp
 }
 
-function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes){
+function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
     var filtObs = pick(obs, cells)
     var filtObs_group = filtObs.groupBy(({ celltype }) => celltype)
     var figCtp = {
@@ -74,6 +81,7 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes){
                 tracegroupgap: 0,
             },
             margin: {l: 0, r: 10, t: 0, b: 0,},
+            autosize: false,
             scene: {
                 xaxis: {
                     'visible': !hideAxes,
@@ -87,7 +95,13 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes){
                     'visible': !hideAxes,
                     'backgroundcolor': "white", 'showbackground': true, 'zerolinecolor': 'grey', 'fixedrange': true, 'gridcolor': 'grey', 'nticks': 6
                 },
-                bgcolor: 'white'
+                bgcolor: 'white',
+                camera: {
+                    projection: {
+                        type: projection
+                    } 
+                },
+                aspectmode: 'manual'
             },
         }
     }
@@ -158,17 +172,17 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             }
         },
 
-        exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange){
+        exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange, projection){
 
-            figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes)
+            figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection)
             figExp = push_previewBox(figExp, preview, preRange, hideAxes)
 
             return figExp
         },
 
-        ctp_3Dscatter: function (obs, cells, hideAxes, preview, preRange, ctp_cmap){
+        ctp_3Dscatter: function (obs, cells, hideAxes, preview, preRange, ctp_cmap, projection){
 
-            figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes)
+            figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection)
             figCtp = push_previewBox(figCtp, preview, preRange, hideAxes)
 
             return figCtp

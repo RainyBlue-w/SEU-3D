@@ -1,6 +1,37 @@
 
-.fac-AntdCollapse .fac-AntdCollapse--card {
-      width: 300px;
-  font-size: 16px;
-  font-family: system-ui;
+/* dmc-Tabs-vertical */
+.dmc-Tabs-vertical .mantine-Tabs-tabLabel {
+  writing-mode: vertical-rl;
+  transform: rotate(-0.5turn);
+  font-size: 16;
+}
+
+.dmc-Tabs-vertical .mantine-Tabs-tab{
+  padding-left: 0px;
+}
+
+.dmc-Tabs-vertical .mantine-Tabs-panel {
+  padding-left: 5px;
+}
+
+.fac-AntdSpace-sideBar {
+  /* position: fixed; */
+  max-height: 90vh;
+  overflow-y: auto;
+  /* width: 40vh; */
+}
+
+.dmc-accordionMultiple {
+  /* overflow-y: auto;
+  max-height: 96vh; */
+}
+
+.dmc-Text-label {
+  font-size: 14;
+  font-family: Segoe UI; 
+  font-weight: bold
+}
+
+.dmc-Text-label .dmc-Text-label-center {
+  text-align: center,
 }

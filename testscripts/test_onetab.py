@@ -12,8 +12,8 @@ import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import feffery_antd_components as fac
-import dash_bootstrap_components as dbc
 import feffery_utils_components as fuc
+import dash_bootstrap_components as dbc
 from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, Serverside, ServersideOutputTransform
 from dash_extensions.enrich import MultiplexerTransform
 
@@ -57,7 +57,6 @@ exp_data = {
 }
 
 # for stage, data in exp_data.items():
-  
 
 coord_data = {
   'E7.5': pd.read_csv('/rad/wuc/dash_data/spatial/spatial_coordinate.embryo_E7.5.csv', sep=' '),
@@ -340,7 +339,6 @@ app = DashProxy(
   transforms=[
     LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
   ],
-  # prevent_initial_callbacks=True
 )
 
 header = dbc.NavbarSimple(
@@ -363,11 +361,7 @@ header = dbc.NavbarSimple(
     style = {"height": "6vh"}
 )
 
-# In[] styles
-
-style_dmcGrid = {
-  'textAlign': 'center'
-}
+# In[] global vars
 
 colorPicker_swatches = [
   "#25262b", "#868e96", "#fa5252", "#e64980", "#be4bdb", "#7950f2", "#4c6ef5",
@@ -436,91 +430,31 @@ CHECKLIST_germLayer_3D = html.Div(
     className="mb-4",
 )
 
-SWITCH_hideZero_3D = html.Div([
-  dbc.Row(
-    [
-        dbc.Col(
-            dbc.Label("Hide zero:"),
-            width=6
-            ),
-        dbc.Col(
-            daq.BooleanSwitch(id='SWITCH_hideZero_3D', on=False),
-            width=4
-            )
-    ]
-  )
-])
-
-SWITCH_hideAxes_3D = html.Div([
-  dbc.Row(
-    [
-      dbc.Col(
-        dbc.Label('Hide axes:'),
-        width=6,
-      ),
-      dbc.Col(
-        daq.BooleanSwitch(on=False, id='SWITCH_hideAxes_3D'),
-        width=4
-      )
-    ]
-  )
-])
-
 SET_topViewer_controler_3D = html.Div([
   dbc.Row(
     [
       dbc.Col([
-        dbc.Label('x range'),
-        dcc.RangeSlider(-400,480,10, value=(-400,480), id='SLIDER_Xrange_3D',
-                        marks=None,tooltip={'placement': 'bottom', 'always_visible': True})
-      ], width=2),
-      dbc.Col([
-        dbc.Label('y range'),
-        dcc.RangeSlider(-410, 470,10, value=(-410,470), id='SLIDER_Yrange_3D',
-                        marks=None,tooltip={'placement': 'bottom', 'always_visible': True})
-      ], width=2),
-      dbc.Col([
-        dbc.Label('z range'),
-        dcc.RangeSlider(0, 700,10, value=(0,700), id='SLIDER_Zrange_3D',
-                        marks=None,tooltip={'placement': 'bottom', 'always_visible': True})
-      ], width=2),
-      dbc.Col([
-        dbc.Row([
-          dbc.Col(dbc.Label('Preview'), width=4),
-          dbc.Col(daq.BooleanSwitch(on=False, id='SWITCH_previewBox_3D'),width=4)
-        ]),
-        dbc.Row([
-          dbc.Col(dmc.Button('Slice', color='red', id='BUTTON_slice_3D', n_clicks=0),width=4),
-          dbc.Col(dmc.Button('Recover', color='teal', id='BUTTON_recover_3D', n_clicks=0),width=4),
-        ])
-      ], width=2),
-      dbc.Col([
         CHECKLIST_germLayer_3D
       ], width=2),
-      dbc.Col([
-        SWITCH_hideZero_3D,
-        SWITCH_hideAxes_3D
-      ], width=2)
     ],
     style = {'height': '8vh'}
   ),
   SET_STORE_Ranges_3D,
 ], className='mb-4')
-
+  
 def iconHover_colorPicker(init_color: str, id: Dict, swatches: List[str]):
-  return dmc.HoverCard(
-    openDelay=200,
-    position='right',
+  return fac.AntdPopover(
+    # openDelay=200,
+    placement = 'left',
     children=[
-      dmc.HoverCardTarget(
-        dmc.ActionIcon(
-          DashIconify(icon = 'akar-icons:circle-fill', color=init_color, width=48),
-          variant='transparent', id=id['dmc_ActionIcon'], mt=3)
+      dmc.ActionIcon(
+        DashIconify(icon = 'akar-icons:circle-fill', color=init_color, width=48),
+        variant='transparent', id=id['dmc_ActionIcon'], mt=3
       ),
-      dmc.HoverCardDropdown([
-        dmc.ColorPicker(id=id['dmc_ColorPicker'], format='hex', value=init_color, swatches=swatches),
-        dmc.TextInput(value=init_color, id=id['dmc_TextInput']),
-      ]),
+    ],
+    content = [
+      dmc.ColorPicker(id=id['dmc_ColorPicker'], format='hex', value=init_color, swatches=swatches),
+      dmc.TextInput(value=init_color, id=id['dmc_TextInput']),
     ]
   )
 
@@ -530,201 +464,273 @@ spatial_tab_plotFeature3D = dbc.Tab(
   [dmc.Grid([
     # options
     dmc.Col([
-      dmc.AccordionMultiple(
-        children=[
-          # Select data
-          dmc.AccordionItem(
-            [
-              dmc.AccordionControl('Select data'),
-              dmc.AccordionPanel([
-                dmc.Grid([
-                  dmc.Col([
-                    dbc.Label("Feature type"),
-                    dcc.Dropdown(
-                      ['Gene', 'Regulon'],
-                      'Gene',
-                      id="DROPDOWN_featureType_3D",
-                      clearable=False,
-                      searchable=True,
-                    ),
-                  ], span=6),
-                  dmc.Col([
-                    dbc.Label("Stage"),
-                    dcc.Dropdown(
-                      ['E7.5', 'E7.75', 'E8.0'],
-                      'E7.75',
-                      id="DROPDOWN_stage_3D",
-                      clearable=False,
-                      searchable=True,
-                    ),
-                  ], span=6),
-                  dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
-                ], gutter='xs'),
-              ]),
-            ],
-            value = 'Select data',
-          ),
-          # Slicer
-          dmc.AccordionItem(
-            [
-              dmc.AccordionControl('Slicer'),
-              dmc.AccordionPanel(
+      fuc.FefferySticky([
+        fac.AntdSpace([
+          dmc.AccordionMultiple(
+            children=[
+              # Select data
+              dmc.AccordionItem(
                 [
-                  
+                  dmc.AccordionControl('Select data'),
+                  dmc.AccordionPanel([
+                    dmc.Grid([
+                      dmc.Col([
+                        dbc.Label("Feature type"),
+                        dcc.Dropdown(
+                          ['Gene', 'Regulon'],
+                          'Gene',
+                          id="DROPDOWN_featureType_3D",
+                          clearable=False,
+                          searchable=True,
+                        ),
+                      ], span=6),
+                      dmc.Col([
+                        dbc.Label("Stage"),
+                        dcc.Dropdown(
+                          ['E7.5', 'E7.75', 'E8.0'],
+                          'E7.75',
+                          id="DROPDOWN_stage_3D",
+                          clearable=False,
+                          searchable=True,
+                        ),
+                      ], span=6),
+                      dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
+                    ], gutter='xs'),
+                  ]),
                 ],
+                value = 'Select data',
               ),
-            ],
-            value = 'Slicer'
-          ),
-          # Single feature
-          dmc.AccordionItem(
-            [
-              dmc.AccordionControl('Plot single feature'),
-              dmc.AccordionPanel([
-                dmc.Grid([
-                  dmc.Col([
-                    dcc.Dropdown(
-                      options = exp_data['E7.75'].var_names,
-                      value = 'Cdx1',
-                      id="DROPDOWN_singleName_3D",
-                      clearable=False
+              # Plot options
+              dmc.AccordionItem(
+                [
+                  dmc.AccordionControl('Plot options'),
+                  dmc.AccordionPanel([          
+                    dmc.Tabs(
+                      [
+                        dmc.TabsList([
+                          dmc.Tab('Settings', value='settings'),
+                          dmc.Tab('Single', value='single'),
+                          dmc.Tab('Multiple', value='multi'),
+                        ], grow=False),
+                        # settings
+                        dmc.TabsPanel(
+                          [
+                            dmc.Text('Point size', className='dmc-Text-label'),
+                            dmc.NumberInput(value=3, step=0.5, min=0.1, id='NUMBERINPUT_pointSize_3D', precision=1),
+                            dmc.Space(h=10),
+                            dmc.Switch(label='Hide axes', id='SWITCH_hideAxes_3D', size='md',
+                                      onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
+                                      offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
+                            dmc.Space(h=10),
+                            dmc.Switch(label='Hide non-expressing cells', id='SWITCH_hideZero_3D',  size='md',
+                                      onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
+                                      offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
+                            dmc.Space(h=10),
+                            dmc.Text('Projection type', className='dmc-Text-label'),
+                            dmc.SegmentedControl(
+                              value='perspective', 
+                              data=[
+                                {'value': 'perspective', 'label': 'Perspective'},
+                                {'value': 'orthographic', 'label': 'Orthographic'},
+                              ], 
+                              fullWidth=True, id='SEGMENTEDCONTROL_projection_3D'
+                            ),
+                          ],
+                          value = 'settings',
+                        ),
+                        # single
+                        dmc.TabsPanel(
+                          [
+                            dmc.Grid([
+                              dmc.Col([
+                                dcc.Dropdown(
+                                  options = exp_data['E7.75'].var_names,
+                                  value = 'Cdx1',
+                                  id="DROPDOWN_singleName_3D",
+                                  clearable=False
+                                ),
+                              ], span=10),
+                              dmc.Col([
+                                iconHover_colorPicker(
+                                  id={
+                                    'dmc_ActionIcon': 'ACTIONICON_colorSingle_3D', 
+                                    'dmc_ColorPicker': 'COLORPICKER_single_3D', 
+                                    'dmc_TextInput': 'TEXT_colorSingle_3D',
+                                    },
+                                  init_color='#225ea8', swatches=colorPicker_swatches,
+                                )
+                              ], span=2),
+                              dmc.Col([
+                                dmc.Button('Plot', id='BUTTON_singlePlot_3D', color='dark', fullWidth=True,
+                                          leftIcon=DashIconify(icon="carbon:chart-scatter", width=16)),
+                              ], span=12),
+                            ], gutter='xs')  
+                          ],
+                          value='single',
+                        ),
+                        # multi
+                        dmc.TabsPanel(
+                          [
+                            # extendable selector
+                            html.Div(
+                              [
+                                dmc.Grid([
+                                  dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 0}), span=10),
+                                  dmc.Col(
+                                    iconHover_colorPicker(
+                                      id={
+                                        'dmc_ActionIcon': {'type':'ACTIONICON_colorSingle_3D', 'index': 0}, 
+                                        'dmc_ColorPicker': {'type': 'COLORPICKER_single_3D', 'index': 0}, 
+                                        'dmc_TextInput': {'type': 'TEXT_colorSingle_3D', 'index': 0},
+                                        },
+                                      init_color=initColor_multiName[0], swatches=colorPicker_swatches,
+                                    ),
+                                    span=2
+                                  ),
+                                ]),
+                                dmc.Grid([
+                                  dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 1}), span=10),
+                                  dmc.Col(
+                                    iconHover_colorPicker(
+                                      id={
+                                        'dmc_ActionIcon': {'type':'ACTIONICON_colorSingle_3D', 'index': 1}, 
+                                        'dmc_ColorPicker': {'type': 'COLORPICKER_single_3D', 'index': 1}, 
+                                        'dmc_TextInput': {'type': 'TEXT_colorSingle_3D', 'index': 1},
+                                        },
+                                      init_color=initColor_multiName[1], swatches=colorPicker_swatches,
+                                    ),
+                                    span=2
+                                  ),
+                                ]),
+                              ],
+                              id = 'DIV_multiNameDynamic_3D',
+                            ),
+                            dcc.Store(data=2, id='STORE_multiNameCurNumber'),
+                            # buttons
+                            dmc.Grid(
+                              [
+                                dmc.Col(dmc.Button(
+                                  'Add', id='BUTTON_addFeature_3D', color='teal', fullWidth=True,
+                                  leftIcon=DashIconify(icon="material-symbols:add-box-outline", width=16)
+                                ), span=23),
+                                dmc.Col(dmc.Button(
+                                  'Delete', id='BUTTON_deleteFeature_3D', color='red', fullWidth=True,
+                                  leftIcon=DashIconify(icon="material-symbols:chips-outline", width=16)
+                                ), span=27),
+                                dmc.Col(dmc.Button(
+                                  'Plot', id='BUTTON_multiPlot_3D', color='dark', fullWidth=True,
+                                  leftIcon=DashIconify(icon="gis:cube-3d", width=16),
+                                ), span=50),
+                              ],
+                              columns=50,
+                            ),
+                            dcc.Store(id='STORE_multiNameInfo_3D'),
+                          ],
+                          value='multi',
+                        ),
+                      ], 
+                      orientation = 'vertical',
+                      placement = 'left',
+                      className = 'dmc-Tabs-vertical',
+                      value = 'single'
+                      ),
+                  ]),
+                ],
+                value='Plot options'
+              ),
+              # Slicer
+              dmc.AccordionItem(
+                [
+                  dmc.AccordionControl('Slicer'),
+                  dmc.AccordionPanel(
+                    [
+                      dmc.Grid([
+                        dmc.Col(dmc.Text('x', className='.dmc-Text-label-center'), span=2),
+                        dmc.Col(
+                          dcc.RangeSlider(
+                            -400,480,10, value=(-400,480), id='SLIDER_Xrange_3D',
+                            marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
+                          ),
+                          span=10
+                        ),
+                        dmc.Col(dmc.Text('y', className='.dmc-Text-label-center'), span=2),
+                        dmc.Col(
+                          dcc.RangeSlider(
+                            -410, 470,10, value=(-410,470), id='SLIDER_Yrange_3D',
+                            marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
+                          ),
+                          span=10
+                        ),
+                        dmc.Col(dmc.Text('z', className='.dmc-Text-label-center'), span=2),
+                        dmc.Col(
+                          dcc.RangeSlider(
+                            0, 700,10, value=(0,700), id='SLIDER_Zrange_3D',
+                            marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
+                          ),
+                          span=10
+                        ),
+                        dmc.Col(
+                          dmc.Switch(size='md', id='SWITCH_previewBox_3D', label='Preview', checked=False),
+                          span=12
+                        ),
+                        dmc.Col(
+                          dmc.Button(
+                            'Slice', color='red', id='BUTTON_slice_3D', fullWidth=True, 
+                            leftIcon=DashIconify(icon='mdi:box-cutter', width=16),
+                          ),
+                          span=6
+                        ),
+                        dmc.Col(
+                          dmc.Button(
+                            'Recover', color='teal', id='BUTTON_recover_3D', fullWidth=True, 
+                            leftIcon=DashIconify(icon='ion:reload-circle', width=16),
+                          ),
+                          span=6
+                        )
+                      ]),
+                    ],
+                  ),
+                ],
+                value = 'Slicer'
+              ),
+              # Moran
+              dmc.AccordionItem(
+                [
+                  dmc.AccordionControl('Calculate SVG(moran)'),
+                  dmc.AccordionPanel([
+                    dmc.Grid([
+                      dmc.Col(
+                        dmc.Button('Calculate', id='BUTTON_calMoran_3D', color='dark', disabled=False, fullWidth=True),
+                        span=6,
+                      ),
+                      dmc.Col(
+                        dmc.Button('Result', id='BUTTON_showMoran_3D', disabled=False, fullWidth=True),
+                        span=6,
+                      ),
+                      dmc.Text('Using current cells to calculate SVGs', color='gray', italic=True),
+                    ]),
+                    dbc.Offcanvas(
+                      [dash_table.DataTable(
+                        id='DATATABLE_moranRes_3D',
+                        sort_action="native", page_action='native', filter_action="native",
+                        page_current= 0, page_size= 20, fill_width=True,
+                        style_cell={'textAlign': 'center'},
+                        style_table={'overflowX': 'auto'},
+                      )],
+                      title = 'SVGs:',
+                      placement='end', scrollable=True, backdrop=False, is_open=False,
+                      id = 'OFFCANVAS_moranRes_3D',
                     ),
-                  ], span=10),
-                  dmc.Col([
-                    iconHover_colorPicker(
-                      id={
-                        'dmc_ActionIcon': 'ACTIONICON_colorSingle_3D', 
-                        'dmc_ColorPicker': 'COLORPICKER_single_3D', 
-                        'dmc_TextInput': 'TEXT_colorSingle_3D',
-                        },
-                      init_color='#225ea8', swatches=colorPicker_swatches,
-                    )
-                  ], span=2),
-                  dmc.Col([
-                    dmc.Button('Plot', id='BUTTON_singlePlot_3D', color='dark', 
-                               leftIcon=DashIconify(icon="carbon:chart-scatter")),
-                  ], span=4),
-                ], gutter='xs')
-              ])
+                  ]),
+                ],
+                value = 'Calculate SVG(moran)',
+              )
             ],
-            value = 'Plot single feature',
+            className = 'dmc-accordionMultiple',
           ),
-          # Multi features
-          dmc.AccordionItem(
-            [
-              dmc.AccordionControl('Plot multi features'),
-              dmc.AccordionPanel([
-                html.Div(
-                  [
-                    dmc.Grid([
-                      dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 0}), span=10),
-                      dmc.Col(
-                        dmc.HoverCard(
-                          openDelay=200,
-                          position='right',
-                          children=[
-                            dmc.HoverCardTarget(
-                              dmc.ActionIcon(
-                                DashIconify(icon = 'akar-icons:circle-fill', color=initColor_multiName[0], width=48), variant='transparent', 
-                                            id={'type':'ACTIONICON_colorSingle_3D', 'index': 0}, mt=3)
-                            ),
-                            dmc.HoverCardDropdown([
-                              dmc.ColorPicker(id={'type': 'COLORPICKER_single_3D', 'index': 0}, 
-                                              format='hex', value=initColor_multiName[0], swatches=colorPicker_swatches),
-                              dmc.TextInput(value=initColor_multiName[0], id={'type': 'TEXT_colorSingle_3D', 'index': 0}),
-                            ]),
-                          ]
-                        ),
-                        span=2
-                      ),
-                    ]),
-                    dmc.Grid([
-                      dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 1}), span=10),
-                      dmc.Col(
-                        dmc.HoverCard(
-                          openDelay=200,
-                          position='right',
-                          children=[
-                            dmc.HoverCardTarget(
-                              dmc.ActionIcon(
-                                DashIconify(icon = 'akar-icons:circle-fill', color=initColor_multiName[1], width=48), variant='transparent', 
-                                            id={'type':'ACTIONICON_colorSingle_3D', 'index': 1}, mt=3)
-                            ),
-                            dmc.HoverCardDropdown([
-                              dmc.ColorPicker(id={'type': 'COLORPICKER_single_3D', 'index': 1}, 
-                                              format='hex', value=initColor_multiName[1], swatches=colorPicker_swatches),
-                              dmc.TextInput(value=initColor_multiName[1], id={'type': 'TEXT_colorSingle_3D', 'index': 1}),
-                            ]),
-                          ]
-                        ),
-                        span=2
-                      ),
-                    ]),
-                  ],
-                  id = 'DIV_multiNameDynamic_3D',
-                ),
-                dcc.Store(data=2, id='STORE_multiNameCurNumber'),
-                dmc.Grid(
-                  [
-                    dmc.Col(dmc.Button(
-                      'Add', id='BUTTON_addFeature_3D', color='teal', fullWidth=True,
-                      leftIcon=DashIconify(icon="material-symbols:add-box-outline")
-                    ), span=6),
-                    dmc.Col(dmc.Button(
-                      'Delete', id='BUTTON_deleteFeature_3D', color='red', fullWidth=True,
-                      leftIcon=DashIconify(icon="material-symbols:chips-outline")
-                    ), span=6),
-                    dmc.Col(dmc.Button(
-                      'Plot', id='BUTTON_multiPlot_3D', color='dark', fullWidth=True,
-                      leftIcon=DashIconify(icon="carbon:chart-scatter"),
-                    ), span=12),
-                  ]
-                ),
-                dcc.Store(id='STORE_multiNameInfo_3D'),
-              ]),
-            ],
-            value = 'Plot multi features',
-          ),
-          # Moran
-          dmc.AccordionItem(
-            [
-              dmc.AccordionControl('Calculate SVG(moran)'),
-              dmc.AccordionPanel([
-                dmc.Grid([
-                  dmc.Col(
-                    dmc.Button('Calculate', id='BUTTON_calMoran_3D', color='dark', disabled=False),
-                    span=6
-                  ),
-                  dmc.Col(
-                    dmc.Button('Result', id='BUTTON_showMoran_3D', disabled=False),
-                    span=6
-                  ),
-                  dmc.Text('Using current cells to calculate SVGs', color='gray', italic=True),
-                ]),
-                dbc.Offcanvas(
-                  [dash_table.DataTable(
-                    id='DATATABLE_moranRes_3D',
-                    sort_action="native", page_action='native', filter_action="native",
-                    page_current= 0, page_size= 20, fill_width=True,
-                    style_cell={'textAlign': 'center'},
-                    style_table={'overflowX': 'auto'},
-                  )],
-                  title = 'SVGs:',
-                  placement='end', scrollable=True, backdrop=False, is_open=False,
-                  id = 'OFFCANVAS_moranRes_3D',
-                ),
-              ]),
-            ],
-            value = 'Calculate SVG(moran)',
-          )
-        ], 
-        # style = { 'position':'fixed','width':'40vh', 'overflowY': 'overlay', 'maxHeight': '100vh',
-        #   'item': {
-        #     'border': '1px solid', 'borderColor': dmc.theme.DEFAULT_COLORS['gray'][2],
-        #   }
-        # }
-      ),
-    ], span=2),
+        ], className='fac-AntdSpace-sideBar'),
+      ], top=20),
+    ], span=10),
     # viewer
     dmc.Col([
       SET_topViewer_controler_3D,
@@ -733,7 +739,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
       dbc.Row([
         dbc.Col([
           dcc.Graph(figure={}, id="FIGURE_3Dexpression", 
-                    style={'height': "80vh"}, ),
+                    style={'height': "80vh"}),
         ],align = "center", width=5),
         dbc.Col([
           dcc.Graph(figure={}, id="FIGURE_3Dcelltype", 
@@ -751,8 +757,8 @@ spatial_tab_plotFeature3D = dbc.Tab(
           dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D")
         ], align='center', width=8)
       ])
-    ],span=10),
-  ])],
+    ],span=40),
+  ], columns=50)],
   label = "Plot feature(3D)",
   tab_id = "spatial_tab_plotFeature3D",
 )
@@ -859,21 +865,13 @@ def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
       dmc.Grid([
         dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': nextIndex}), span=10),
         dmc.Col(
-          dmc.HoverCard(
-            openDelay=200,
-            position='right',
-            children=[
-              dmc.HoverCardTarget(
-                dmc.ActionIcon(
-                  DashIconify(icon = 'akar-icons:circle-fill', color=nextColor, width=48), variant='transparent', 
-                              id={'type':'ACTIONICON_colorSingle_3D', 'index': nextIndex}, mt=3)
-              ),
-              dmc.HoverCardDropdown([
-                dmc.ColorPicker(id={'type': 'COLORPICKER_single_3D', 'index': nextIndex}, 
-                                format='hex', value=nextColor, swatches=colorPicker_swatches),
-                dmc.TextInput(value=nextColor, id={'type': 'TEXT_colorSingle_3D', 'index': nextIndex}),
-              ]),
-            ]
+          iconHover_colorPicker(
+            id={
+              'dmc_ActionIcon': {'type':'ACTIONICON_colorSingle_3D', 'index': nextIndex}, 
+              'dmc_ColorPicker': {'type': 'COLORPICKER_single_3D', 'index': nextIndex}, 
+              'dmc_TextInput': {'type': 'TEXT_colorSingle_3D', 'index': nextIndex},
+              },
+            init_color=nextColor, swatches=colorPicker_swatches,
           ),
           span=2
         ),
@@ -973,7 +971,7 @@ def store_cellsInfo_forJSONtoPlot_3D(sliceRange, germs, stage, featureType):
   
   Input('BUTTON_singlePlot_3D', 'n_clicks'),
   Input('BUTTON_multiPlot_3D', 'n_clicks'),
-  Input('SWITCH_hideZero_3D', 'on'),
+  Input('SWITCH_hideZero_3D', 'checked'),
   Input('DROPDOWN_stage_3D', 'value'),
   Input('DROPDOWN_featureType_3D', 'value'),
   
@@ -1080,9 +1078,10 @@ app.clientside_callback(
   Input('STORE_singleExp_3D', 'data'),
   Input('STORE_ifmulti_3D', 'data'),
   Input('STORE_mixedColor_3D', 'data'),
-  State('SWITCH_hideAxes_3D', 'on'),
-  State('SWITCH_previewBox_3D', 'on'),
+  State('SWITCH_hideAxes_3D', 'checked'),
+  State('SWITCH_previewBox_3D', 'checked'),
   State('STORE_previewRange_3D', 'data'),
+  State('SEGMENTEDCONTROL_projection_3D', 'value'),
 )
 
 # colorpicker for singleExp
@@ -1150,10 +1149,11 @@ app.clientside_callback(
   Output("FIGURE_3Dcelltype", "figure"),
   Input('STORE_obs_3D', 'data'),
   Input('STORE_cellsForCtp_3D', 'data'),
-  State('SWITCH_hideAxes_3D', 'on'),
-  State('SWITCH_previewBox_3D', 'on'),
+  State('SWITCH_hideAxes_3D', 'checked'),
+  State('SWITCH_previewBox_3D', 'checked'),
   State('STORE_previewRange_3D', 'data'),
   State('STORE_ctpCmap_3D', 'data'),
+  State('SEGMENTEDCONTROL_projection_3D', 'value'),
 )
 
 # sync layout between exp and ctp figure
@@ -1169,18 +1169,28 @@ app.clientside_callback(
 def update_relayout(expLayout, ctpLayout):
   tid = ctx.triggered_id
   patch = Patch()
+  
   if tid == 'FIGURE_3Dexpression':
     if 'scene.camera' in expLayout:
       patch['layout']['scene']['camera'] = expLayout['scene.camera']
-      return no_update, patch
-    else:
-      raise PreventUpdate
-  if tid == 'FIGURE_3Dcelltype':
+    if 'scene.aspectratio' in expLayout:
+      patch['layout']['scene']['aspectmode'] = 'manual'
+      patch['layout']['scene']['aspectratio'] = expLayout['scene.aspectratio']
+      
+      
+    return no_update, patch
+
+  elif tid == 'FIGURE_3Dcelltype':
     if 'scene.camera' in ctpLayout:
       patch['layout']['scene']['camera'] = ctpLayout['scene.camera']
-      return patch, no_update
-    else:
-      raise PreventUpdate
+    if 'scene.aspectratio' in ctpLayout:
+      patch['layout']['scene']['aspectmode'] = 'manual'
+      patch['layout']['scene']['aspectratio'] = ctpLayout['scene.aspectratio']
+
+    return patch, no_update
+  
+  else:
+    raise PreventUpdate
 
 # sync restyle between exp and ctp figure
 @app.callback(
@@ -1193,7 +1203,7 @@ def update_relayout(expLayout, ctpLayout):
   Input('STORE_cellsObsFilter_3D', 'data'),
   Input('STORE_cellsExpFilter_3D', 'data'),
   State('STORE_ctpToShow_3D', 'data'),
-  Input('SWITCH_hideZero_3D', 'on'),
+  Input('SWITCH_hideZero_3D', 'checked'),
   Input('FIGURE_3Dcelltype', 'restyleData'),
 )
 def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow, hideZero, restyle):
@@ -1228,6 +1238,48 @@ def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow,
   
   return (Serverside(ctpNow), Serverside(cells))
 
+# update point size
+@app.callback(
+  Output('FIGURE_3Dexpression', 'figure'),
+  Input('NUMBERINPUT_pointSize_3D', 'value'),
+  prevent_initial_call = True
+)
+def update_expPointSize_3D(size):
+  
+  patch = Patch()
+  patch['data'][0]['marker']['size'] = size
+  
+  return patch
+
+@app.callback(
+  Output('FIGURE_3Dcelltype', 'figure'),
+  Input('NUMBERINPUT_pointSize_3D', 'value'),
+  State('STORE_cellsForCtp_3D', 'data'),
+  State('DROPDOWN_stage_3D', 'value'),
+  prevent_initial_call = True,
+)
+def update_ctpPointSize_3D(size, cells, stage):
+  
+  adata = exp_data[stage]
+  celltypes = adata.obs.loc[cells, 'celltype'].unique()
+  patch = Patch()
+  for i in range(0,len(celltypes)):
+    patch['data'][i]['marker']['size'] = size
+  return patch
+
+
+# switch projection type
+@app.callback(
+  Output('FIGURE_3Dcelltype', 'figure'),
+  Output('FIGURE_3Dexpression', 'figure'),
+  Input('SEGMENTEDCONTROL_projection_3D', 'value'),
+)
+def switch_projectionType(type):
+  patch=Patch()
+  patch['layout']['scene']['camera']['projection'] = {'type': type}
+  return patch, patch
+
+
 # find intersection of 3-filter
 @app.callback(
   Output('STORE_cellsForExp_3D', 'data'),
@@ -1245,7 +1297,7 @@ def intersection_of_filter(obsFilter, expFilter, ctpFilter):
 @app.callback(
   Output("FIGURE_3Dexpression", "figure", allow_duplicate=True),
   Output("FIGURE_3Dcelltype", "figure", allow_duplicate=True),
-  Input('SWITCH_hideAxes_3D', 'on'),
+  Input('SWITCH_hideAxes_3D', 'checked'),
   prevent_initial_call=True
 )
 def hideAxes_3D(hideAxes):
@@ -1264,7 +1316,7 @@ def hideAxes_3D(hideAxes):
 @app.callback(
   Output('FIGURE_3Dexpression', 'figure', allow_duplicate=True),
   Output('FIGURE_3Dcelltype', 'figure', allow_duplicate=True),
-  Input('SWITCH_previewBox_3D', 'on'),
+  Input('SWITCH_previewBox_3D', 'checked'),
   Input('STORE_previewRange_3D', 'data'),
   prevent_initial_call=True,
 )
