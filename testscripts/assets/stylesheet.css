@@ -26,6 +26,11 @@
   /* width: 40vh; */
 }
 
+.fac-AntdCollapse-sidebar {
+  background: '#ffffff';
+  border-top: 0.1rem solid #dddddd;
+}
+
 .dmc-accordionMultiple {
   /* overflow-y: auto;
   max-height: 96vh; */
@@ -39,4 +44,10 @@
 
 .dmc-Text-label .dmc-Text-label-center {
   text-align: center,
+}
+
+.dmc-Text-sidebar-title {
+  /* font-size: 16; */ /* con't control */
+  /* font-weight: bold; */
+  font-family: Segoe UI;
 }
