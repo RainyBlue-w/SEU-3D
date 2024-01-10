@@ -729,7 +729,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
             className = 'dmc-accordionMultiple',
           ),
         ], className='fac-AntdSpace-sideBar'),
-      ], top=20),
+      ], top=10),
     ], span=10),
     # viewer
     dmc.Col([
@@ -756,20 +756,19 @@ spatial_tab_plotFeature3D = dbc.Tab(
         dbc.Col([
           dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D")
         ], align='center', width=8)
-      ])
+      ], style={'overflow-y': 'auto'})
     ],span=40),
   ], columns=50)],
   label = "Plot feature(3D)",
   tab_id = "spatial_tab_plotFeature3D",
 )
 
-spatial_tabs = dbc.Card(
-    dbc.Tabs(
-        [spatial_tab_plotFeature3D],
-        active_tab = "spatial_tab_plotFeature3D",  
-        id = "spatial_tabs",
-    ),
-)
+spatial_tabs = dbc.Tabs(
+    children=[spatial_tab_plotFeature3D],
+    active_tab = 'spatial_tab_plotFeature3D',
+    id='tabs'
+  ),
+
 
 # In[] callbacks
 
@@ -1448,7 +1447,7 @@ def cal_moranRes(click, cells, stage, featureType):
 
 # In[] run:
 
-tabs = dbc.Col(
+tabs = html.Div(
   spatial_tabs,
   id = 'tabs'
 )

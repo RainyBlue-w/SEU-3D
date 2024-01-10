@@ -14,9 +14,14 @@
   padding-left: 5px;
 }
 
+.dmc-Tabs-all .maintine-Tabs-tab {
+  font-size: 20;
+  font-weight: bold;
+}
+
 .fac-AntdSpace-sideBar {
   /* position: fixed; */
-  max-height: 90vh;
+  max-height: 85vh;
   overflow-y: auto;
   /* width: 40vh; */
 }
