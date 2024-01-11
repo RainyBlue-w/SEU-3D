@@ -1210,22 +1210,25 @@ def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow,
   if (not ctpNow) or ('STORE_cellsObsFilter_3D' in id) or ('SWITCH_hideZero_3D' in id):
     ctpNow = celltype_all
     restyle = [{'visible': [True]}, [0]]
-
     
   if (('BUTTON_singlePlot_3D' in id) or ('BUTTON_multiPlot_3D' in id)) and hideZero:
     ctpNow = celltype_all
     restyle = [{'visible': [True]}, [0]]
 
-    
 # ------------------
-  if(restyle):
 
+  print('ctpNow before',ctpNow)
+  
+  if(restyle):
     for index,order in enumerate(restyle[1]):
       if index != len(celltype_all):
         ctpNow[order] = None if restyle[0]['visible'][index] == 'legendonly' else celltype_all[order]
 
+  print('ctpNow after',ctpNow)
 
   cells = adata.obs_names[[True if i in ctpNow else False for i in adata.obs.celltype ]].to_list()
+  
+  
   
   return (Serverside(ctpNow), Serverside(cells))
 
@@ -1280,8 +1283,14 @@ def switch_projectionType(type):
   Input('STORE_cellsCtpFilter_3D', 'data'),
 )
 def intersection_of_filter(obsFilter, expFilter, ctpFilter):
+  id = ctx.triggered_id
   exp = list(set(obsFilter) & set(expFilter) & set(ctpFilter))
-  ctp = list(set(obsFilter) & set(expFilter))
+  exp.sort()
+  if id == 'STORE_cellsCtpFilter_3D':
+    ctp = no_update
+  else:
+    ctp = list(set(obsFilter) & set(expFilter))
+    ctp.sort()
   return (exp, ctp)
 
 # hide axes
@@ -1526,35 +1535,35 @@ genes_dict = {
 
 mixColor = color_mixer(adata, genes_dict)
 
-fig = go.Figure()
+# fig = go.Figure()
 
-fig.add_trace(
-  go.Scatter3d(
-    x=adata.obs['x'], y=adata.obs['y'], z=adata.obs['z'],
-    mode = 'markers',
-    marker = dict(
-      color =mixColor,
-      size = 2
-    )
-  )
-)
+# fig.add_trace(
+#   go.Scatter3d(
+#     x=adata.obs['x'], y=adata.obs['y'], z=adata.obs['z'],
+#     mode = 'markers',
+#     marker = dict(
+#       color =mixColor,
+#       size = 2
+#     )
+#   )
+# )
 
-fig.update_layout(
-  scene = dict(
-    xaxis_visible=False,
-    yaxis_visible=False,
-    zaxis_visible=False,
-  )
-)
+# fig.update_layout(
+#   scene = dict(
+#     xaxis_visible=False,
+#     yaxis_visible=False,
+#     zaxis_visible=False,
+#   )
+# )
 
 # %%
 import plotly.graph_objects as go
-fig = go.Figure()
-fig.add_trace(
-  go.Scatter3d(
-    x = [0,1,1], y=[0,1,0], z=[0,1,1],
-    mode = 'markers',
-    marker = dict( color = ['rgba(200,150,100,0.8)', 'rgba(100,200,150,0.8)' ])
-  )
-)
+# fig = go.Figure()
+# fig.add_trace(
+#   go.Scatter3d(
+#     x = [0,1,1], y=[0,1,0], z=[0,1,1],
+#     mode = 'markers',
+#     marker = dict( color = ['rgba(200,150,100,0.8)', 'rgba(100,200,150,0.8)' ])
+#   )
+# )
 # %%

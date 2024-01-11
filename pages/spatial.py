@@ -882,6 +882,7 @@ spatial_dropdown_stage = html.Div(
 
 # In[] app/widgets/3D:
 
+
 SET_STORE_JSONtoPlot_3D = html.Div(
   [
     dcc.Store(data={}, id='STORE_obs_3D'),
@@ -921,35 +922,6 @@ SET_STORE_Ranges_3D = html.Div(
   ]
 )
 
-CHECKLIST_germLayer_3D = html.Div(
-    [
-        # dbc.Label("Germ layers to show:"),
-        dbc.Checklist(
-            options=[
-                {"label": " Ectoderm", "value": 'ectoderm'},
-                {"label": " Mesoderm", "value": 'mesoderm'},
-                {"label": " Endoderm", "value": 'endoderm'},
-            ],
-            value=['ectoderm', 'mesoderm', 'endoderm'],
-            id="CHECKLIST_germLayer_3D",
-            switch=True
-        ),
-    ],
-    className="mb-4",
-)
-
-SET_topViewer_controler_3D = html.Div([
-  dbc.Row(
-    [
-      dbc.Col([
-        CHECKLIST_germLayer_3D
-      ], width=2),
-    ],
-    style = {'height': '8vh'}
-  ),
-  SET_STORE_Ranges_3D,
-], className='mb-4')
-  
 def iconHover_colorPicker(init_color: str, id: Dict, swatches: List[str]):
   return fac.AntdPopover(
     # openDelay=200,
@@ -1095,6 +1067,23 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     ),
                   ], span=6),
                   dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
+                  fac.AntdCollapse(
+                    title = 'germ layer', className='fac-AntdCollapse-inline',
+                    forceRender=True, isOpen=True, ghost=True,
+                    children = [
+                      dmc.ChipGroup(
+                        children = [
+                          dmc.Chip(
+                            x.capitalize(),
+                            value=x
+                          ) for x in ['ectoderm', 'mesoderm', 'endoderm']
+                        ],
+                        value = ['ectoderm', 'mesoderm', 'endoderm'],
+                        id = 'CHIPGROUP_germLayer_3D',
+                        multiple = True,
+                      )
+                    ]
+                  ),
                 ], gutter='xs'),
               ]
             ),
@@ -1289,6 +1278,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     span=6
                   )
                 ]),
+                SET_STORE_Ranges_3D,
               ],
             ),
             # Moran
@@ -1332,7 +1322,6 @@ spatial_tab_plotFeature3D = dbc.Tab(
     ], span=11),
     # viewer
     dmc.Col([
-      SET_topViewer_controler_3D,
       SET_STORE_JSONtoPlot_3D,
       # scatter3d
       dbc.Row([
@@ -1341,7 +1330,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     style={'height': "80vh"}),
         ],align = "center", width=5),
         dbc.Col([
-          dcc.Graph(figure={}, id="FIGURE_3Dcelltype", 
+          dcc.Graph(figure={}, id="FIGURE_3Dcelltype",
                     style={'height': "80vh"}),
         ],align = "center", width=7)
       ]),
@@ -1688,7 +1677,7 @@ def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
   Output('STORE_cellsObsFilter_3D', 'data'),
   
   Input('STORE_sliceRange_3D', 'data'),
-  Input('CHECKLIST_germLayer_3D', 'value'),
+  Input('CHIPGROUP_germLayer_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value'),
   Input('DROPDOWN_featureType_3D', 'value'),
 )
@@ -1977,23 +1966,20 @@ def sync_restyle_3D(stage, splot, mplot, cellsObsFilter, cellsExpFilter, ctpNow,
   if (not ctpNow) or ('STORE_cellsObsFilter_3D' in id) or ('SWITCH_hideZero_3D' in id):
     ctpNow = celltype_all
     restyle = [{'visible': [True]}, [0]]
-
     
   if (('BUTTON_singlePlot_3D' in id) or ('BUTTON_multiPlot_3D' in id)) and hideZero:
     ctpNow = celltype_all
     restyle = [{'visible': [True]}, [0]]
 
-    
 # ------------------
-  if(restyle):
 
+  if(restyle):
     for index,order in enumerate(restyle[1]):
       if index != len(celltype_all):
         ctpNow[order] = None if restyle[0]['visible'][index] == 'legendonly' else celltype_all[order]
 
-
   cells = adata.obs_names[[True if i in ctpNow else False for i in adata.obs.celltype ]].to_list()
-  
+
   return (Serverside(ctpNow), Serverside(cells))
 
 # update point size
@@ -2047,8 +2033,14 @@ def switch_projectionType(type):
   Input('STORE_cellsCtpFilter_3D', 'data'),
 )
 def intersection_of_filter(obsFilter, expFilter, ctpFilter):
+  id = ctx.triggered_id
   exp = list(set(obsFilter) & set(expFilter) & set(ctpFilter))
-  ctp = list(set(obsFilter) & set(expFilter))
+  exp.sort()
+  if id == 'STORE_cellsCtpFilter_3D':
+    ctp = no_update
+  else:
+    ctp = list(set(obsFilter) & set(expFilter))
+    ctp.sort()
   return (exp, ctp)
 
 # hide axes
@@ -2301,6 +2293,8 @@ def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage
         color='orange',
         icon=DashIconify(icon="akar-icons:circle-alert"),
       )
+    else:
+      note = no_update
 
     names = list(set(names) - set(names_out))
     
