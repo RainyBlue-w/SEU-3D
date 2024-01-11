@@ -413,35 +413,6 @@ SET_STORE_Ranges_3D = html.Div(
   ]
 )
 
-CHECKLIST_germLayer_3D = html.Div(
-    [
-        # dbc.Label("Germ layers to show:"),
-        dbc.Checklist(
-            options=[
-                {"label": " Ectoderm", "value": 'ectoderm'},
-                {"label": " Mesoderm", "value": 'mesoderm'},
-                {"label": " Endoderm", "value": 'endoderm'},
-            ],
-            value=['ectoderm', 'mesoderm', 'endoderm'],
-            id="CHECKLIST_germLayer_3D",
-            switch=True
-        ),
-    ],
-    className="mb-4",
-)
-
-SET_topViewer_controler_3D = html.Div([
-  dbc.Row(
-    [
-      dbc.Col([
-        CHECKLIST_germLayer_3D
-      ], width=2),
-    ],
-    style = {'height': '8vh'}
-  ),
-  SET_STORE_Ranges_3D,
-], className='mb-4')
-  
 def iconHover_colorPicker(init_color: str, id: Dict, swatches: List[str]):
   return fac.AntdPopover(
     # openDelay=200,
@@ -500,6 +471,23 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     ),
                   ], span=6),
                   dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
+                  fac.AntdCollapse(
+                    title = 'germ layer', className='fac-AntdCollapse-inline',
+                    forceRender=True, isOpen=True, ghost=True,
+                    children = [
+                      dmc.ChipGroup(
+                        children = [
+                          dmc.Chip(
+                            x.capitalize(),
+                            value=x
+                          ) for x in ['ectoderm', 'mesoderm', 'endoderm']
+                        ],
+                        value = ['ectoderm', 'mesoderm', 'endoderm'],
+                        id = 'CHIPGROUP_germLayer_3D',
+                        multiple = True,
+                      )
+                    ]
+                  ),
                 ], gutter='xs'),
               ]
             ),
@@ -694,6 +682,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     span=6
                   )
                 ]),
+                SET_STORE_Ranges_3D,
               ],
             ),
             # Moran
@@ -737,7 +726,6 @@ spatial_tab_plotFeature3D = dbc.Tab(
     ], span=11),
     # viewer
     dmc.Col([
-      SET_topViewer_controler_3D,
       SET_STORE_JSONtoPlot_3D,
       # scatter3d
       dbc.Row([
@@ -746,7 +734,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     style={'height': "80vh"}),
         ],align = "center", width=5),
         dbc.Col([
-          dcc.Graph(figure={}, id="FIGURE_3Dcelltype", 
+          dcc.Graph(figure={}, id="FIGURE_3Dcelltype",
                     style={'height': "80vh"}),
         ],align = "center", width=7)
       ]),
@@ -933,7 +921,7 @@ def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
   Output('STORE_cellsObsFilter_3D', 'data'),
   
   Input('STORE_sliceRange_3D', 'data'),
-  Input('CHECKLIST_germLayer_3D', 'value'),
+  Input('CHIPGROUP_germLayer_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value'),
   Input('DROPDOWN_featureType_3D', 'value'),
 )
@@ -1567,16 +1555,6 @@ fig.add_trace(
     x = [0,1,1], y=[0,1,0], z=[0,1,1],
     mode = 'markers',
     marker = dict( color = ['rgba(200,150,100,0.8)', 'rgba(100,200,150,0.8)' ])
-  )
-)
-# %%
-import plotly.graph_objects as go
-fig = go.Figure()
-fig.add_trace(
-  go.Scatter3d(
-    x = [0,1], y=[0,1], z=[0,1],
-    mode = 'markers',
-    marker = dict( color = ['rgba(200,150,100,1)', 'rgba(100,200,150,1)' ])
   )
 )
 # %%
