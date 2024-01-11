@@ -1081,7 +1081,7 @@ app.clientside_callback(
   Output('FIGURE_3Dexpression', 'figure'),
   Input('COLORPICKER_single_3D', 'value'),
 )
-def colorp/home/wuc/dashapps/multi_page/testscripts/pagesicker_for_singleExp_3D(color):
+def colorpicker_for_singleExp_3D(color):
   patch = Patch()
   patch['layout']['coloraxis']['colorscale'][1][1] = color
   icon = DashIconify(icon = 'akar-icons:circle-fill', color=color, width=48)
