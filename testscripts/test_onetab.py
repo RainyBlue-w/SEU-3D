@@ -1081,7 +1081,7 @@ app.clientside_callback(
   Output('FIGURE_3Dexpression', 'figure'),
   Input('COLORPICKER_single_3D', 'value'),
 )
-def colorpicker_for_singleExp_3D(color):
+def colorp/home/wuc/dashapps/multi_page/testscripts/pagesicker_for_singleExp_3D(color):
   patch = Patch()
   patch['layout']['coloraxis']['colorscale'][1][1] = color
   icon = DashIconify(icon = 'akar-icons:circle-fill', color=color, width=48)
@@ -1154,7 +1154,7 @@ app.clientside_callback(
   Input("FIGURE_3Dexpression", "relayoutData"),
   Input("FIGURE_3Dcelltype", "relayoutData"),
   prevent_initial_call=True,
-  backgroud=True,
+  background=True,
   manager=background_callback_manager
 )
 def update_relayout(expLayout, ctpLayout):
@@ -1354,7 +1354,7 @@ def update_previewBox(showBox, preRange):
   Input('BUTTON_multiPlot_3D', 'n_clicks'),
   State('DROPDOWN_singleName_3D', 'value'),
   State('STORE_multiNameInfo_3D', 'data'),
-  backgroud = True,
+  background = True,
   manager = background_callback_manager,
 )
 def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
@@ -1383,7 +1383,7 @@ def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, s
   Input('BUTTON_multiPlot_3D', 'n_clicks'),
   State('DROPDOWN_singleName_3D', 'value'),
   State('STORE_multiNameInfo_3D', 'data'),
-  backgroud = True,
+  background = True,
   manager = background_callback_manager,
 )
 def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
@@ -1472,98 +1472,3 @@ if __name__ == '__main__':
     jupyter_mode = 'external'
   )
   
-
-# In[] test color-mix algorithm
-
-from functools import reduce
-
-def hex_to_rgbList(hex_color):
-  hex_color = hex_color.replace(' ', '').replace('#', '')
-  if len(hex_color) == 6:
-    r = int(hex_color[0:2], 16)
-    g = int(hex_color[2:4], 16)
-    b = int(hex_color[4:6], 16)
-  return [r,g,b]
-
-def mix_multipy(color, alpha):
-
-  def multipy(x,y):
-    return x*y/255
-
-  def mix(x, y):
-    alpha = x[3]+y[3]-x[3]*y[3]
-    if alpha==0:
-      return [244,244,244, 0]
-    else:
-      R = np.round( (x[3]*(1-y[3])*x[0]+x[3]*y[3]*multipy(x[0],y[0])+(1-x[3])*y[3]*y[0])/alpha).astype(int)
-      G = np.round( (x[3]*(1-y[3])*x[1]+x[3]*y[3]*multipy(x[1],y[1])+(1-x[3])*y[3]*y[1])/alpha).astype(int) 
-      B = np.round( (x[3]*(1-y[3])*x[2]+x[3]*y[3]*multipy(x[2],y[2])+(1-x[3])*y[3]*y[2])/alpha).astype(int)
-      return [R,G,B,alpha]
-
-  array = []
-  for c,a in zip(color, alpha):
-    array.append(c.copy())
-    array[-1].append(a)
-
-  res = reduce(mix, array)
-  res = f'rgb{res[0],res[1],res[2]}'
-
-  return res
-
-def color_mixer(adata, genes_dict):
-  import numpy
-  genes_dict_copy = genes_dict.copy()
-  _ = [genes_dict_copy.pop(color) for color in genes_dict.keys() if not genes_dict[color]]
-  colors = [hex_to_rgbList(c) for c in genes_dict_copy.keys()]
-  genes = list(genes_dict_copy.values())
-  
-  exp = adata[:,genes].to_df()
-  
-  alpha = exp.div(exp.max(axis=0), axis=1)
-  
-  cell_colors = alpha.apply( axis=1, func=lambda row: mix_multipy(colors,row))
-  
-  return cell_colors
-
-adata = exp_data['E7.5']
-
-genes_dict = {
-  '#228be6': 'T',
-  '#40c057': 'Foxf1',
-  '#fa5252': 'Lefty2',
-}
-
-mixColor = color_mixer(adata, genes_dict)
-
-# fig = go.Figure()
-
-# fig.add_trace(
-#   go.Scatter3d(
-#     x=adata.obs['x'], y=adata.obs['y'], z=adata.obs['z'],
-#     mode = 'markers',
-#     marker = dict(
-#       color =mixColor,
-#       size = 2
-#     )
-#   )
-# )
-
-# fig.update_layout(
-#   scene = dict(
-#     xaxis_visible=False,
-#     yaxis_visible=False,
-#     zaxis_visible=False,
-#   )
-# )
-
-# %%
-import plotly.graph_objects as go
-# fig = go.Figure()
-# fig.add_trace(
-#   go.Scatter3d(
-#     x = [0,1,1], y=[0,1,0], z=[0,1,1],
-#     mode = 'markers',
-#     marker = dict( color = ['rgba(200,150,100,0.8)', 'rgba(100,200,150,0.8)' ])
-#   )
-# )
-# %%
