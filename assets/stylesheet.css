@@ -1,3 +1,17 @@
+/* Navbar */
+.dbc-Navbar-main {
+  height: 6vh
+}
+
+/* figures */
+.dcc-figure {
+  height: 90vh;
+}
+
+.dmc-ChipGroup-legend {
+  overflow-y: auto;
+  max-height: 75vh;
+}
 
 /* dmc-Tabs-vertical */
 .dmc-Tabs-vertical .mantine-Tabs-tabLabel {
@@ -21,7 +35,7 @@
 
 .fac-AntdSpace-sideBar {
   /* position: fixed; */
-  max-height: 85vh;
+  max-height: 90vh;
   overflow-y: auto;
   /* width: 40vh; */
 }
@@ -53,4 +67,19 @@
 .dmc-Text-sidebar-title {
   /* font-weight: bold; */
   font-family: Segoe UI;
+}
+
+/* 设置滚动条的样式 */
+::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+}
+/* 滚动槽 */
+::-webkit-scrollbar-track{
+  background: rgb(239, 239, 239);
+  border-radius:2px;
+}
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb:hover{
+  background: #333;
 }

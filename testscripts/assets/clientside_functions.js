@@ -18,7 +18,6 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, p
     } else {
         var colors = pick(mixcolor, cells)
     }
-    console.log(colors)
     var figExp = {
         'data': [
             {
@@ -75,11 +74,12 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
         'layout': {
             'plot_bgcolor': '#ffffff',
             // 'uirevision': 'constant',
-            legend: {
-                title: { text: 'Celltype' },
-                itemsizing: 'constant',
-                tracegroupgap: 0,
-            },
+            // legend: {
+            //     title: { text: 'Celltype' },
+            //     itemsizing: 'constant',
+            //     tracegroupgap: 0,
+            // },
+            showlegend: false,
             margin: {l: 0, r: 10, t: 0, b: 0,},
             autosize: false,
             scene: {
@@ -164,7 +164,6 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
 
         store_sliceRange: function(slice, recover, previewRange, maxRange){
             var id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
-            console.log(id)
             if(id.includes('BUTTON_slice_3D.n_clicks')){
             return previewRange
             } else {
@@ -262,6 +261,32 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
 
         multiExpCtp_violin: function (obs, obsFilter, expFilter, multiExp, ifmulti, ctp_map){
 
-        }
+        },
+
+        // sync_layout: function (relayoutExp, relayoutCtp, figExp, figCtp) {
+        //     tid = dash_clientside.callback_context.triggered.map(t => t.prop_id)
+        //     console.log(tid)
+        //     if (tid.includes('FIGURE_3Dexpression.relayoutData')) {
+        //         console.log('exp relayout')
+        //         if ('scene.camera' in relayoutExp){
+        //             figCtp['layout']['scene']['camera'] = relayoutExp['scene.camera']
+        //         } else if ( 'scene.aspectratio' in relayoutExp) {
+        //             figCtp['layout']['scene']['aspectmode'] = 'manual'
+        //             figCtp['layout']['scene']['aspectmode'] = relayoutExp['scene.aspectratio']
+        //         }
+        //         console.log(figCtp['layout']['scene']['camera'])
+        //         return dash_clientside.no_update, figCtp
+        //     } else if (tid.includes('FIGURE_3Dcelltype.relayoutData')) {
+        //         console.log('ctp relayout')
+        //         if ('scene.camera' in relayoutCtp){
+        //             figExp['layout']['scene']['camera'] = relayoutCtp['scene.camera']
+        //         } else if ( 'scene.aspectratio' in relayoutCtp) {
+        //             figExp['layout']['scene']['aspectmode'] = 'manual'
+        //             figExp['layout']['scene']['aspectmode'] = relayoutCtp['scene.aspectratio']
+        //         }
+        //         return figExp, dash_clientside.no_update
+        //     }
+        //     return dash_clientside.no_update, dash_clientside.no_update
+        // }
     }
 });

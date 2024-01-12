@@ -35,8 +35,8 @@ header = dbc.NavbarSimple(
     brand="Omics-viewer",
     color="dark",
     dark=True,
-    sticky='top',
-    style = {"height": "6vh"}
+    # sticky='top',
+    className='dbc-Navbar-main'
 )
 
 app.layout = dmc.NotificationsProvider(html.Div([
