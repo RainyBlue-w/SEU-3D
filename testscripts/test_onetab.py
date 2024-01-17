@@ -457,7 +457,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
   [dmc.Grid([
     # options
     dmc.Col([
-      # fuc.FefferySticky([
+      fuc.FefferySticky([
         fac.AntdSpace(
           size=0,
           direction='vertical',
@@ -469,7 +469,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
-              title = dmc.Text('Select data', className='dmc-Text-sidebar-title', style={'font-size': 18}),
+              title = dmc.Text('Select data', className='dmc-Text-sidebar-title'),
               children = [
                 dmc.Grid([
                   dmc.Col([
@@ -495,18 +495,18 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
                   fac.AntdCollapse(
                     title = 'germ layer', className='fac-AntdCollapse-inline',
-                    forceRender=True, isOpen=True, ghost=True,
+                    forceRender=True, isOpen=False, ghost=True,
                     children = [
                       dmc.ChipGroup(
                         children = [
                           dmc.Chip(
                             x.capitalize(),
-                            value=x
+                            value=x, size='xs'
                           ) for x in ['ectoderm', 'mesoderm', 'endoderm']
                         ],
                         value = ['ectoderm', 'mesoderm', 'endoderm'],
                         id = 'CHIPGROUP_germLayer_3D',
-                        multiple = True,
+                        multiple = True, spacing=3,
                       )
                     ]
                   ),
@@ -519,7 +519,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
-              title = dmc.Text('Plot options', className='dmc-Text-sidebar-title', style={'font-size': 18}),
+              title = dmc.Text('Plot options', className='dmc-Text-sidebar-title'),
               children = [          
                 dmc.Tabs(
                   [
@@ -527,29 +527,62 @@ spatial_tab_plotFeature3D = dbc.Tab(
                       dmc.Tab('Settings', value='settings'),
                       dmc.Tab('Single', value='single'),
                       dmc.Tab('Multiple', value='multi'),
-                    ], grow=False),
+                    ], grow=True),
                     # settings
                     dmc.TabsPanel(
                       [
-                        dmc.Text('Point size', className='dmc-Text-label'),
-                        dmc.NumberInput(value=3, step=0.5, min=0.1, id='NUMBERINPUT_pointSize_3D', precision=1),
-                        dmc.Space(h=10),
-                        dmc.Switch(label='Hide axes', id='SWITCH_hideAxes_3D', size='md',
-                                  onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
-                                  offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
-                        dmc.Space(h=10),
-                        dmc.Switch(label='Hide non-expressing cells', id='SWITCH_hideZero_3D',  size='md',
-                                  onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
-                                  offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
-                        dmc.Space(h=10),
-                        dmc.Text('Projection type', className='dmc-Text-label'),
-                        dmc.SegmentedControl(
-                          value='orthographic', 
-                          data=[
-                            {'value': 'perspective', 'label': 'Perspective'},
-                            {'value': 'orthographic', 'label': 'Orthographic'},
-                          ], 
-                          fullWidth=True, id='SEGMENTEDCONTROL_projection_3D'
+                        dmc.Tabs(
+                          [
+                            dmc.TabsList([
+                              dmc.Tab('Scatter-3D', value='Scatter-3D'),
+                              dmc.Tab('Violin', value='Violin')
+                            ], grow=False),
+                            dmc.TabsPanel(
+                              [
+                                dmc.Grid([
+                                  dmc.Col(dmc.Text('Point size:', className='dmc-Text-label'), span=5),
+                                  dmc.Col(dmc.NumberInput(value=3, step=0.5, min=0.1, id='NUMBERINPUT_pointSize_3D', precision=1), span=7),
+                                ], justify='center', gutter=3, className='dmc-Grid-center'),
+                                dmc.Space(h=5),
+                                dmc.Switch(label='Hide axes', id='SWITCH_hideAxes_3D', size='md',
+                                          onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
+                                          offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
+                                dmc.Space(h=5),
+                                dmc.Switch(label='Hide non-expressing cells', id='SWITCH_hideZero_3D',  size='md',
+                                          onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
+                                          offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
+                                dmc.Space(h=5),
+                                dmc.Text('Projection type:', className='dmc-Text-label'),
+                                dmc.SegmentedControl(
+                                  value='orthographic', 
+                                  data=[
+                                    {'value': 'perspective', 'label': 'Perspective'},
+                                    {'value': 'orthographic', 'label': 'Orthographic'},
+                                  ], 
+                                  fullWidth=True, id='SEGMENTEDCONTROL_projection_3D'
+                                ),
+                              ],
+                              value = 'Scatter-3D'
+                            ),
+                            dmc.TabsPanel(
+                              [
+                                dmc.Text('Points:', className='dmc-Text-label'),
+                                dmc.SegmentedControl(
+                                  value='outliers',
+                                  data = [
+                                    {'value': 'none', 'label': 'none'},
+                                    {'value': 'outliers', 'label': 'outliers'},
+                                    {'value': 'all', 'label': 'all'}
+                                  ],
+                                  fullWidth=True, id='SEGMENTEDCONTROL_violin_3D',
+                                ),
+                              ],
+                              value = 'Violin'
+                            ),
+                          ],
+                          value = 'Scatter-3D',
+                          variant = 'pills',
+                          color = 'grape'
                         ),
                       ],
                       value = 'settings',
@@ -645,10 +678,10 @@ spatial_tab_plotFeature3D = dbc.Tab(
                       value='multi',
                     ),
                   ], 
-                  orientation = 'vertical',
-                  placement = 'left',
-                  className = 'dmc-Tabs-vertical',
-                  value = 'single'
+                  orientation = 'horizontal',
+                  className = 'dmc-Tabs-inline',
+                  # variant = 'pills',
+                  value = 'single',
                 ),
               ]
             ),
@@ -658,7 +691,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
-              title = dmc.Text('Slicer', className='dmc-Text-sidebar-title', style={'font-size': 18}),
+              title = dmc.Text('Slicer', className='dmc-Text-sidebar-title'),
               children = [
                 dmc.Grid([
                   dmc.Col(dmc.Text('x', className='.dmc-Text-label-center'), span=2),
@@ -713,7 +746,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
               forceRender = True,
               className = 'fac-AntdCollapse-sidebar',
               ghost=True,
-              title = dmc.Text('Compute SVG(moran)', className='dmc-Text-sidebar-title', style={'font-size': 18}),
+              title = dmc.Text('Compute SVG(moran)', className='dmc-Text-sidebar-title'),
               children = [
                 dmc.Grid([
                   dmc.Col(
@@ -744,7 +777,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
             ),
           ],
         ),
-      # ], top=20),
+      ], top=10),
     ], span=9),
     # viewer
     dmc.Col([
@@ -800,9 +833,10 @@ spatial_tab_plotFeature3D = dbc.Tab(
           fac.AntdDrawer(
             children=[], id='DRAWER_setColorCtp_3D',
             title=dmc.Stack([
-              dmc.Text('Setting colors', size=20, classNames='dmc-Text-drawerTitle'),
-              dmc.Text("tip: colors will be saved locally", size=12, color='gray', italic=True, classNames='dmc-Text-drawerSubTitle')
+              dmc.Text('Setting colors', className='dmc-Text-drawerTitle'),
+              dmc.Text("tip: colors will be saved locally", className='dmc-Text-drawerSubTitle')
             ], spacing=1),
+            width=300,
           )
         ], span=10)
       ], columns=50),
@@ -831,6 +865,26 @@ spatial_tabs = dbc.Tabs(
 
 
 # In[] callbacks
+
+# violin points
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'figure'),
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('SEGMENTEDCONTROL_violin_3D', 'value'),
+  State('STORE_allCelltypes_3D', 'data'),
+)
+def update_violinPointStyle_3D(points, allCelltypes):
+  points = False if points=='none' else points
+  
+  patch_exp = Patch()
+  patch_exp['data'][0]['points'] = points
+  
+  n_ctp = len(allCelltypes)
+  patch_ctp = Patch()
+  for i in range(0, n_ctp):
+    patch_ctp['data'][i]['points'] = points
+
+  return patch_exp, patch_ctp
 
 # update_dataSummary
 @app.callback(
@@ -938,8 +992,11 @@ def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
     )
     nextNumber = curNumber+1
   elif 'BUTTON_deleteFeature_3D' in id:
-    del patch_children[nextIndex-1]
-    nextNumber = curNumber-1 if curNumber>0 else 0
+    if nextIndex >= 2 :
+      del patch_children[nextIndex-1]
+      nextNumber = curNumber-1 if curNumber>0 else 0
+    else:
+      nextNumber = curNumber
 
   return patch_children, nextNumber
 
@@ -1086,6 +1143,7 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       cellsExpFilter = exp[(exp>0)[sname]].index.to_list()
     else:
       cellsExpFilter = exp.index.to_list()
+    exp = exp.loc[cellsExpFilter,:]
     return (ifmulti, exp, cellsExpFilter)
   
   def return_multi():
@@ -1095,6 +1153,7 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       cellsExpFilter = mixColor[mixColor!='rgb(244, 244, 244)'].index.to_list()
     else:
       cellsExpFilter = mixColor.index.to_list()
+    mixColor = mixColor.loc[cellsExpFilter,:]
     return (ifmulti, [], cellsExpFilter, mixColor.to_dict()) 
   
   def return_multiExp():
@@ -1134,9 +1193,9 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       ifmulti,_,cellsExpFilter,mixcolor = return_multi()
       # exp = return_multiExp()
       if hideZero:
-        return (Serverside(cellsExpFilter), no_update, no_update, ifmulti, mixcolor)
+        return (Serverside(cellsExpFilter), no_update, return_multiExp(), ifmulti, mixcolor)
       else:
-        return (no_update, no_update, no_update, ifmulti, mixcolor)
+        return (no_update, no_update, return_multiExp(), ifmulti, mixcolor)
     
     elif 'SWITCH_hideZero_3D' in btn_id:
       
@@ -1560,62 +1619,77 @@ def update_previewBox(showBox, preRange):
   return patch, patch
 
 # violin plot
-@app.callback(
+# @app.callback(
+#   Output('FIGURE_expViolin_3D', 'figure'),
+#   Input('DROPDOWN_featureType_3D', 'value'),
+#   Input('DROPDOWN_stage_3D', 'value'),
+#   Input('STORE_cellsIntersection_3D', 'data'),
+#   Input('STORE_ifmulti_3D', 'data'),
+#   Input('BUTTON_singlePlot_3D', 'n_clicks'),
+#   Input('BUTTON_multiPlot_3D', 'n_clicks'),
+#   State('DROPDOWN_singleName_3D', 'value'),
+#   State('STORE_multiNameInfo_3D', 'data'),
+#   background = True,
+#   manager = background_callback_manager,
+# )
+# def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
+  
+#   if featureType == 'Gene':
+#       adata = exp_data[stage]
+#   elif featureType == 'Regulon':
+#       adata = auc_data[stage]
+  
+#   adata = adata[cells]
+
+#   if not ifmulti:
+#     fig = show_expViolin(adata, sname)
+#   else:
+#     fig = show_multiFeatures_expViolin(adata, minfo)
+
+#   return fig
+
+# @app.callback(
+#   Output('FIGURE_ctpViolin_3D', 'figure'),
+#   Input('DROPDOWN_featureType_3D', 'value'),
+#   Input('DROPDOWN_stage_3D', 'value'),
+#   Input('STORE_cellsIntersection_3D', 'data'),
+#   Input('STORE_ifmulti_3D', 'data'),
+#   Input('BUTTON_singlePlot_3D', 'n_clicks'),
+#   Input('BUTTON_multiPlot_3D', 'n_clicks'),
+#   State('DROPDOWN_singleName_3D', 'value'),
+#   State('STORE_multiNameInfo_3D', 'data'),
+#   background = True,
+#   manager = background_callback_manager,
+# )
+# def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
+#   if featureType == 'Gene':
+#       adata = exp_data[stage]
+#   elif featureType == 'Regulon':
+#       adata = auc_data[stage]
+
+#   adata = adata[cells]
+
+#   if not ifmulti:
+#     fig = show_ctpExpViolin(adata, sname)
+#   else:
+#     fig = show_multiFeatures_ctpExpViolin(adata, minfo)
+
+#   return fig
+
+app.clientside_callback(
+  ClientsideFunction(
+    namespace='plotFunc_3Dtab',
+    function_name='singleExpCtp_violin',
+  ),
   Output('FIGURE_expViolin_3D', 'figure'),
-  Input('DROPDOWN_featureType_3D', 'value'),
-  Input('DROPDOWN_stage_3D', 'value'),
-  Input('STORE_cellsIntersection_3D', 'data'),
-  Input('STORE_ifmulti_3D', 'data'),
-  Input('BUTTON_singlePlot_3D', 'n_clicks'),
-  Input('BUTTON_multiPlot_3D', 'n_clicks'),
-  State('DROPDOWN_singleName_3D', 'value'),
-  State('STORE_multiNameInfo_3D', 'data'),
-  background = True,
-  manager = background_callback_manager,
-)
-def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
-  
-  if featureType == 'Gene':
-      adata = exp_data[stage]
-  elif featureType == 'Regulon':
-      adata = auc_data[stage]
-  
-  adata = adata[cells]
-
-  if not ifmulti:
-    fig = show_expViolin(adata, sname)
-  else:
-    fig = show_multiFeatures_expViolin(adata, minfo)
-
-  return fig
-
-@app.callback(
   Output('FIGURE_ctpViolin_3D', 'figure'),
-  Input('DROPDOWN_featureType_3D', 'value'),
-  Input('DROPDOWN_stage_3D', 'value'),
+  Input('STORE_obs_3D', 'data'),
   Input('STORE_cellsIntersection_3D', 'data'),
+  Input('STORE_singleExp_3D', 'data'),
   Input('STORE_ifmulti_3D', 'data'),
-  Input('BUTTON_singlePlot_3D', 'n_clicks'),
-  Input('BUTTON_multiPlot_3D', 'n_clicks'),
-  State('DROPDOWN_singleName_3D', 'value'),
-  State('STORE_multiNameInfo_3D', 'data'),
-  background = True,
-  manager = background_callback_manager,
+  Input('STORE_ctpCmap_3D', 'data'),
+  State('SEGMENTEDCONTROL_violin_3D', 'value'),
 )
-def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
-  if featureType == 'Gene':
-      adata = exp_data[stage]
-  elif featureType == 'Regulon':
-      adata = auc_data[stage]
-
-  adata = adata[cells]
-
-  if not ifmulti:
-    fig = show_ctpExpViolin(adata, sname)
-  else:
-    fig = show_multiFeatures_ctpExpViolin(adata, minfo)
-
-  return fig
 
 # moran SVG offcanvas
 @app.callback(

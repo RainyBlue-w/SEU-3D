@@ -151,10 +151,85 @@ function push_previewBox(fig, preview, preRange){
     return fig
 }
 
+function plot_expViolin3D_single(cells, singleExp, points){
+
+    let expValue = pick(singleExp, cells).reduce( (iter,val) => (iter.push(Object.values(val)[0]), iter), [] )
+    let name = Object.keys(getObjFirstItem(singleExp))[0]
+    let ncells = cells.length
+
+    let figExp = {
+        'data': [{
+            x: expValue, y0: name+"("+ncells +")",  type: 'violin',
+            fillcolor: 'lightseagreen', opacity: 0.6, pointpos: 1.5, jitter: 0.15, width: 1.5,
+            orientation: 'h', side: 'positive', points: points,
+            name: name, 
+            marker: {size: 2.5}, box: { visible: true }, line: {color: 'black'},
+            meanline: { visible: true }, hoverInfo: 'none', hoveron: false,
+        }],
+        'layout': {
+            plot_bgcolor: 'rgba(200,200,200,0.15)',
+            xaxis: {dtick:1, showgrid: false, zeroline: false},
+            yaxis: {showgrid: true, },
+            margin: {
+                l: 80, r: 20, t: 80, b: 80
+            },
+        }
+    }
+    return figExp
+}
+
+function plot_ctpViolin3D_single(obs, cells, singleExp, ctp_cmap, points){
+
+    let filtObs = pick(obs, cells)
+    let expValue = pick(singleExp, cells).reduce((iter, val) => (iter.push(Object.values(val)[0]), iter), [])
+
+    let figCtp = {
+        data: [],
+        layout: {
+            plot_bgcolor: 'rgba(200,200,200,0.15)',
+            xaxis: { dtick: 1, gridcolor: '#ffffff', gridwidth: 1, griddash: 'solid', zeroline: false },
+            yaxis: { gridcolor: 'rgba(200,200,200,0.6)', gridwidth: 1.2, },
+            legend: {
+                title: { text: 'Celltype' }, tracegroupgap: 0,
+            },
+            margin: {
+                l: 200, r: 0, t: 10, b: 40,
+            },
+            height: 800,
+        }
+    }
+
+    filtObs.map( (obj, index) => obj['exp']=expValue[index] )
+    let filtObs_group = filtObs.groupBy(({ celltype }) => celltype)
+
+    for (let ctp in filtObs_group) {
+        let filt = filtObs_group[ctp]
+        figCtp['data'].push(
+            {
+                x: filt.map(obj => obj['exp']), x0: '', xaxis: 'x',
+                y: filt.map(obj => obj['celltype']), y0: '', yaxis: 'y',
+                jitter: 0.15, width: 1.3, side: 'positive', orientation: 'h',
+                name: ctp, legendgroup: ctp, offsetgroup: ctp, scalegroup: true,
+                showlegend: true, points: points,
+                marker: { size: 2.5, color: ctp_cmap[ctp] },
+                type: 'violin', hoverInfo: 'none', hoveron: true,
+            }
+
+        )
+    }
+    
+    return figCtp
+}
+
+function plot_expViolin3D_multi(cells, multiExp, ){
+
+}
+
+
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     plotFunc_3Dtab: {
         store_previewRange: function (x_range, y_range, z_range) {
-            var dict = {
+            let dict = {
                 'x_min': x_range[0], 'x_max': x_range[1],
                 'y_min': y_range[0], 'y_max': y_range[1],
                 'z_min': z_range[0], 'z_max': z_range[1],
@@ -163,7 +238,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         },
 
         store_sliceRange: function(slice, recover, maxRange, previewRange ){
-            var id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
+            let id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
             if(id.includes('BUTTON_slice_3D.n_clicks')){
                 return previewRange
             } else {
@@ -192,79 +267,17 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             return figCtp
         },
 
-        singleExpCtp_violin: function (obs, obsFilter, expFilter, ctpFilter, singleExp, ifmulti, ctp_map){
-            if (expFilter) {
-                var expSet = new Set(expFilter)
-                var intersection = obsFilter.filter(item => expSet.has(item))
-            } else {
-                var intersection = obsFilter
-            }
+        singleExpCtp_violin: function (obs, cells, singleExp, ifmulti, ctp_cmap, points){
+            
+            points = (points == 'none') ? false : points
 
-            var filtObs = pick(obs, intersection)
-            var expValue = pick(singleExp, intersection).reduce( (iter,val) => (iter.push(Object.values(val)[0]), iter), [] )
-
-            var name = Object.keys(getObjFirstItem(singleExp))[0]
-            var ncells = intersection.length
-            var figExp = {
-                'data': [{
-                    x: expValue, y0: name+"("+ncells +")",  type: 'violin',
-                    fillcolor: 'lightseagreen', opacity: 0.6, pointpos: 1.5, jitter: 0.2,
-                    orientation: 'h', side: 'positive', points: 'all',
-                    name: name,
-                    marker: {size: 2.5}, box: { visible: true }, line: {color: 'black'},
-                    meanline: { visible: true }, hoverInfo: 'none', hoveron: false,
-                }],
-                'layout': {
-                    plot_bgcolor: 'rgba(200,200,200,0.15)',
-                    xaxis: {dtick:1, showgrid: false},
-                    yaxis: {showgrid: true},
-                    margin: {
-                        l: 80, r: 20, t: 80, b: 80
-                    },
-                }
-            }
-
-            var figCtp = {
-                data: [],
-                layout: {
-                    plot_bgcolor: 'rgba(200,200,200,0.15)',
-                    xaxis: {dtick: 1, gridcolor: '#ffffff', gridwidth: 1, griddash: 'solid'},
-                    yaxis: {gridcolor: 'rgba(200,200,200,0.6)', gridwidth: 1.2},
-                    legend: {
-                        title: {text: 'Celltype'}, tracegroupgap: 0,
-                    },
-                    margin: {
-                        l: 200, r: 0, t: 10, b: 40,
-                    },
-                    height: 800,
-                }
-            }
-
-            filtObs.map( (obj, index) => obj['exp']=expValue[index] )
-            var filtObs_group = filtObs.groupBy(({ celltype }) => celltype)
-
-            for (let ctp in filtObs_group) {
-                let filt = filtObs_group[ctp]
-                figCtp['data'].push(
-                    {
-                        x: filt.map(obj => obj['exp']), x0: '', xaxis: 'x',
-                        y: filt.map(obj => obj['celltype']), y0: '', yaxis: 'y',
-                        jitter: 0.2, width: 1.3, side: 'positive', orientation: 'h',
-                        name: ctp, legendgroup: ctp, offsetgroup: ctp, scalegroup: true,
-                        showlegend: true,
-                        marker: { size: 2.5, color: ctp_map[ctp] },
-                        type: 'violin', hoverInfo: 'none', hoveron: true,
-                    }
-
-                )
-            }
-
-
+            figExp = plot_expViolin3D_single(cells, singleExp, points)
+            figCtp = plot_ctpViolin3D_single(obs, cells, singleExp, ctp_cmap, points)
 
             return [figExp, figCtp]
         },
 
-        multiExpCtp_violin: function (obs, obsFilter, expFilter, multiExp, ifmulti, ctp_map){
+        multiExpCtp_violin: function (obs, obsFilter, expFilter, multiExp, ifmulti, ctp_cmap){
 
         },
 

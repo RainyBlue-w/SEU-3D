@@ -3,13 +3,18 @@
   height: 6vh
 }
 
+.dmc-Grid-center {
+  align-items: center;
+  justify-content: center;
+}
+
 /* figures */
 .dcc-Graph-scatter3d {
   height: 88vh;
 }
 
 .dcc-Graph-violin-exp {
-  width: 70vh;
+  width: 55vh;
 }
 
 .dcc-Graph-violin-ctp {
@@ -21,29 +26,26 @@
   max-height: 75vh;
 }
 
-/* dmc-Tabs-vertical */
-.dmc-Tabs-vertical .mantine-Tabs-tabLabel {
-  writing-mode: vertical-rl;
-  transform: rotate(-0.5turn);
-  font-size: 16;
+/* dmc-Tabs-inline */
+.dmc-Tabs-inline .mantine-Tabs-tabLabel {
+  /* writing-mode: vertical-rl; */
+  /* transform: rotate(-0.5turn); */
+  font-size: 0.8rem;
+  font-weight: normal;
 }
 
-.dmc-Tabs-vertical .mantine-Tabs-tab{
-  padding-left: 0px;
+.dmc-Tabs-inline .mantine-Tabs-tab{
+  padding-top: 3px;
 }
 
-.dmc-Tabs-vertical .mantine-Tabs-panel {
-  padding-left: 5px;
+.dmc-Tabs-inline .mantine-Tabs-panel {
+  padding-top: 3px;
 }
 
-.dmc-Tabs-all .maintine-Tabs-tab {
-  font-size: 20;
-  font-weight: bold;
-}
 
 .fac-AntdSpace-sideBar {
   position: fixed;
-  max-height: 88vh;
+  max-height: 95vh;
   overflow-y: auto;
   width: 35vh;
 }
@@ -62,26 +64,34 @@
   max-height: 96vh; */
 }
 
+.dmc-Text-setting-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
 .dmc-Text-label {
-  /* font-size: 14; */
+  font-size: 1rem;
   font-family: Segoe UI; 
-  font-weight: bold
+  font-weight: normal
 }
 
 .dmc-Text-label .dmc-Text-label-center {
-  text-align: center,
+  text-align: center;
+  /* font-weight: bold; */
 }
 
 .dmc-Text-drawerTitle {
-  
+  font-size: 1.3rem;
 }
 
 .dmc-Text-drawerSubTitle {
-
+  font-size: 0.7rem;
+  color: gray;
+  font-style: italic;
 }
 
 .dmc-Text-sidebar-title {
-  /* font-weight: bold; */
+  font-size: 1.2rem;
   font-family: Segoe UI;
 }
 
