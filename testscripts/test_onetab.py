@@ -390,23 +390,21 @@ SET_STORE_JSONtoPlot_3D = html.Div(
   ]
 )
 
+init_range = dict(
+  x_min = np.floor(exp_data['E7.5'].obs.x.min()/10)*10, x_max = np.ceil(exp_data['E7.5'].obs.x.max()/10)*10,
+  y_min = np.floor(exp_data['E7.5'].obs.y.min()/10)*10, y_max = np.ceil(exp_data['E7.5'].obs.y.max()/10)*10,
+  z_min = np.floor(exp_data['E7.5'].obs.z.min()/10)*10, z_max = np.ceil(exp_data['E7.5'].obs.z.max()/10)*10,
+)
+
 SET_STORE_Ranges_3D = html.Div(
   [
     dcc.Store(
-      data= {
-        'x_min': -400, 'x_max': 480,
-        'y_min': -410, 'y_max': 470,
-        'z_min': 0, 'z_max': 700,
-      },
+      data = init_range, 
       id='STORE_previewRange_3D'
     ),
     dcc.Store(id='STORE_sliceRange_3D'),
     dcc.Store(
-      data= {
-        'x_min': -400, 'x_max': 480,
-        'y_min': -410, 'y_max': 470,
-        'z_min': 0, 'z_max': 700,
-      },
+      data = init_range,
       id='STORE_maxRange_3D'),
   ]
 )
@@ -459,7 +457,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
   [dmc.Grid([
     # options
     dmc.Col([
-      fuc.FefferySticky([
+      # fuc.FefferySticky([
         fac.AntdSpace(
           size=0,
           direction='vertical',
@@ -488,7 +486,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     dbc.Label("Stage"),
                     dcc.Dropdown(
                       ['E7.5', 'E7.75', 'E8.0'],
-                      'E7.75',
+                      'E7.5',
                       id="DROPDOWN_stage_3D",
                       clearable=False,
                       searchable=True,
@@ -546,7 +544,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         dmc.Space(h=10),
                         dmc.Text('Projection type', className='dmc-Text-label'),
                         dmc.SegmentedControl(
-                          value='perspective', 
+                          value='orthographic', 
                           data=[
                             {'value': 'perspective', 'label': 'Perspective'},
                             {'value': 'orthographic', 'label': 'Orthographic'},
@@ -562,7 +560,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         dmc.Grid([
                           dmc.Col([
                             dcc.Dropdown(
-                              options = exp_data['E7.75'].var_names,
+                              options = exp_data['E7.5'].var_names,
                               value = 'Cdx1',
                               id="DROPDOWN_singleName_3D",
                               clearable=False
@@ -666,7 +664,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   dmc.Col(dmc.Text('x', className='.dmc-Text-label-center'), span=2),
                   dmc.Col(
                     dcc.RangeSlider(
-                      -400,480,10, value=(-400,480), id='SLIDER_Xrange_3D',
+                      step=10, id='SLIDER_Xrange_3D',
                       marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
                     ),
                     span=10
@@ -674,7 +672,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   dmc.Col(dmc.Text('y', className='.dmc-Text-label-center'), span=2),
                   dmc.Col(
                     dcc.RangeSlider(
-                      -410, 470,10, value=(-410,470), id='SLIDER_Yrange_3D',
+                      step=10, id='SLIDER_Yrange_3D',
                       marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
                     ),
                     span=10
@@ -682,7 +680,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   dmc.Col(dmc.Text('z', className='.dmc-Text-label-center'), span=2),
                   dmc.Col(
                     dcc.RangeSlider(
-                      0, 700,10, value=(0,700), id='SLIDER_Zrange_3D',
+                      step=10, id='SLIDER_Zrange_3D',
                       marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
                     ),
                     span=10
@@ -744,9 +742,9 @@ spatial_tab_plotFeature3D = dbc.Tab(
                 ),
               ],
             ),
-          ], 
+          ],
         ),
-      ], top=10),
+      # ], top=20),
     ], span=9),
     # viewer
     dmc.Col([
@@ -755,11 +753,11 @@ spatial_tab_plotFeature3D = dbc.Tab(
       dmc.Grid([
         dmc.Col([
           dcc.Graph(figure={}, id="FIGURE_3Dexpression", 
-                    className='dcc-figure'),
+                    className='dcc-Graph-scatter3d'),
         ], span=20),
         dmc.Col([
           dcc.Graph(figure={}, id="FIGURE_3Dcelltype",
-                    className='dcc-figure'),
+                    className='dcc-Graph-scatter3d'),
         ], span=20),
         dmc.Col([
           # DIY-legend
@@ -771,10 +769,11 @@ spatial_tab_plotFeature3D = dbc.Tab(
               leftIcon=DashIconify(icon='fluent:color-20-regular', width=20)
             ), span=12),
             # invert selection
-            dmc.Col(dmc.Button(
-              DashIconify(icon='system-uicons:reverse', width=21), variant='light', color='gray',
-              id='BUTTON_invertSelectionCtp_3D', fullWidth=True,
-            ), span=4),
+            dmc.Col(
+              dmc.Button(
+                DashIconify(icon='system-uicons:reverse', width=21), variant='light', color='gray',
+                id='BUTTON_invertSelectionCtp_3D', fullWidth=True,),
+              span=4),
             # clear selection
             dmc.Col(dmc.Button(
               DashIconify(icon='fluent:border-none-20-regular', width=20), variant="light", color='gray',
@@ -786,6 +785,13 @@ spatial_tab_plotFeature3D = dbc.Tab(
               id='BUTTON_allSelectionCtp_3D', fullWidth=True,
             ), span=4),
           ], gutter=2),
+          # tooltips for buttons
+          html.Div(
+            [
+              dbc.Tooltip( i.capitalize(), target=f'BUTTON_{i}SelectionCtp_3D', placement='top')
+              for i in ['invert', 'clear', 'all']
+            ],
+          ),
           dmc.ChipGroup(
             children=[], value=[], multiple=True, align='center', spacing=1, 
             id = 'CHIPGROUP_celltype_3D', className='dmc-ChipGroup-legend'
@@ -805,10 +811,10 @@ spatial_tab_plotFeature3D = dbc.Tab(
         dbc.Col([
           dbc.Label( 'Normalized expression in all celltypes(left)'),
           dbc.Label('and in each celltype(right):'),
-          dcc.Graph(figure={}, id="FIGURE_expViolin_3D")
+          dcc.Graph(figure={}, id="FIGURE_expViolin_3D", className='dcc-Graph-violin-exp')
         ], align='center', width=4),
         dbc.Col([
-          dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D")
+          dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D", className='dcc-Graph-violin-ctp')
         ], align='center', width=8)
       ], style={'overflow-y': 'auto'}, id='test_sticky')
     ],span=41),
@@ -957,9 +963,41 @@ app.clientside_callback(
   Output('STORE_sliceRange_3D', 'data'),
   Input('BUTTON_slice_3D', 'n_clicks'),
   Input('BUTTON_recover_3D', 'n_clicks'),
+  Input('STORE_maxRange_3D', 'data'),
   State('STORE_previewRange_3D', 'data'),
-  State('STORE_maxRange_3D', 'data'),
 )
+
+# max range
+
+@app.callback(
+  Output('STORE_maxRange_3D', 'data'),
+  Input('DROPDOWN_stage_3D', 'value'),
+)
+def update_maxRange_3D(stage):
+  obs = exp_data[stage].obs
+  maxRange = dict(
+    x_min = np.floor(obs.x.min()/10)*10, x_max = np.ceil(obs.x.max()/10)*10,
+    y_min = np.floor(obs.y.min()/10)*10, y_max = np.ceil(obs.y.max()/10)*10,
+    z_min = np.floor(obs.z.min()/10)*10, z_max = np.ceil(obs.z.max()/10)*10,
+  )
+  return maxRange
+
+@app.callback(
+  output=[
+    ( Output('SLIDER_Xrange_3D', 'min'), Output('SLIDER_Xrange_3D', 'max'), Output('SLIDER_Xrange_3D', 'value') ),
+    ( Output('SLIDER_Yrange_3D', 'min'), Output('SLIDER_Yrange_3D', 'max'), Output('SLIDER_Yrange_3D', 'value') ),
+    ( Output('SLIDER_Zrange_3D', 'min'), Output('SLIDER_Zrange_3D', 'max'), Output('SLIDER_Zrange_3D', 'value') ),
+  ],
+  inputs = Input('STORE_maxRange_3D', 'data'),
+)
+def update_sliderRange_3D(maxRange):
+  
+  res = [
+    ( maxRange[f'{c}_min'], maxRange[f'{c}_max'], (maxRange[f'{c}_min'], maxRange[f'{c}_max']) )
+    for c in ['x', 'y', 'z']
+  ]
+  
+  return  res
 
 # store_cellsInfo_forJSONtoPlot (download: ~2.5M,500ms ; compute 250ms)
 
@@ -1387,25 +1425,27 @@ app.clientside_callback(
   Output("FIGURE_3Dcelltype", "figure"),
   Input("FIGURE_3Dexpression", "relayoutData"),
   Input("FIGURE_3Dcelltype", "relayoutData"),
+  State('SEGMENTEDCONTROL_projection_3D', 'value'),
   prevent_initial_call=True,
-  background=False,
+  # background=True,
   # manager=background_callback_manager
 )
-def update_relayout(expLayout, ctpLayout):
+def update_relayout(expLayout, ctpLayout, proj):
   tid = ctx.triggered_id
   patch = Patch()
   
   if tid == 'FIGURE_3Dexpression':
+    
     if 'scene.camera' in expLayout:
       patch['layout']['scene']['camera'] = expLayout['scene.camera']
     if 'scene.aspectratio' in expLayout:
       patch['layout']['scene']['aspectmode'] = 'manual'
       patch['layout']['scene']['aspectratio'] = expLayout['scene.aspectratio']
-      
-      
+
     return no_update, patch
 
   elif tid == 'FIGURE_3Dcelltype':
+    
     if 'scene.camera' in ctpLayout:
       patch['layout']['scene']['camera'] = ctpLayout['scene.camera']
     if 'scene.aspectratio' in ctpLayout:
@@ -1416,7 +1456,6 @@ def update_relayout(expLayout, ctpLayout):
   
   else:
     raise PreventUpdate
-
 
 # update point size
 @app.callback(
@@ -1447,7 +1486,6 @@ def update_ctpPointSize_3D(size, cells, stage):
     patch['data'][i]['marker']['size'] = size
   return patch
 
-
 # switch projection type
 @app.callback(
   Output('FIGURE_3Dcelltype', 'figure'),
@@ -1458,7 +1496,6 @@ def switch_projectionType(type):
   patch=Patch()
   patch['layout']['scene']['camera']['projection'] = {'type': type}
   return patch, patch
-
 
 # find intersection of 3-filter
 @app.callback(
@@ -1589,7 +1626,7 @@ def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti
 def show_moranRes_offcanvas(click):
   if click:
     return True
-  
+
 @app.callback(
   Output('DATATABLE_moranRes_3D', 'data'),
   Output('DATATABLE_moranRes_3D', 'columns'),

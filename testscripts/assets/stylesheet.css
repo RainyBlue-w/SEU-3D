@@ -4,8 +4,16 @@
 }
 
 /* figures */
-.dcc-figure {
-  height: 90vh;
+.dcc-Graph-scatter3d {
+  height: 88vh;
+}
+
+.dcc-Graph-violin-exp {
+  width: 70vh;
+}
+
+.dcc-Graph-violin-ctp {
+  height: 100vh
 }
 
 .dmc-ChipGroup-legend {
@@ -34,10 +42,10 @@
 }
 
 .fac-AntdSpace-sideBar {
-  /* position: fixed; */
-  max-height: 90vh;
+  position: fixed;
+  max-height: 88vh;
   overflow-y: auto;
-  /* width: 40vh; */
+  width: 35vh;
 }
 
 .fac-AntdCollapse-sidebar {
@@ -79,15 +87,20 @@
 
 /* 设置滚动条的样式 */
 ::-webkit-scrollbar {
-    width: 2px;
-    height: 2px;
+    width: 3px;
+    height: 3px;
 }
 /* 滚动槽 */
 ::-webkit-scrollbar-track{
-  background: rgb(239, 239, 239);
-  border-radius:2px;
+  background: rgb(244, 244, 244);
+  border-radius: 3px;
 }
 /* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: #aaa;
+  color: #aaa;
+}
+
 ::-webkit-scrollbar-thumb:hover{
   background: #333;
 }

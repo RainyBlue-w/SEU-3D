@@ -37,7 +37,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, p
                 ],
             },
             autosize: false,
-            // 'uirevision': 'constant',
+            'uirevision': 'constant',
             margin: {l: 10, r: 0, t: 0, b: 0},
             scene: {
                 xaxis: {
@@ -58,7 +58,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, p
                         type: projection
                     } 
                 },
-                aspectmode: 'manual'
+                aspectmode: 'data'
             }
         }
     }
@@ -73,7 +73,7 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
         'data': [],
         'layout': {
             'plot_bgcolor': '#ffffff',
-            // 'uirevision': 'constant',
+            'uirevision': 'constant',
             // legend: {
             //     title: { text: 'Celltype' },
             //     itemsizing: 'constant',
@@ -101,7 +101,7 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
                         type: projection
                     } 
                 },
-                aspectmode: 'manual'
+                aspectmode: 'data'
             },
         }
     }
@@ -140,11 +140,11 @@ function push_previewBox(fig, preview, preRange){
             i: [0, 1, 0, 0, 0, 0, 2, 2, 7, 7, 7, 7],
             j: [1, 2, 4, 1, 4, 2, 3, 6, 4, 4, 1, 1],
             k: [2, 3, 5, 5, 6, 6, 7, 7, 6, 5, 3, 5],
-            color: 'black', opacity: 0.60, type: 'mesh3d'
+            color: 'black', opacity: 0.40, type: 'mesh3d'
         }
     } else {
         var preview_box = {
-            x: [], y: [], z: [], i: [], j: [], k: [], type: 'mesh3d', color: 'black', opacity: 0.60
+            x: [], y: [], z: [], i: [], j: [], k: [], type: 'mesh3d', color: 'black', opacity: 0.40
         }
     }
     fig['data'].push(preview_box)
@@ -162,14 +162,19 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             return dict
         },
 
-        store_sliceRange: function(slice, recover, previewRange, maxRange){
+        store_sliceRange: function(slice, recover, maxRange, previewRange ){
             var id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
             if(id.includes('BUTTON_slice_3D.n_clicks')){
-            return previewRange
+                return previewRange
             } else {
-            return maxRange
+                return maxRange
             }
         },
+
+        // set_sliderMaxRange_3D: function(maxRange) {
+        //     console.log()
+        //     return  maxRange['x_min'], maxRange['x_max'], [maxRange['x_min'], maxRange['x_max']], maxRange['y_min'], maxRange['y_max'], [maxRange['y_min'], maxRange['y_max']], maxRange['z_min'], maxRange['z_max'], [maxRange['z_min'], maxRange['z_max']]
+        // },
 
         exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange, projection){
 
@@ -263,30 +268,5 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
 
         },
 
-        // sync_layout: function (relayoutExp, relayoutCtp, figExp, figCtp) {
-        //     tid = dash_clientside.callback_context.triggered.map(t => t.prop_id)
-        //     console.log(tid)
-        //     if (tid.includes('FIGURE_3Dexpression.relayoutData')) {
-        //         console.log('exp relayout')
-        //         if ('scene.camera' in relayoutExp){
-        //             figCtp['layout']['scene']['camera'] = relayoutExp['scene.camera']
-        //         } else if ( 'scene.aspectratio' in relayoutExp) {
-        //             figCtp['layout']['scene']['aspectmode'] = 'manual'
-        //             figCtp['layout']['scene']['aspectmode'] = relayoutExp['scene.aspectratio']
-        //         }
-        //         console.log(figCtp['layout']['scene']['camera'])
-        //         return dash_clientside.no_update, figCtp
-        //     } else if (tid.includes('FIGURE_3Dcelltype.relayoutData')) {
-        //         console.log('ctp relayout')
-        //         if ('scene.camera' in relayoutCtp){
-        //             figExp['layout']['scene']['camera'] = relayoutCtp['scene.camera']
-        //         } else if ( 'scene.aspectratio' in relayoutCtp) {
-        //             figExp['layout']['scene']['aspectmode'] = 'manual'
-        //             figExp['layout']['scene']['aspectmode'] = relayoutCtp['scene.aspectratio']
-        //         }
-        //         return figExp, dash_clientside.no_update
-        //     }
-        //     return dash_clientside.no_update, dash_clientside.no_update
-        // }
     }
 });
