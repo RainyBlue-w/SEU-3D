@@ -221,8 +221,8 @@ function plot_ctpViolin3D_single(obs, cells, singleExp, ctp_cmap, points){
     return figCtp
 }
 
-function plot_expViolin3D_multi(cells, multiExp, ){
-
+function plot_expViolin3D_multi(cells, multiExp, points){
+    
 }
 
 

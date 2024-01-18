@@ -109,14 +109,12 @@ def show_expViolin(adata, feature, **kws):
   # data = data[data>0]
   fig = go.Figure(
     data = go.Violin(
-      x=data, y0=f'{feature}({len(data)})', box_visible=True, 
-      line_color='black', meanline_visible=True,
+      x=data, y0=f'{feature}({len(data)})', line_color='black',
       fillcolor='lightseagreen', opacity=0.6,
-      jitter=0.1, **kws,  marker_size=2.5, points='outliers',
+      orientation='h', side='positive', width=1.5, **kws,
     )
   )
   
-  fig.update_traces(orientation='h', side='positive', width=1.5)
   fig.update_layout(
     plot_bgcolor = 'rgba(200,200,200,0.1)', showlegend=False
   ).update_yaxes(
@@ -137,7 +135,7 @@ def show_ctpExpViolin(adata, feature, **kws):
     pdf, x=feature, y='celltype', color = 'celltype', 
     color_discrete_map=ctp_cmap, orientation='h', height=800,
   ).update_traces(
-    side='positive', width=1.5, jitter=0.2, marker_size=2.5
+    side='positive', width=1.5, **kws,
   ).update_layout(
     plot_bgcolor = 'rgba(200,200,200,0.1)',
   ).update_yaxes(
@@ -162,11 +160,10 @@ def show_multiFeatures_expViolin(adata, features_dict, **kws):
       go.Violin(
         x=data, y0=f'{filt_dict[color]}({len(data)})', box_visible=False, 
         line_color='black', meanline_visible=False,
-        fillcolor=color, opacity=0.6, marker_size=2.5, points='outliers',
-         jitter=0.1, **kws
+        fillcolor=color, opacity=0.6,
+        orientation='h', side='positive', width=1.5, **kws, 
       )
     )
-  fig.update_traces(orientation='h', side='positive', width=1.5)
   fig.update_layout(
     plot_bgcolor = 'rgba(200,200,200,0.1)', showlegend=False
   ).update_yaxes(
@@ -177,7 +174,7 @@ def show_multiFeatures_expViolin(adata, features_dict, **kws):
   
   return fig
 
-def show_multiFeatures_ctpExpViolin(adata, features_dict, *kws):
+def show_multiFeatures_ctpExpViolin(adata, features_dict, **kws):
   
   from plotly.subplots import make_subplots
   
@@ -198,9 +195,9 @@ def show_multiFeatures_ctpExpViolin(adata, features_dict, *kws):
   fig = px.violin(
     pdf, x='expression', y='celltype', color = 'celltype', 
     color_discrete_map=ctp_cmap, orientation='h', height=800,
-    animation_frame='Gene', points='outliers'
+    animation_frame='Gene', 
   ).update_traces(
-    side='positive', width=1.5, jitter=0.2, marker_size=2.5
+    side='positive', width=1.5, **kws,
   ).update_layout(
     plot_bgcolor = 'rgba(200,200,200,0.1)',
   ).update_yaxes(
@@ -537,20 +534,26 @@ spatial_tab_plotFeature3D = dbc.Tab(
                               dmc.Tab('Scatter-3D', value='Scatter-3D'),
                               dmc.Tab('Violin', value='Violin')
                             ], grow=False),
+                            # scatter-3d
                             dmc.TabsPanel(
                               [
                                 dmc.Grid([
                                   dmc.Col(dmc.Text('Point size:', className='dmc-Text-label'), span=5),
-                                  dmc.Col(dmc.NumberInput(value=3, step=0.5, min=0.1, id='NUMBERINPUT_pointSize_3D', precision=1), span=7),
+                                  dmc.Col(dmc.NumberInput(
+                                    value=3, step=0.5, min=0.1, id='NUMBERINPUT_scatter3dPointsize_3D', precision=1,
+                                    persistence = True, persistence_type = 'local'
+                                  ), span=7),
                                 ], justify='center', gutter=3, className='dmc-Grid-center'),
                                 dmc.Space(h=5),
                                 dmc.Switch(label='Hide axes', id='SWITCH_hideAxes_3D', size='md',
                                           onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
-                                          offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
+                                          offLabel=DashIconify(icon='solar:eye-linear', width=14),
+                                          persistence = True, persistence_type = 'local'),
                                 dmc.Space(h=5),
                                 dmc.Switch(label='Hide non-expressing cells', id='SWITCH_hideZero_3D',  size='md',
                                           onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
-                                          offLabel=DashIconify(icon='solar:eye-linear', width=14) ),
+                                          offLabel=DashIconify(icon='solar:eye-linear', width=14),
+                                          persistence = False, persistence_type = 'local'),
                                 dmc.Space(h=5),
                                 dmc.Text('Projection type:', className='dmc-Text-label'),
                                 dmc.SegmentedControl(
@@ -559,14 +562,16 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                     {'value': 'perspective', 'label': 'Perspective'},
                                     {'value': 'orthographic', 'label': 'Orthographic'},
                                   ], 
-                                  fullWidth=True, id='SEGMENTEDCONTROL_projection_3D'
+                                  fullWidth=True, id='SEGMENTEDCONTROL_projection_3D',
+                                  persistence = True, persistence_type = 'local',
                                 ),
                               ],
                               value = 'Scatter-3D'
                             ),
+                            # violin
                             dmc.TabsPanel(
                               [
-                                dmc.Text('Points:', className='dmc-Text-label'),
+                                dmc.Text('Points to show', className='dmc-Text-setting-title'),
                                 dmc.SegmentedControl(
                                   value='outliers',
                                   data = [
@@ -574,8 +579,37 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                     {'value': 'outliers', 'label': 'outliers'},
                                     {'value': 'all', 'label': 'all'}
                                   ],
-                                  fullWidth=True, id='SEGMENTEDCONTROL_violin_3D',
+                                  fullWidth=True, id='SEGMENTEDCONTROL_violinPoints_3D',
+                                  persistence = True, persistence_type = 'local',
                                 ),
+                                dmc.Grid(
+                                  [
+                                    dmc.Col(dmc.NumberInput(label='position', value=0, step=0.1, min=-2, max=2, 
+                                                    id='NUMBERINPUT_violinPointpos_3D', precision=2,
+                                                    persistence = True, persistence_type = 'local',), span=4),
+                                    dmc.Col(dmc.NumberInput(label='size', value=2.5, step=0.5, min=0, max=10,
+                                                    id='NUMBERINPUT_violinPointsize_3D', precision=1,
+                                                    persistence = True, persistence_type = 'local',), span=4),
+                                    dmc.Col(dmc.NumberInput(label='jitter', value=0.15, step=0.05, min=0, max=1,
+                                                    id='NUMBERINPUT_violinPointjitter_3D', precision=2,
+                                                    persistence = True, persistence_type = 'local',), span=4),
+                                  ],
+                                ),
+                                dmc.Text('Box to show', className='dmc-Text-setting-title'),
+                                dmc.SegmentedControl(
+                                  value='all',
+                                  data = [
+                                    {'value': 'none', 'label': 'none'},
+                                    {'value': 'box', 'label': 'box'},
+                                    {'value': 'meanline', 'label': 'mean'},
+                                    {'value': 'all', 'label': 'all'}
+                                  ],
+                                  id='SEGMENTEDCONTROL_violinBox_3D', fullWidth=True,
+                                  persistence = True, persistence_type = 'local',
+                                ),
+                                dmc.NumberInput(label='Box width', value=0.5, step=0.1, min=0, max=1,
+                                                id='NUMBERINPUT_violinBoxwidth_3D', precision=1,
+                                                persistence = True, persistence_type = 'local',)
                               ],
                               value = 'Violin'
                             ),
@@ -866,25 +900,120 @@ spatial_tabs = dbc.Tabs(
 
 # In[] callbacks
 
-# violin points
+# violin options hot-update
 @app.callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
-  Input('SEGMENTEDCONTROL_violin_3D', 'value'),
+  Input('SEGMENTEDCONTROL_violinPoints_3D', 'value'),
   State('STORE_allCelltypes_3D', 'data'),
+  State('STORE_multiNameInfo_3D', 'data'),
 )
-def update_violinPointStyle_3D(points, allCelltypes):
+def update_violinPointStyle_3D(points, allCelltypes, minfo):
+  
   points = False if points=='none' else points
   
-  patch_exp = Patch()
-  patch_exp['data'][0]['points'] = points
-  
+  n_gene = len(minfo)
   n_ctp = len(allCelltypes)
-  patch_ctp = Patch()
-  for i in range(0, n_ctp):
-    patch_ctp['data'][i]['points'] = points
+  
+  patch = Patch()
+  for i in range(0, max(n_gene, n_ctp)):
+    patch['data'][i]['points'] = points
 
-  return patch_exp, patch_ctp
+  return patch, patch
+
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'figure'),
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('NUMBERINPUT_violinPointpos_3D', 'value'),
+  State('STORE_allCelltypes_3D', 'data'),
+  State('STORE_multiNameInfo_3D', 'data'),
+)
+def update_violinPointpos_3D(pointpos, allCelltypes, minfo):
+  
+  n_gene = len(minfo)
+  n_ctp = len(allCelltypes)
+  
+  patch = Patch()
+  for i in range(0, max(n_gene, n_ctp)):
+    patch['data'][i]['pointpos'] = pointpos
+
+  return patch, patch
+
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'figure'),
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('NUMBERINPUT_violinPointsize_3D', 'value'),
+  State('STORE_allCelltypes_3D', 'data'),
+  State('STORE_multiNameInfo_3D', 'data'),
+)
+def update_violinPointsize_3D(pointsize, allCelltypes, minfo):
+  
+  n_gene = len(minfo)
+  n_ctp = len(allCelltypes)
+  
+  patch = Patch()
+  for i in range(0, max(n_gene, n_ctp)):
+    patch['data'][i]['marker']['size'] = pointsize
+
+  return patch, patch
+
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'figure'),
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('SEGMENTEDCONTROL_violinBox_3D', 'value'),
+  State('STORE_allCelltypes_3D', 'data'),
+  State('STORE_multiNameInfo_3D', 'data'),
+)
+def update_violinBox_3D(box, allCelltypes, minfo):
+  
+  n_gene = len(minfo)
+  n_ctp = len(allCelltypes)
+  
+  box_visible = True if box=='box' or box=='all' else False
+  meanline_visible = True if box=='meanline' or box=='all' else False
+  
+  patch = Patch()
+  for i in range(0, max(n_gene, n_ctp)):
+    patch['data'][i]['box']['visible'] = box_visible
+    patch['data'][i]['meanline']['visible'] = meanline_visible
+
+  return patch, patch
+
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'figure'),
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('NUMBERINPUT_violinPointjitter_3D', 'value'),
+  State('STORE_allCelltypes_3D', 'data'),
+  State('STORE_multiNameInfo_3D', 'data'),
+)
+def update_violinPointpos_3D(jitter, allCelltypes, minfo):
+  
+  n_gene = len(minfo)
+  n_ctp = len(allCelltypes)
+  
+  patch = Patch()
+  for i in range(0, max(n_gene, n_ctp)):
+    patch['data'][i]['jitter'] = jitter
+
+  return patch, patch
+
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'figure'),
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('NUMBERINPUT_violinBoxwidth_3D', 'value'),
+  State('STORE_allCelltypes_3D', 'data'),
+  State('STORE_multiNameInfo_3D', 'data'),
+)
+def update_violinPointpos_3D(boxwidth, allCelltypes, minfo):
+  
+  n_gene = len(minfo)
+  n_ctp = len(allCelltypes)
+  
+  patch = Patch()
+  for i in range(0, max(n_gene, n_ctp)):
+    patch['data'][i]['box']['width'] = boxwidth
+
+  return patch, patch
 
 # update_dataSummary
 @app.callback(
@@ -992,7 +1121,7 @@ def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
     )
     nextNumber = curNumber+1
   elif 'BUTTON_deleteFeature_3D' in id:
-    if nextIndex >= 2 :
+    if nextIndex >= 3 :
       del patch_children[nextIndex-1]
       nextNumber = curNumber-1 if curNumber>0 else 0
     else:
@@ -1140,20 +1269,22 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
     ifmulti = False
     exp = adata[:,sname].to_df()
     if hideZero:
-      cellsExpFilter = exp[(exp>0)[sname]].index.to_list()
+      cellsExpFilter = exp[(exp>0)[sname]].index
     else:
-      cellsExpFilter = exp.index.to_list()
+      cellsExpFilter = exp.index
     exp = exp.loc[cellsExpFilter,:]
+    cellsExpFilter = cellsExpFilter.to_list()
     return (ifmulti, exp, cellsExpFilter)
   
   def return_multi():
     ifmulti = True
     mixColor = color_mixer(adata, minfo)
     if hideZero:
-      cellsExpFilter = mixColor[mixColor!='rgb(244, 244, 244)'].index.to_list()
+      cellsExpFilter = mixColor[mixColor!='rgb(244, 244, 244)'].index
     else:
-      cellsExpFilter = mixColor.index.to_list()
-    mixColor = mixColor.loc[cellsExpFilter,:]
+      cellsExpFilter = mixColor.index
+    mixColor = mixColor[cellsExpFilter]
+    cellsExpFilter = cellsExpFilter.to_list()
     return (ifmulti, [], cellsExpFilter, mixColor.to_dict()) 
   
   def return_multiExp():
@@ -1166,7 +1297,7 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
 
     exp = adata[:, genes].to_df()
     exp.columns = colors
-    exp.to_dict('index')
+    exp = exp.to_dict('index')
 
     return exp
   
@@ -1179,7 +1310,8 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
         return (Serverside(cellsExpFilter), exp, no_update, ifmulti, no_update)
       else:
         ifmulti,_,cellsExpFilter,mixcolor = return_multi()
-        return (Serverside(cellsExpFilter), no_update, no_update, ifmulti, mixcolor)
+        exp_multi = return_multiExp()
+        return (Serverside(cellsExpFilter), no_update, exp_multi, ifmulti, mixcolor)
 
     elif 'BUTTON_singlePlot_3D' in btn_id:
       ifmulti,exp,cellsExpFilter = return_single()
@@ -1191,11 +1323,11 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
     
     elif 'BUTTON_multiPlot_3D' in btn_id:
       ifmulti,_,cellsExpFilter,mixcolor = return_multi()
-      # exp = return_multiExp()
+      exp_multi = return_multiExp()
       if hideZero:
-        return (Serverside(cellsExpFilter), no_update, return_multiExp(), ifmulti, mixcolor)
+        return (Serverside(cellsExpFilter), no_update, exp_multi, ifmulti, mixcolor)
       else:
-        return (no_update, no_update, return_multiExp(), ifmulti, mixcolor)
+        return (no_update, no_update, exp_multi, ifmulti, mixcolor)
     
     elif 'SWITCH_hideZero_3D' in btn_id:
       
@@ -1209,7 +1341,8 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
           return (Serverside(cellsExpFilter), no_update, no_update, no_update, no_update)
         else:
           _,_,cellsExpFilter,_ = return_multi()
-          return (Serverside(cellsExpFilter), no_update, no_update, no_update, no_update)
+          exp_multi = return_multiExp()
+          return (Serverside(cellsExpFilter), no_update, exp_multi, no_update, no_update)
 
   else:
       ifmulti,exp,cellsExpFilter = return_single()
@@ -1294,7 +1427,7 @@ def store_ctpInfo_forJSONtoPlot_3D(selectedCtps, stage):
   series = series[series.isin(selectedCtps)]
   
   return series.index.to_list()
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
 # plot_3Dfigure_exp
 app.clientside_callback(
   ClientsideFunction(
@@ -1485,7 +1618,7 @@ app.clientside_callback(
   Input("FIGURE_3Dexpression", "relayoutData"),
   Input("FIGURE_3Dcelltype", "relayoutData"),
   State('SEGMENTEDCONTROL_projection_3D', 'value'),
-  prevent_initial_call=True,
+  # prevent_initial_call=True,
   # background=True,
   # manager=background_callback_manager
 )
@@ -1516,10 +1649,10 @@ def update_relayout(expLayout, ctpLayout, proj):
   else:
     raise PreventUpdate
 
-# update point size
+# update scatter-3d point size
 @app.callback(
   Output('FIGURE_3Dexpression', 'figure'),
-  Input('NUMBERINPUT_pointSize_3D', 'value'),
+  Input('NUMBERINPUT_scatter3dPointsize_3D', 'value'),
   prevent_initial_call = True
 )
 def update_expPointSize_3D(size):
@@ -1531,7 +1664,7 @@ def update_expPointSize_3D(size):
 
 @app.callback(
   Output('FIGURE_3Dcelltype', 'figure'),
-  Input('NUMBERINPUT_pointSize_3D', 'value'),
+  Input('NUMBERINPUT_scatter3dPointsize_3D', 'value'),
   State('STORE_cellsIntersection_3D', 'data'),
   State('DROPDOWN_stage_3D', 'value'),
   prevent_initial_call = True,
@@ -1619,77 +1752,105 @@ def update_previewBox(showBox, preRange):
   return patch, patch
 
 # violin plot
-# @app.callback(
-#   Output('FIGURE_expViolin_3D', 'figure'),
-#   Input('DROPDOWN_featureType_3D', 'value'),
-#   Input('DROPDOWN_stage_3D', 'value'),
-#   Input('STORE_cellsIntersection_3D', 'data'),
-#   Input('STORE_ifmulti_3D', 'data'),
-#   Input('BUTTON_singlePlot_3D', 'n_clicks'),
-#   Input('BUTTON_multiPlot_3D', 'n_clicks'),
-#   State('DROPDOWN_singleName_3D', 'value'),
-#   State('STORE_multiNameInfo_3D', 'data'),
-#   background = True,
-#   manager = background_callback_manager,
-# )
-# def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
-  
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-  
-#   adata = adata[cells]
-
-#   if not ifmulti:
-#     fig = show_expViolin(adata, sname)
-#   else:
-#     fig = show_multiFeatures_expViolin(adata, minfo)
-
-#   return fig
-
-# @app.callback(
-#   Output('FIGURE_ctpViolin_3D', 'figure'),
-#   Input('DROPDOWN_featureType_3D', 'value'),
-#   Input('DROPDOWN_stage_3D', 'value'),
-#   Input('STORE_cellsIntersection_3D', 'data'),
-#   Input('STORE_ifmulti_3D', 'data'),
-#   Input('BUTTON_singlePlot_3D', 'n_clicks'),
-#   Input('BUTTON_multiPlot_3D', 'n_clicks'),
-#   State('DROPDOWN_singleName_3D', 'value'),
-#   State('STORE_multiNameInfo_3D', 'data'),
-#   background = True,
-#   manager = background_callback_manager,
-# )
-# def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo):
-#   if featureType == 'Gene':
-#       adata = exp_data[stage]
-#   elif featureType == 'Regulon':
-#       adata = auc_data[stage]
-
-#   adata = adata[cells]
-
-#   if not ifmulti:
-#     fig = show_ctpExpViolin(adata, sname)
-#   else:
-#     fig = show_multiFeatures_ctpExpViolin(adata, minfo)
-
-#   return fig
-
-app.clientside_callback(
-  ClientsideFunction(
-    namespace='plotFunc_3Dtab',
-    function_name='singleExpCtp_violin',
-  ),
+@app.callback(
   Output('FIGURE_expViolin_3D', 'figure'),
-  Output('FIGURE_ctpViolin_3D', 'figure'),
-  Input('STORE_obs_3D', 'data'),
+  Input('DROPDOWN_featureType_3D', 'value'),
+  Input('DROPDOWN_stage_3D', 'value'),
   Input('STORE_cellsIntersection_3D', 'data'),
-  Input('STORE_singleExp_3D', 'data'),
   Input('STORE_ifmulti_3D', 'data'),
-  Input('STORE_ctpCmap_3D', 'data'),
-  State('SEGMENTEDCONTROL_violin_3D', 'value'),
+  Input('BUTTON_singlePlot_3D', 'n_clicks'),
+  Input('BUTTON_multiPlot_3D', 'n_clicks'),
+  State('DROPDOWN_singleName_3D', 'value'),
+  State('STORE_multiNameInfo_3D', 'data'),
+  State('SEGMENTEDCONTROL_violinPoints_3D', 'value'),
+  State('NUMBERINPUT_violinPointpos_3D', 'value'),
+  State('NUMBERINPUT_violinPointsize_3D', 'value'),
+  State('NUMBERINPUT_violinPointjitter_3D', 'value'),
+  State('SEGMENTEDCONTROL_violinBox_3D', 'value'),
+  State('NUMBERINPUT_violinBoxwidth_3D', 'value'),
+  # background = True,
+  # manager = background_callback_manager,
 )
+def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo, 
+                                           points, pointpos, pointsize,jitter, box, boxwidth):
+  
+  if featureType == 'Gene':
+      adata = exp_data[stage]
+  elif featureType == 'Regulon':
+      adata = auc_data[stage]
+  
+  adata = adata[cells]
+
+  points = False if points=='none' else points
+  
+  box_visible = True if box=='box' or box=='all' else False
+  meanline_visible = True if box=='meanline' or box=='all' else False
+
+  if not ifmulti:
+    fig = show_expViolin(adata, sname, points=points, pointpos=pointpos, marker_size=pointsize, 
+                         meanline_visible=meanline_visible,  box_visible=box_visible, jitter=jitter, box_width=boxwidth)
+  else:
+    fig = show_multiFeatures_expViolin(adata, minfo, points=points, pointpos=pointpos, marker_size=pointsize, 
+                                       meanline_visible=meanline_visible,  box_visible=box_visible, jitter=jitter, box_width=boxwidth)
+
+  return fig
+
+@app.callback(
+  Output('FIGURE_ctpViolin_3D', 'figure'),
+  Input('DROPDOWN_featureType_3D', 'value'),
+  Input('DROPDOWN_stage_3D', 'value'),
+  Input('STORE_cellsIntersection_3D', 'data'),
+  Input('STORE_ifmulti_3D', 'data'),
+  Input('BUTTON_singlePlot_3D', 'n_clicks'),
+  Input('BUTTON_multiPlot_3D', 'n_clicks'),
+  State('DROPDOWN_singleName_3D', 'value'),
+  State('STORE_multiNameInfo_3D', 'data'),
+  State('SEGMENTEDCONTROL_violinPoints_3D', 'value'),
+  State('NUMBERINPUT_violinPointpos_3D', 'value'),
+  State('NUMBERINPUT_violinPointsize_3D', 'value'),
+  State('NUMBERINPUT_violinPointjitter_3D', 'value'),
+  State('SEGMENTEDCONTROL_violinBox_3D', 'value'),
+  State('NUMBERINPUT_violinBoxwidth_3D', 'value'),
+  # background = True,
+  # manager = background_callback_manager,
+)
+def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti, splot, mplot, sname, minfo, 
+                                              points, pointpos, pointsize, jitter, box, boxwidth):
+  if featureType == 'Gene':
+      adata = exp_data[stage]
+  elif featureType == 'Regulon':
+      adata = auc_data[stage]
+
+  adata = adata[cells]
+
+  points = False if points=='none' else points
+  
+  box_visible = True if box=='box' or box=='all' else False
+  meanline_visible = True if box=='meanline' or box=='all' else False
+
+  if not ifmulti:
+    fig = show_ctpExpViolin(adata, sname, points=points, pointpos=pointpos, marker_size=pointsize, 
+                            meanline_visible=meanline_visible, box_visible=box_visible, jitter=jitter, box_width=boxwidth)
+  else:
+    fig = show_multiFeatures_ctpExpViolin(adata, minfo, points=points, pointpos=pointpos, marker_size=pointsize, 
+                                          meanline_visible=meanline_visible, box_visible=box_visible, jitter=jitter, box_width=boxwidth)
+
+  return fig
+
+# app.clientside_callback(
+#   ClientsideFunction(
+#     namespace='plotFunc_3Dtab',
+#     function_name='singleExpCtp_violin',
+#   ),
+#   Output('FIGURE_expViolin_3D', 'figure'),
+#   Output('FIGURE_ctpViolin_3D', 'figure'),
+#   Input('STORE_obs_3D', 'data'),
+#   Input('STORE_cellsIntersection_3D', 'data'),
+#   Input('STORE_singleExp_3D', 'data'),
+#   Input('STORE_ifmulti_3D', 'data'),
+#   Input('STORE_ctpCmap_3D', 'data'),
+#   State('SEGMENTEDCONTROL_violinPoints_3D', 'value'),
+# )
 
 # moran SVG offcanvas
 @app.callback(
