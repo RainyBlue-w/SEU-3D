@@ -1634,7 +1634,7 @@ def update_relayout(expLayout, ctpLayout, proj):
       patch['layout']['scene']['aspectmode'] = 'manual'
       patch['layout']['scene']['aspectratio'] = expLayout['scene.aspectratio']
 
-    return no_update, patch
+    return patch, patch
 
   elif tid == 'FIGURE_3Dcelltype':
     
@@ -1644,7 +1644,7 @@ def update_relayout(expLayout, ctpLayout, proj):
       patch['layout']['scene']['aspectmode'] = 'manual'
       patch['layout']['scene']['aspectratio'] = ctpLayout['scene.aspectratio']
 
-    return patch, no_update
+    return patch, patch
   
   else:
     raise PreventUpdate
