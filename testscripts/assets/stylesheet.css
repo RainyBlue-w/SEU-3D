@@ -65,7 +65,7 @@
 }
 
 .dmc-Text-setting-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: bold;
 }
 
@@ -95,6 +95,12 @@
   font-family: Segoe UI;
 }
 
+.dmc-Text-sidebar-tips {
+  font-size: 1.0rem;
+  font-style: italic;
+  color: gray
+}
+
 /* 设置滚动条的样式 */
 ::-webkit-scrollbar {
     width: 3px;
@@ -113,4 +119,10 @@
 
 ::-webkit-scrollbar-thumb:hover{
   background: #333;
+}
+
+.dmc-divider-sidebar-inline .mantine-Divider-label{
+  font-size: 1rem;
+  font-weight: bold;
+  color: #4080ee;
 }

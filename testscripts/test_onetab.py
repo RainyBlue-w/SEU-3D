@@ -369,6 +369,20 @@ initColor_multiName = [
   "#fa5252", "#228be6", "#40c057", "#fd7e14", "#be4bdb", "#e64980", "#15aabf", "#fab005", "#868e96", 
 ]
 
+config_scatter3d = {
+  'toImageButtonOptions': {
+    'format': 'png', # one of png, svg, jpeg, webp,
+    'scale': 3
+  }
+}
+
+config_violin = {
+  'toImageButtonOptions': {
+    'format': 'png', # one of png, svg, jpeg, webp,
+    'scale': 3
+  }
+}
+
 # In[] widgets
 
 SET_STORE_JSONtoPlot_3D = html.Div(
@@ -537,6 +551,8 @@ spatial_tab_plotFeature3D = dbc.Tab(
                             # scatter-3d
                             dmc.TabsPanel(
                               [
+                                
+                                dmc.Divider(label = 'Points', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.Grid([
                                   dmc.Col(dmc.Text('Point size:', className='dmc-Text-label'), span=5),
                                   dmc.Col(dmc.NumberInput(
@@ -545,16 +561,14 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                   ), span=7),
                                 ], justify='center', gutter=3, className='dmc-Grid-center'),
                                 dmc.Space(h=5),
-                                dmc.Switch(label='Hide axes', id='SWITCH_hideAxes_3D', size='md',
-                                          onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
-                                          offLabel=DashIconify(icon='solar:eye-linear', width=14),
-                                          persistence = True, persistence_type = 'local'),
-                                dmc.Space(h=5),
+
                                 dmc.Switch(label='Hide non-expressing cells', id='SWITCH_hideZero_3D',  size='md',
                                           onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
                                           offLabel=DashIconify(icon='solar:eye-linear', width=14),
                                           persistence = False, persistence_type = 'local'),
                                 dmc.Space(h=5),
+                                
+                                dmc.Divider(label = 'Axes', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.Text('Projection type:', className='dmc-Text-label'),
                                 dmc.SegmentedControl(
                                   value='orthographic', 
@@ -565,13 +579,31 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                   fullWidth=True, id='SEGMENTEDCONTROL_projection_3D',
                                   persistence = True, persistence_type = 'local',
                                 ),
+                                dmc.Space(h=5),
+                                dmc.Switch(label='Hide axes', id='SWITCH_hideAxes_3D', size='md',
+                                  onLabel=DashIconify(icon='solar:eye-closed-linear', width=14), 
+                                  offLabel=DashIconify(icon='solar:eye-linear', width=14),
+                                  persistence = True, persistence_type = 'local'),
+                                
+                                dmc.Divider(label='Download', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
+                                dmc.Text('tip: replot to take effect', className='dmc-Text-sidebar-tips'),
+                                dmc.Grid([
+                                  dmc.Col(dmc.Select( label = 'type', id='NUMBERINPUT_scatter3dFigtype_3D',
+                                    value='png', data = ['svg', 'png', 'jpeg', 'webp'],
+                                    persistence = True, persistence_type = 'local', 
+                                  ), span=6),
+                                  dmc.Col(dmc.NumberInput( label = 'scale(resolution)', id='NUMBERINPUT_scatter3dFigscale_3D',
+                                    value=3, step=1, min=1, icon=DashIconify(icon='uim:multiply', width=16),
+                                    persistence = True, persistence_type = 'local', 
+                                  ), span=6),
+                                ], justify='center', gutter=3, className='dmc-Grid-center'),
                               ],
                               value = 'Scatter-3D'
                             ),
                             # violin
                             dmc.TabsPanel(
                               [
-                                dmc.Text('Points to show', className='dmc-Text-setting-title'),
+                                dmc.Divider(label = 'Points', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.SegmentedControl(
                                   value='outliers',
                                   data = [
@@ -595,7 +627,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                                     persistence = True, persistence_type = 'local',), span=4),
                                   ],
                                 ),
-                                dmc.Text('Box to show', className='dmc-Text-setting-title'),
+                                dmc.Divider(label = 'Box', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.SegmentedControl(
                                   value='all',
                                   data = [
@@ -609,7 +641,20 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                 ),
                                 dmc.NumberInput(label='Box width', value=0.5, step=0.1, min=0, max=1,
                                                 id='NUMBERINPUT_violinBoxwidth_3D', precision=1,
-                                                persistence = True, persistence_type = 'local',)
+                                                persistence = True, persistence_type = 'local',),
+                                
+                                dmc.Divider(label='Download', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
+                                dmc.Text('tip: replot to take effect', className='dmc-Text-sidebar-tips'),
+                                dmc.Grid([
+                                  dmc.Col(dmc.Select( label = 'type', id='NUMBERINPUT_violinFigtype_3D',
+                                    value='png', data = ['svg', 'png', 'jpeg', 'webp'],
+                                    persistence = True, persistence_type = 'local', 
+                                  ), span=6),
+                                  dmc.Col(dmc.NumberInput( label = 'scale(resolution)', id='NUMBERINPUT_violinFigscale_3D',
+                                    value=3, step=1, min=1, icon=DashIconify(icon='uim:multiply', width=16),
+                                    persistence = True, persistence_type = 'local', 
+                                  ), span=6),
+                                ], justify='center', gutter=3, className='dmc-Grid-center'),
                               ],
                               value = 'Violin'
                             ),
@@ -793,7 +838,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         leftIcon = DashIconify(icon='fluent:clipboard-checkmark-20-regular', width=20) ),
                     span=6,
                   ),
-                  dmc.Text('Using current cells to compute SVGs', color='gray', italic=True),
+                  dmc.Text('Using current cells to compute SVGs', className='dmc-Text-sidebar-tips'),
                 ]),
                 dbc.Offcanvas(
                   [dash_table.DataTable(
@@ -820,11 +865,11 @@ spatial_tab_plotFeature3D = dbc.Tab(
       dmc.Grid([
         dmc.Col([
           dcc.Graph(figure={}, id="FIGURE_3Dexpression", 
-                    className='dcc-Graph-scatter3d'),
+                    className='dcc-Graph-scatter3d', config=config_scatter3d),
         ], span=20),
         dmc.Col([
           dcc.Graph(figure={}, id="FIGURE_3Dcelltype",
-                    className='dcc-Graph-scatter3d'),
+                    className='dcc-Graph-scatter3d', config=config_scatter3d),
         ], span=20),
         dmc.Col([
           # DIY-legend
@@ -879,10 +924,10 @@ spatial_tab_plotFeature3D = dbc.Tab(
         dbc.Col([
           dbc.Label( 'Normalized expression in all celltypes(left)'),
           dbc.Label('and in each celltype(right):'),
-          dcc.Graph(figure={}, id="FIGURE_expViolin_3D", className='dcc-Graph-violin-exp')
+          dcc.Graph(figure={}, id="FIGURE_expViolin_3D", className='dcc-Graph-violin-exp', config=config_violin)
         ], align='center', width=4),
         dbc.Col([
-          dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D", className='dcc-Graph-violin-ctp')
+          dcc.Graph(figure={}, id="FIGURE_ctpViolin_3D", className='dcc-Graph-violin-ctp', config=config_violin)
         ], align='center', width=8)
       ], style={'overflow-y': 'auto'}, id='test_sticky')
     ],span=41),
@@ -899,6 +944,35 @@ spatial_tabs = dbc.Tabs(
 
 
 # In[] callbacks
+
+# download scale
+@app.callback(
+  Output('FIGURE_3Dcelltype', 'config'),
+  Output('FIGURE_3Dexpression', 'config'),
+  Input('NUMBERINPUT_scatter3dFigtype_3D', 'value'),
+  Input('NUMBERINPUT_scatter3dFigscale_3D', 'value'),
+)
+def update_scatter3dDownloadConfig_3D(type, scale):
+  
+  patch=Patch()
+  patch['toImageButtonOptions']['format'] = type
+  patch['toImageButtonOptions']['scale'] = scale
+  
+  return patch, patch
+
+@app.callback(
+  Output('FIGURE_expViolin_3D', 'config'),
+  Output('FIGURE_ctpViolin_3D', 'config'),
+  Input('NUMBERINPUT_violinFigtype_3D', 'value'),
+  Input('NUMBERINPUT_violinFigscale_3D', 'value'),
+)
+def update_violinDownloadConfig_3D(type, scale):
+  
+  patch=Patch()
+  patch['toImageButtonOptions']['format'] = type
+  patch['toImageButtonOptions']['scale'] = scale
+  
+  return patch, patch
 
 # violin options hot-update
 @app.callback(
