@@ -1471,7 +1471,7 @@ def update_spatial_plotFeature_ctpGraph(featureType, stage):
 # In[] callbacks/3D:
 
 # download scale
-@app.callback(
+@callback(
   Output('FIGURE_3Dcelltype', 'config'),
   Output('FIGURE_3Dexpression', 'config'),
   Input('NUMBERINPUT_scatter3dFigtype_3D', 'value'),
@@ -1485,7 +1485,7 @@ def update_scatter3dDownloadConfig_3D(type, scale):
   
   return patch, patch
 
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'config'),
   Output('FIGURE_ctpViolin_3D', 'config'),
   Input('NUMBERINPUT_violinFigtype_3D', 'value'),
@@ -1500,7 +1500,7 @@ def update_violinDownloadConfig_3D(type, scale):
   return patch, patch
 
 # violin options hot-update
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('SEGMENTEDCONTROL_violinPoints_3D', 'value'),
@@ -1520,7 +1520,7 @@ def update_violinPointStyle_3D(points, allCelltypes, minfo):
 
   return patch, patch
 
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('NUMBERINPUT_violinPointpos_3D', 'value'),
@@ -1538,7 +1538,7 @@ def update_violinPointpos_3D(pointpos, allCelltypes, minfo):
 
   return patch, patch
 
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('NUMBERINPUT_violinPointsize_3D', 'value'),
@@ -1556,7 +1556,7 @@ def update_violinPointsize_3D(pointsize, allCelltypes, minfo):
 
   return patch, patch
 
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('SEGMENTEDCONTROL_violinBox_3D', 'value'),
@@ -1578,7 +1578,7 @@ def update_violinBox_3D(box, allCelltypes, minfo):
 
   return patch, patch
 
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('NUMBERINPUT_violinPointjitter_3D', 'value'),
@@ -1596,7 +1596,7 @@ def update_violinPointpos_3D(jitter, allCelltypes, minfo):
 
   return patch, patch
 
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('NUMBERINPUT_violinBoxwidth_3D', 'value'),
@@ -1615,7 +1615,7 @@ def update_violinPointpos_3D(boxwidth, allCelltypes, minfo):
   return patch, patch
 
 # update_dataSummary
-@app.callback(
+@callback(
   Output('TEXT_dataSummary_3D', 'children'),
   Input('DROPDOWN_featureType_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value')
@@ -1630,7 +1630,7 @@ def update_dataSummary_3D(featureType, stage):
   return str
 
 # update_nameOptions
-@app.callback(
+@callback(
   Output('DROPDOWN_singleName_3D', 'options'),
   Input('DROPDOWN_singleName_3D', 'search_value'),
   Input('DROPDOWN_featureType_3D', 'value'),
@@ -1653,7 +1653,7 @@ def update_nameOptions_single_3D(search, featureType, stage):
   
   return opts
 
-@app.callback(
+@callback(
   Output({'type': 'DROPDOWN_multiName_3D', 'index': MATCH}, 'options'),
   Input({'type': 'DROPDOWN_multiName_3D', 'index': MATCH}, 'search_value'),
   Input('DROPDOWN_featureType_3D', 'value'),
@@ -1678,7 +1678,7 @@ def update_nameOptions_multi_3D(search, featureType, stage):
   return opts
 
 # add & delte components for multiName
-@app.callback(
+@callback(
   Output('DIV_multiNameDynamic_3D', 'children'),
   Output('STORE_multiNameCurNumber', 'data'),
   Input('BUTTON_addFeature_3D', 'n_clicks'),
@@ -1729,7 +1729,7 @@ def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
   return patch_children, nextNumber
 
 # store_previewRange
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='store_previewRange',
@@ -1741,7 +1741,7 @@ app.clientside_callback(
 )
 
 # store_sliceRange
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='store_sliceRange'),
@@ -1754,7 +1754,7 @@ app.clientside_callback(
 
 # max range
 
-@app.callback(
+@callback(
   Output('STORE_maxRange_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
 )
@@ -1767,7 +1767,7 @@ def update_maxRange_3D(stage):
   )
   return maxRange
 
-@app.callback(
+@callback(
   output=[
     ( Output('SLIDER_Xrange_3D', 'min'), Output('SLIDER_Xrange_3D', 'max'), Output('SLIDER_Xrange_3D', 'value') ),
     ( Output('SLIDER_Yrange_3D', 'min'), Output('SLIDER_Yrange_3D', 'max'), Output('SLIDER_Yrange_3D', 'value') ),
@@ -1786,7 +1786,7 @@ def update_sliderRange_3D(maxRange):
 
 # store_cellsInfo_forJSONtoPlot (download: ~2.5M,500ms ; compute 250ms)
 
-@app.callback(
+@callback(
   Output('STORE_obs_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
   Input('DROPDOWN_featureType_3D', 'value'),
@@ -1802,7 +1802,7 @@ def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
   obs = adata.obs[['x','y','z','germ_layer','celltype']]
   return obs.to_dict('index')
 
-@app.callback(
+@callback(
   Output('STORE_cellsObsFilter_3D', 'data'),
   
   Input('STORE_sliceRange_3D', 'data'),
@@ -1838,7 +1838,7 @@ def store_cellsInfo_forJSONtoPlot_3D(sliceRange, germs, stage, featureType):
   return Serverside(obsnames_filt)
 
 # store_expInfo_forJSONtoPlot (download: <0.43M,<80ms; compute 320ms)
-@app.callback(
+@callback(
   Output('STORE_cellsExpFilter_3D', 'data'),
   Output('STORE_singleExp_3D', 'data'),
   Output('STORE_multiExp_3D', 'data'),
@@ -1949,7 +1949,7 @@ def store_expInfo_forJSONtoPlot_3D(sclick, mclick, hideZero, stage, featureType,
       return (Serverside(cellsExpFilter), exp, no_update, ifmulti, no_update)
 
 # update ChipGroup-celltype chips
-@app.callback(
+@callback(
   Output('CHIPGROUP_celltype_3D', 'children'),
   Output('CHIPGROUP_celltype_3D', 'value'),
   Output('STORE_allCelltypes_3D', 'data'),
@@ -1983,7 +1983,7 @@ def update_chipGroupCelltype_3D(obsFilter, expFilter, stage, cmap):
   
   return chips, celltypes, celltypes
 
-@app.callback(
+@callback(
   Output('CHIPGROUP_celltype_3D', 'value'),
   Input('BUTTON_invertSelectionCtp_3D', 'n_clicks'),
   State('CHIPGROUP_celltype_3D', 'value'),
@@ -1993,7 +1993,7 @@ def update_chipGroupCelltype_3D(obsFilter, expFilter, stage, cmap):
 def invertSelection_celltypesButton_3D(click, curValue, allCelltypes):
   return list(set(allCelltypes) - set(curValue))
 
-@app.callback(
+@callback(
   Output('CHIPGROUP_celltype_3D', 'value'),
   Input('BUTTON_clearSelectionCtp_3D', 'n_clicks'),
   prevent_initial_call=True
@@ -2001,7 +2001,7 @@ def invertSelection_celltypesButton_3D(click, curValue, allCelltypes):
 def clearSelection_celltypesButton_3D(click):
   return []
 
-@app.callback(
+@callback(
   Output('CHIPGROUP_celltype_3D', 'value'),
   Input('BUTTON_allSelectionCtp_3D', 'n_clicks'),
   State('CHIPGROUP_celltype_3D', 'value'),
@@ -2015,7 +2015,7 @@ def allSelection_celltypesButton_3D(click, curValue, allCelltypes):
     return list(set(allCelltypes))
 
 # store_ctpInfo_forJSONtoPLot
-@app.callback(
+@callback(
   Output('STORE_cellsCtpFilter_3D', 'data'),
   Input('CHIPGROUP_celltype_3D', 'value'),
   State('DROPDOWN_stage_3D', 'value')
@@ -2028,7 +2028,7 @@ def store_ctpInfo_forJSONtoPlot_3D(selectedCtps, stage):
   return series.index.to_list()
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 # plot_3Dfigure_exp
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='exp_3Dscatter',
@@ -2046,7 +2046,7 @@ app.clientside_callback(
 )
 
 # colorpicker for singleExp
-@app.callback(
+@callback(
   Output('ACTIONICON_colorSingle_3D', 'children'),
   Output('FIGURE_3Dexpression', 'figure'),
   Input('COLORPICKER_single_3D', 'value'),
@@ -2057,7 +2057,7 @@ def colorpicker_for_singleExp_3D(color):
   icon = DashIconify(icon = 'fluent:circle-48-filled', color=color, width=48)
   return icon, patch
 
-@app.callback(
+@callback(
   Output('TEXT_colorSingle_3D', 'value'),
   Output('COLORPICKER_single_3D', 'value'),
   Input('TEXT_colorSingle_3D', 'value'),
@@ -2076,7 +2076,7 @@ def linkage_colorPickerAndTextSingle_3D(value1, value2):
 
 # colopicker for multiExp
 
-@app.callback(
+@callback(
   Output('STORE_multiNameInfo_3D', 'data'),
   Input({'type': 'COLORPICKER_multi_3D', 'index': ALL}, 'value'),
   Input({'type': 'DROPDOWN_multiName_3D', 'index': ALL}, 'value'),
@@ -2084,7 +2084,7 @@ def linkage_colorPickerAndTextSingle_3D(value1, value2):
 def store_multiNameInfo_3D(colors, genes):
   return dict(zip(colors, genes))
 
-@app.callback(
+@callback(
   Output({'type':'ACTIONICON_colorMulti_3D', 'index': MATCH}, 'children'),
   Output({'type': 'TEXT_colorMulti_3D', 'index': MATCH}, 'value'),
   Output({'type': 'COLORPICKER_multi_3D', 'index': MATCH}, 'value'),
@@ -2108,7 +2108,7 @@ def linkage_colorPickerAndTextMulti_3D(value1, value2):
     return icon, color, no_update
 
 # colorpicker for ctpLegend
-@app.callback(
+@callback(
   Output('DRAWER_setColorCtp_3D', 'visible'),
   Input('BUTTON_setColors_3D', 'n_clicks'),
   prevent_initial_call=True,
@@ -2116,7 +2116,7 @@ def linkage_colorPickerAndTextMulti_3D(value1, value2):
 def setCelltypeColorsInDrawer_3D(click):
   return True
 
-@app.callback(
+@callback(
   Output('DRAWER_setColorCtp_3D', 'children'),
   Input('STORE_allCelltypes_3D', 'data'),
   State('STORE_ctpCmap_3D', 'data'),
@@ -2125,7 +2125,7 @@ def setCelltypeColorsInDrawer_3D(click):
 def generate_drawerLegendContent_3D(curAllCtps, cmap):
   return drawerContent_ctpColorPicker(curAllCtps, cmap)
 
-@app.callback(
+@callback(
   Output({'type': 'ACTIONICON_colorCtp_3D', 'id': MATCH}, 'children'),
   Output({'type': 'TEXT_colorCtp_3D', 'id': MATCH}, 'value'),
   Output({'type': 'COLORPICKER_colorCtp_3D', 'id': MATCH}, 'value'),
@@ -2151,7 +2151,7 @@ def syncAndReturn_colorValue_3D(text, picker):
     icon = DashIconify(icon = 'fluent:circle-48-filled', color=color, width=48)
     return icon, color, no_update
   
-@app.callback(
+@callback(
   Output('STORE_ctpCmap_3D', 'data'),
   Input({'type': 'TEXT_colorCtp_3D', 'id': ALL}, 'value'),
   prevent_initial_call=True
@@ -2169,7 +2169,7 @@ def update_storeCtpCmap_3D(colors):
     patch[ctp] = color
     return patch
 
-@app.callback(
+@callback(
   Output('FIGURE_3Dcelltype', 'figure'),
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('STORE_ctpCmap_3D', 'data'),
@@ -2183,7 +2183,7 @@ def update_figureCtpCmap_3D(cmap, curCtps):
     patch_fig['data'][i]['marker']['color'] =  cmap[curCtps[i]]
   return patch_fig, patch_fig
 
-@app.callback(
+@callback(
   Output({'type': 'CHIP_ctpColorLegend_3D', 'id': MATCH}, 'styles'),
   Input({'type': 'TEXT_colorCtp_3D', 'id': MATCH}, 'value'),
   prevent_initial_call=True
@@ -2195,7 +2195,7 @@ def update_chipColor_3D(color):
   return patch
 
 # plot_3Dfigure_ctp
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='ctp_3Dscatter',
@@ -2211,7 +2211,7 @@ app.clientside_callback(
 )
 
 # sync layout between exp and ctp figure
-@app.callback(
+@callback(
   Output("FIGURE_3Dexpression", "figure"),
   Output("FIGURE_3Dcelltype", "figure"),
   Input("FIGURE_3Dexpression", "relayoutData"),
@@ -2249,7 +2249,7 @@ def update_relayout(expLayout, ctpLayout, proj):
     raise PreventUpdate
 
 # update scatter-3d point size
-@app.callback(
+@callback(
   Output('FIGURE_3Dexpression', 'figure'),
   Input('NUMBERINPUT_scatter3dPointsize_3D', 'value'),
   prevent_initial_call = True
@@ -2261,7 +2261,7 @@ def update_expPointSize_3D(size):
   
   return patch
 
-@app.callback(
+@callback(
   Output('FIGURE_3Dcelltype', 'figure'),
   Input('NUMBERINPUT_scatter3dPointsize_3D', 'value'),
   State('STORE_cellsIntersection_3D', 'data'),
@@ -2278,7 +2278,7 @@ def update_ctpPointSize_3D(size, cells, stage):
   return patch
 
 # switch projection type
-@app.callback(
+@callback(
   Output('FIGURE_3Dcelltype', 'figure'),
   Output('FIGURE_3Dexpression', 'figure'),
   Input('SEGMENTEDCONTROL_projection_3D', 'value'),
@@ -2289,7 +2289,7 @@ def switch_projectionType(type):
   return patch, patch
 
 # find intersection of 3-filter
-@app.callback(
+@callback(
   Output('STORE_cellsIntersection_3D', 'data'),
   Input('STORE_cellsObsFilter_3D', 'data'),
   Input('STORE_cellsExpFilter_3D', 'data'),
@@ -2301,7 +2301,7 @@ def intersection_of_filter(obsFilter, expFilter, ctpFilter):
   return tmp
 
 # hide axes
-@app.callback(
+@callback(
   Output("FIGURE_3Dexpression", "figure", allow_duplicate=True),
   Output("FIGURE_3Dcelltype", "figure", allow_duplicate=True),
   Input('SWITCH_hideAxes_3D', 'checked'),
@@ -2320,7 +2320,7 @@ def hideAxes_3D(hideAxes):
   return patch, patch
 
 # show preview Box
-@app.callback(
+@callback(
   Output('FIGURE_3Dexpression', 'figure', allow_duplicate=True),
   Output('FIGURE_3Dcelltype', 'figure', allow_duplicate=True),
   Input('SWITCH_previewBox_3D', 'checked'),
@@ -2351,7 +2351,7 @@ def update_previewBox(showBox, preRange):
   return patch, patch
 
 # violin plot
-@app.callback(
+@callback(
   Output('FIGURE_expViolin_3D', 'figure'),
   Input('DROPDOWN_featureType_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -2394,7 +2394,7 @@ def update_spatial_plotFeature3D_expViolin(featureType, stage, cells, ifmulti, s
 
   return fig
 
-@app.callback(
+@callback(
   Output('FIGURE_ctpViolin_3D', 'figure'),
   Input('DROPDOWN_featureType_3D', 'value'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -2436,7 +2436,7 @@ def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti
 
   return fig
 
-# app.clientside_callback(
+# clientside_callback(
 #   ClientsideFunction(
 #     namespace='plotFunc_3Dtab',
 #     function_name='singleExpCtp_violin',
@@ -2452,7 +2452,7 @@ def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti
 # )
 
 # moran SVG offcanvas
-@app.callback(
+@callback(
   Output('OFFCANVAS_moranRes_3D', 'is_open'),
   Input('BUTTON_showMoran_3D', 'n_clicks'),
   prevent_initial_call = True
@@ -2461,7 +2461,7 @@ def show_moranRes_offcanvas(click):
   if click:
     return True
 
-@app.callback(
+@callback(
   Output('DATATABLE_moranRes_3D', 'data'),
   Output('DATATABLE_moranRes_3D', 'columns'),
   
