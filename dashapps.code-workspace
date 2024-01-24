@@ -4,7 +4,10 @@
 			"path": "."
 		},
 		{
-			"path": "../../project/uhrf1/notebooks"
+			"path": "../../project/uhrf1"
+		},
+		{
+			"path": ".."
 		}
 	],
 	"settings": {}

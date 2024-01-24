@@ -2043,6 +2043,7 @@ clientside_callback(
   State('SWITCH_previewBox_3D', 'checked'),
   State('STORE_previewRange_3D', 'data'),
   State('SEGMENTEDCONTROL_projection_3D', 'value'),
+  State('NUMBERINPUT_scatter3dPointsize_3D', 'value')
 )
 
 # colorpicker for singleExp
@@ -2208,6 +2209,7 @@ clientside_callback(
   State('STORE_previewRange_3D', 'data'),
   State('STORE_ctpCmap_3D', 'data'),
   State('SEGMENTEDCONTROL_projection_3D', 'value'),
+  State('NUMBERINPUT_scatter3dPointsize_3D', 'value')
 )
 
 # sync layout between exp and ctp figure

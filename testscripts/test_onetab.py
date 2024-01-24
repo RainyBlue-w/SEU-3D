@@ -1518,6 +1518,7 @@ app.clientside_callback(
   State('SWITCH_previewBox_3D', 'checked'),
   State('STORE_previewRange_3D', 'data'),
   State('SEGMENTEDCONTROL_projection_3D', 'value'),
+  State('NUMBERINPUT_scatter3dPointsize_3D', 'value')
 )
 
 # colorpicker for singleExp
@@ -1683,6 +1684,7 @@ app.clientside_callback(
   State('STORE_previewRange_3D', 'data'),
   State('STORE_ctpCmap_3D', 'data'),
   State('SEGMENTEDCONTROL_projection_3D', 'value'),
+  State('NUMBERINPUT_scatter3dPointsize_3D', 'value')
 )
 
 # sync layout between exp and ctp figure
@@ -1992,7 +1994,7 @@ app.layout = dbc.Container(
 if __name__ == '__main__':
   app.run_server(
     host='10.193.0.208',
-    port='8052',
+    port='8051',
     debug=True,
     jupyter_mode = 'external'
   )

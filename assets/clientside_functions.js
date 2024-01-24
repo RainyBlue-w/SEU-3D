@@ -9,7 +9,7 @@ const getObjFirstItem = (obj) => {
     for(let i in obj) return obj[i];
 }
 
-function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection) {
+function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection, pointSize) {
 
     var filtObs = pick(obs, cells)
     if (!ifmulti) {
@@ -24,7 +24,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, p
                 x: filtObs.map(obj => obj['x']), y: filtObs.map(obj => obj['y']), z: filtObs.map(obj => obj['z']),
                 mode: 'markers', type: 'scatter3d',
                 marker: {
-                    color: colors, coloraxis: 'coloraxis', size: 3, opacity: 1,
+                    color: colors, coloraxis: 'coloraxis', size: pointSize, opacity: 1,
                 }
             }
         ],
@@ -66,7 +66,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, p
     return figExp
 }
 
-function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
+function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection, pointSize){
     var filtObs = pick(obs, cells)
     var filtObs_group = filtObs.groupBy(({ celltype }) => celltype)
     var figCtp = {
@@ -119,7 +119,7 @@ function plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection){
                 showlegend: true,
                 marker: {
                     color: ctp_cmap[ctp],
-                    size: 3,
+                    size: pointSize,
                     opacity: 1,
                 },
             }
@@ -251,17 +251,17 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         //     return  maxRange['x_min'], maxRange['x_max'], [maxRange['x_min'], maxRange['x_max']], maxRange['y_min'], maxRange['y_max'], [maxRange['y_min'], maxRange['y_max']], maxRange['z_min'], maxRange['z_max'], [maxRange['z_min'], maxRange['z_max']]
         // },
 
-        exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange, projection){
+        exp_3Dscatter: function(obs, cells, singleExp, ifmulti, mixcolor, hideAxes, preview, preRange, projection, pointSize){
 
-            figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection)
+            figExp = plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, projection, pointSize)
             figExp = push_previewBox(figExp, preview, preRange, hideAxes)
 
             return figExp
         },
 
-        ctp_3Dscatter: function (obs, cells, hideAxes, preview, preRange, ctp_cmap, projection){
+        ctp_3Dscatter: function (obs, cells, hideAxes, preview, preRange, ctp_cmap, projection, pointSize){
 
-            figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection)
+            figCtp = plot_ctpScatter3D(obs, cells, ctp_cmap, hideAxes, projection, pointSize)
             figCtp = push_previewBox(figCtp, preview, preRange, hideAxes)
 
             return figCtp
