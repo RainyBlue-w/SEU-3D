@@ -36,7 +36,6 @@ import os
 import pandas as pd
 import dask.dataframe as dd
 import numpy as np
-# import loompy as lp
 import h5py
 import json
 import time
@@ -307,10 +306,6 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
         strip_text_y = element_text(size=16, face = 'bold', angle=0)
       ) +
       scale_x_discrete(labels = lambda list: [re.search(r'^(.*?)_',x).group(1) for x in list]) + 
-      # geom_text(data = ctp_counts[ctp_counts['count'] > 0.05],
-      #           mapping = aes(x='celltype', y='text_y', label = 'celltype'),
-      #           size=8,
-      #           angle=90) + 
       coord_flip()
   ).save(img_dir, width=8, height=1+3*len(ordered_features), dpi=dpi, 
            limitsize=False, verbose=False)

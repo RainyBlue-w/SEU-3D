@@ -72,7 +72,6 @@ exp_data = sc.read_h5ad('/rad/wuc/Reik/anndata.h5ad')
 exp_data = exp_data[(exp_data.obs['sample'] != 'E8.5_CRISPR_T_WT')&(exp_data.obs['sample'] != 'E8.5_CRISPR_T_KO')]
 sc.pp.normalize_total(exp_data, target_sum=1e4)
 sc.pp.log1p(exp_data)
-all(exp_data.obs.index.isin(umap.index))
 
 
 # In[25]:

@@ -1998,4 +1998,3 @@ if __name__ == '__main__':
     debug=True,
     jupyter_mode = 'external'
   )
-  

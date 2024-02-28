@@ -1,16 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "."
-		},
-		{
-			"path": "../../project/uhrf1"
-		},
-		{
 			"path": ".."
 		},
 		{
-			"path": "../../../../rad/wuc/project/Hey2_review/motif"
+			"path": "../../../../rad/wuc/project/Hey2_review"
 		}
 	],
 	"settings": {}

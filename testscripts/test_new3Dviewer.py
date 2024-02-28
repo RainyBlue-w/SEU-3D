@@ -2183,7 +2183,7 @@ app.layout = dbc.Container(
 if __name__ == "__main__":
     app.run(
     host='10.193.0.208',
-    port='8053',
+    port='8051',
     # threaded=True,
     proxy=None,
     debug=True,
