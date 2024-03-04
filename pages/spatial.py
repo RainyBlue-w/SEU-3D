@@ -213,7 +213,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
   pdf = pd.DataFrame(np.array(embedding), index=adata.obs_names, columns=['x', 'y'])
 
   features_df = adata[:,ordered_features].to_df()
-  features_df.columns = ['%s\n(%.2e)' % (i,genes_all_pval.loc[stage].loc[i, 'all p.adj']) for i in features_df.columns]
+  features_df.columns = ['%s\n( %.2e )' % (i,genes_all_pval.loc[stage].loc[i, 'all p.adj']) for i in features_df.columns]
 
   pdf = pd.concat([pdf, features_df, adata.obs.germ_layer], axis=1)
   pdf = pd.melt(pdf, id_vars = ['x', 'y', 'germ_layer'], var_name='feature', value_name='value')
@@ -233,8 +233,8 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
   (
     ggplot() + 
     geom_point(data = pdf, mapping=aes(x='x', y='y', color='value')) + 
-    geom_text(data = padj_df, x=0, mapping=aes(y=-25,label='value'), 
-              fontstyle='italic', fontweight='bold', size=12) +
+    geom_text(data = padj_df, x=0, mapping=aes(y=-50,label='value'), 
+              fontstyle='italic', fontweight='normal', size=18, color='#222222') +
     facet_grid('feature ~ germ_layer') + 
     scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
     theme(
@@ -245,12 +245,12 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
       panel_grid = element_blank(),
       panel_border = element_rect(linewidth=0.4, fill= 'None'),
       panel_background = element_rect(fill= 'None'),
-      strip_text_x = element_text(size=16),
-      strip_text_y = element_text(size=16, face = 'bold', angle=-90),
+      strip_text_x = element_text(size=18),
+      strip_text_y = element_text(size=18, face = 'bold', angle=-90),
       
     )
   
-  ).save(img_dir, width=12, height=1+3.5*len(features), dpi=dpi, 
+  ).save(img_dir, width=12, height=1+4*len(features), dpi=dpi, 
           limitsize=False, verbose=False)
   return img_dir
 
@@ -306,7 +306,7 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
         axis_ticks_major_x = element_blank(),
         axis_ticks_minor_x = element_blank(),
         axis_title_y=element_blank(),
-        strip_text_y = element_text(size=16, face = 'bold', angle=0)
+        strip_text_y = element_text(size=16, face = 'bold', angle=-90)
       ) +
       scale_x_discrete(labels = lambda list: [re.search(r'^(.*?)_',x).group(1) for x in list]) + 
       coord_flip()
@@ -2743,15 +2743,3 @@ layout = dbc.Container(
   className="Container-all",
 )
 
-# In[] test
-
-# stage = 'E8.0'
-# adata = exp_data[stage]
-# odir='plotFeatureSeries'
-# featureType='Gene'
-# embedding=exp_data[stage].obs[['x_flatten', 'y_flatten']]
-# features=['Hand1', 'Foxf1', 'Cdx1']
-# pattern=None
-# sort=True
-# ascending=True
-# dpi=100
