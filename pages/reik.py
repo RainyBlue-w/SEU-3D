@@ -6,37 +6,20 @@ dash.register_page(__name__)
 
 # In[]: env
 
-from dash import Dash, dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback
-from dash.dash_table.Format import Format, Group, Scheme, Symbol
+from dash import dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback
 from dash.exceptions import PreventUpdate
-import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 
 import plotly.express as px
-import plotly.graph_objects as go
-import plotly
-from plotly.subplots import make_subplots
 from plotnine import *
-import plotnine.options
 
-from PIL import Image
 import dash_bootstrap_components as dbc
 import scanpy as sc
-import os
 import pandas as pd
-import dask.dataframe as dd
 import numpy as np
-import h5py
-import json
 import loompy as lp
 import math
 
-from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-import matplotlib.pyplot as plt
 import re
-import seaborn as sns
-from concurrent import futures
 import diskcache
 background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/reik/cache"))
 
