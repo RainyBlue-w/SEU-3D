@@ -228,6 +228,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
   padj_df['feature'] = padj_df.index
   padj_df = pd.melt(padj_df, id_vars=['feature'], var_name='germ_layer')
   padj_df.value = [('%.2e' % i) for i in padj_df.value]
+  padj_df['feature'] = padj_df['feature'].astype('category').values.reorder_categories(features_df.columns)
   
   # plotnine
   (
@@ -250,7 +251,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
       
     )
   
-  ).save(img_dir, width=12, height=1+4*len(features), dpi=dpi, 
+  ).save(img_dir, width=12, height=1+3.5*len(features), dpi=dpi, 
           limitsize=False, verbose=False)
   return img_dir
 
@@ -266,7 +267,7 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
   else:
     img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
-  ordered_features = genes_min_pval.loc[stage].loc[features].sort_values(by='PadjMinVal', ascending=True).index.to_list()
+  ordered_features = genes_all_pval.loc[stage].loc[features].sort_values(by='all p.adj', ascending=True).index.to_list()
   
   ctp_counts = {}
   for gene in ordered_features:
@@ -300,17 +301,17 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
         )
       ) + 
       theme(legend_position='none',
-        axis_text_y = element_text(size=12),
-        axis_text_x = element_text(size=12),
+        axis_text_y = element_text(size=16),
+        axis_text_x = element_text(size=16),
         axis_title_x = element_blank(),
         axis_ticks_major_x = element_blank(),
         axis_ticks_minor_x = element_blank(),
         axis_title_y=element_blank(),
-        strip_text_y = element_text(size=16, face = 'bold', angle=-90)
+        strip_text_y = element_text(size=18, face = 'bold', angle=-90)
       ) +
       scale_x_discrete(labels = lambda list: [re.search(r'^(.*?)_',x).group(1) for x in list]) + 
       coord_flip()
-  ).save(img_dir, width=8, height=1+3*len(ordered_features), dpi=dpi, 
+  ).save(img_dir, width=8, height=1+3.5*len(ordered_features), dpi=dpi, 
            limitsize=False, verbose=False)
   return img_dir
 
