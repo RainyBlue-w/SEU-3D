@@ -13,8 +13,6 @@ from dash import Dash, dcc, html, dash_table, no_update, State, Patch, Diskcache
 from dash import ALL, MATCH, ALLSMALLER
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
-import dash_daq as daq
-import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import feffery_antd_components as fac
@@ -25,20 +23,16 @@ from dash_extensions.enrich import MultiplexerTransform
 
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly
 from plotly.subplots import make_subplots
 from plotnine import *
-import plotnine.options
 
 from PIL import Image
 import scanpy as sc
 import os
 import pandas as pd
-import dask.dataframe as dd
 import numpy as np
 import h5py
 import json
-import time
 
 import squidpy as sq
 
@@ -203,25 +197,23 @@ def show_multiFeatures_spatial(adata, features_dict, embedding, **kws):
 def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding, pattern=None, features=None,cmap=None, sort=False, ascending=True, dpi=100, **kws):
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
-    
+
     img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
-    
+
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features = [i for i in features if i in genes_min_pval.loc[stage].index.to_list()]
 
   else:
     img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
-  ordered_features = genes_min_pval.loc[stage].loc[features].sort_values(by='PadjMinVal', ascending=True).index.to_list()
+  ordered_features = genes_all_pval.loc[stage].loc[features].sort_values(by='all p.adj', ascending=True).index.to_list()
 
-  pdf = pd.DataFrame(np.array(embedding), 
-                      index=adata.obs_names, 
-                      columns=['x', 'y'])
-  
+  pdf = pd.DataFrame(np.array(embedding), index=adata.obs_names, columns=['x', 'y'])
+
   features_df = adata[:,ordered_features].to_df()
-  features_df.columns = ['%s\n(%.2e)' % (i,genes_min_pval.loc[stage].loc[i, 'PadjMinVal']) for i in features_df.columns]
+  features_df.columns = ['%s\n(%.2e)' % (i,genes_all_pval.loc[stage].loc[i, 'all p.adj']) for i in features_df.columns]
 
   pdf = pd.concat([pdf, features_df, adata.obs.germ_layer], axis=1)
   pdf = pd.melt(pdf, id_vars = ['x', 'y', 'germ_layer'], var_name='feature', value_name='value')
@@ -229,11 +221,20 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
     pdf = pdf.sort_values(by='value', ascending=ascending)
   pdf['feature'] = pdf['feature'].astype('category').values.reorder_categories(features_df.columns)
   pdf['germ_layer'] = pdf['germ_layer'].astype('category').values.reorder_categories(['ectoderm','mesoderm','endoderm'])
-
+  
+  padj_df = genes_all_pval.loc[stage].loc[features, ['ecto p.adj', 'meso p.adj', 'endo p.adj']]
+  padj_df.index = ['%s\n( %.2e )' % (i,genes_all_pval.loc[stage].loc[i, 'all p.adj']) for i in padj_df.index]
+  padj_df.columns = ['ectoderm', 'mesoderm', 'endoderm']
+  padj_df['feature'] = padj_df.index
+  padj_df = pd.melt(padj_df, id_vars=['feature'], var_name='germ_layer')
+  padj_df.value = [('%.2e' % i) for i in padj_df.value]
+  
   # plotnine
   (
     ggplot() + 
-    geom_point(data = pdf, mapping=aes(x='x', y='y', color='value')) +
+    geom_point(data = pdf, mapping=aes(x='x', y='y', color='value')) + 
+    geom_text(data = padj_df, x=0, mapping=aes(y=-25,label='value'), 
+              fontstyle='italic', fontweight='bold', size=12) +
     facet_grid('feature ~ germ_layer') + 
     scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
     theme(
@@ -245,9 +246,11 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
       panel_border = element_rect(linewidth=0.4, fill= 'None'),
       panel_background = element_rect(fill= 'None'),
       strip_text_x = element_text(size=16),
-      strip_text_y = element_text(size=16, face = 'bold', angle=0)
+      strip_text_y = element_text(size=16, face = 'bold', angle=-90),
+      
     )
-  ).save(img_dir, width=12, height=1+3*len(features), dpi=dpi, 
+  
+  ).save(img_dir, width=12, height=1+3.5*len(features), dpi=dpi, 
           limitsize=False, verbose=False)
   return img_dir
 
@@ -1748,7 +1751,6 @@ clientside_callback(
 )
 
 # max range
-
 @callback(
   Output('STORE_maxRange_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -1771,16 +1773,13 @@ def update_maxRange_3D(stage):
   inputs = Input('STORE_maxRange_3D', 'data'),
 )
 def update_sliderRange_3D(maxRange):
-  
   res = [
     ( maxRange[f'{c}_min'], maxRange[f'{c}_max'], (maxRange[f'{c}_min'], maxRange[f'{c}_max']) )
     for c in ['x', 'y', 'z']
   ]
-  
   return  res
 
-# store_cellsInfo_forJSONtoPlot (download: ~2.5M,500ms ; compute 250ms)
-
+# store cells obsinfo forJSONtoPlot
 @callback(
   Output('STORE_obs_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -1793,7 +1792,6 @@ def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
     adata = auc_data[stage]
   else:
     raise PreventUpdate
-  
   obs = adata.obs[['x','y','z','germ_layer','celltype']]
   return obs.to_dict('index')
 
@@ -2495,6 +2493,7 @@ def cal_moranRes(click, cells, stage, featureType):
 
 # In[] callbacks/series :
 
+
 @callback(
   Output('spatial_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Output('spatial_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
@@ -2527,8 +2526,6 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
     elif featureType == 'Regulon':
       adata = auc_mtx[stage]
 
-    # img_dir1 = show_features_spatial_regularExp(adata, stage, pattern, 'plotFeatureSeries', featureType, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True,)
-    # img_dir2 = show_featuresCtpcounts_spatial_regularExp(adata, stage, pattern, 'plotFeatureSeries', featureType, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True,)
     with futures.ThreadPoolExecutor(max_workers=8) as executor:
       t1 = executor.submit(show_features_spatial_regularExp, adata, stage, 'plotFeatureSeries', featureType, 
                               pattern=pattern, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
@@ -2539,7 +2536,6 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
     return Image.open(img_dir1), Image.open(img_dir2)
   else:
     raise PreventUpdate
-
 
 @callback(
   Output('spatial_plotFeatureSeries_img', 'src', allow_duplicate=True),
@@ -2746,3 +2742,16 @@ layout = dbc.Container(
   fluid=True,
   className="Container-all",
 )
+
+# In[] test
+
+# stage = 'E8.0'
+# adata = exp_data[stage]
+# odir='plotFeatureSeries'
+# featureType='Gene'
+# embedding=exp_data[stage].obs[['x_flatten', 'y_flatten']]
+# features=['Hand1', 'Foxf1', 'Cdx1']
+# pattern=None
+# sort=True
+# ascending=True
+# dpi=100
