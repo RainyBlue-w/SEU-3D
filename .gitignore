@@ -1,2 +1,4 @@
 testscripts/file_system_backend/
 file_system_backend/
+__pycache__/
+dashapps.code-workspace

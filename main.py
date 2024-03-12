@@ -2,7 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash_extensions.enrich import html, DashProxy, LogTransform, ServersideOutputTransform, MultiplexerTransform
-
+import feffery_antd_components as fac
 
 dbc_css = "/home/wuc/dashapps/css/dbc.min.css"
 app = DashProxy(
@@ -45,10 +45,9 @@ app.layout = dmc.NotificationsProvider(html.Div([
 ]))
 
 
-
 #run server
 if __name__ == "__main__":
-    app.run(
+  app.run(
     host='::',
     port='8050',
     threaded=True,
@@ -56,4 +55,4 @@ if __name__ == "__main__":
     debug=False,
     use_reloader=False
     # jupyter_mode='external'
-)
+  )

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import dash
-dash.register_page(__name__)
+# import dash
+# dash.register_page(__name__)
 
 # In[]: env
 
@@ -27,7 +27,9 @@ from PIL import Image
 import re
 import diskcache
 background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/reik/cache"))
-from dash_extensions.enrich import html
+
+
+from dash_extensions.enrich import html, DashProxy, LogTransform, ServersideOutputTransform, MultiplexerTransform
 
 
 # In[]: data
@@ -227,7 +229,7 @@ def show_features_reik_regularExp(adata, stage, odir, featureType, embedding, pa
       panel_border = element_rect(linewidth=0.4, fill= 'None'),
       panel_background = element_rect(fill= 'None'),
       strip_text_x = element_text(size=16),
-      strip_text_y = element_text(size=16, face = 'bold', angle=-90)
+      strip_text_y = element_text(size=18, face = 'bold', angle=-90)
     )
   ).save(img_dir, width=12, height=8*len(features), dpi=dpi, 
           limitsize=False, verbose=False)
@@ -254,7 +256,7 @@ def show_featuresCtpcounts_reik_regularExp(adata, stage, odir, featureType, embe
     df = adata[:,gene].to_df()
     # thr = df.min()+(df.max()-df.min())*0.05
     df = df[df[gene] > 0]
-    counts = pd.DataFrame(adata.obs['celltype'].loc[df.index].value_counts())
+    counts = pd.DataFrame(adata.obs['celltype'][df.index].value_counts())
     counts['gene'] = gene
     counts['count'] = counts['count']/sum(counts['count'])
     ctp_counts[gene] = counts
@@ -282,7 +284,7 @@ def show_featuresCtpcounts_reik_regularExp(adata, stage, odir, featureType, embe
         )
       ) + 
       theme(legend_position='none',
-        axis_text_y = element_text(size=12),
+        axis_text_y = element_text(size=16),
         axis_text_x = element_text(size=12),
         axis_title_x = element_blank(),
         axis_ticks_major_x = element_blank(),
@@ -295,6 +297,21 @@ def show_featuresCtpcounts_reik_regularExp(adata, stage, odir, featureType, embe
   ).save(img_dir, width=8, height=1+8*len(features), dpi=dpi, 
            limitsize=False, verbose=False)
   return img_dir
+
+dbc_css = "/home/wuc/dashapps/css/dbc.min.css"
+app = DashProxy(
+  __name__, 
+  external_stylesheets=[
+    dbc.themes.BOOTSTRAP
+  ],
+  external_scripts = [
+    {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
+  ],
+  transforms=[
+    LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
+  ],
+#   use_pages=True
+)
 
 # In[]: app/widgets/plotFeature
 
@@ -416,7 +433,7 @@ reik_dropdown_stage_series = html.Div(
         dbc.Label("Stage"),
         dcc.Dropdown(
             ['E7.5', 'E7.75', 'E8.0', 'E8.5', 'E8.75'],
-            'E7.0',
+            'E7.75',
             id="reik_dropdown_stage_series",
             clearable=False,
             searchable=True,
@@ -523,9 +540,9 @@ reik_tabs = dbc.Tabs(
   id = "reik_tab_plotFeature",
 )
 
-layout = dbc.Container(
+app.layout = dbc.Container(
   [
-    html.Div(id='notifications-container-reik'),
+    html.Div(id='notifications-container'),
     dbc.Row([
       dbc.Col([
         reik_tabs,
@@ -538,7 +555,7 @@ layout = dbc.Container(
 
 # In[]: callbacks/plotFeature
 
-@callback(
+@app.callback(
   Output('reik_dropdown_plotFeature_gene', 'options'),
   Input('reik_plotFeature_stageSlider', 'value'),
   Input('reik_dropdown_plotFeature_gene', 'search_value')
@@ -553,7 +570,7 @@ def update_dropdown_options_gene(stage, search):
   vars = exp_data[stage].var_names
   return vars[vars.str.startswith(search)].sort_values()
 
-@callback(
+@app.callback(
   Output('reik_dropdown_plotFeature_regulon', 'options'),
   Input('reik_plotFeature_stageSlider', 'value'),
   Input('reik_dropdown_plotFeature_regulon', 'search_value')
@@ -568,7 +585,7 @@ def update_dropdown_options_regulon(stage, search):
   vars = auc_data[stage].var_names
   return vars[vars.str.startswith(search)].sort_values()
 
-@callback(
+@app.callback(
   Output('reik_plotFeature_celltypeGraph','figure'),
   Input('reik_plotFeature_stageSlider', 'value'),
 )
@@ -581,7 +598,7 @@ def update_celltypeGraph(stage):
     stage = 'E%.2f' % stage
   return show_celltype_umap(adata=exp_data[stage], embedding=umap[stage], cmap=celltype_colors, sort=True, orientation='h')
 
-@callback(
+@app.callback(
   Output('reik_plotFeature_geneGraph','figure'),
   Output('reik_plotFeature_geneTitle', 'children'),
   Input('reik_plotFeature_stageSlider', 'value'),
@@ -599,7 +616,7 @@ def update_geneGraph(stage, gene):
     gene
   )
 
-@callback(
+@app.callback(
   Output('reik_plotFeature_regulonGraph','figure'),
   Output('reik_plotFeature_regulonTitle', 'children'),
   Input('reik_plotFeature_stageSlider', 'value'),
@@ -617,7 +634,7 @@ def update_regulonGraph(stage, regulon):
     regulon
   )
 
-@callback(
+@app.callback(
   Output('reik_plotFeature_regulonTargetGene', 'data'),
   Output('reik_plotFeature_regulonTargetGene', 'columns'),
   Input('reik_plotFeature_stageSlider', 'value'),
@@ -635,7 +652,7 @@ def update_regulonTargetGenes(stage, regulon):
   df = df.reset_index().rename(columns={"index": "id"})
   return df.to_dict('records'), [{"name": i, "id": i, "deletable": False} for i in df.columns if i != 'id']
 
-@callback(
+@app.callback(
   Output('reik_dropdown_plotFeature_gene', 'value'),
   Input('reik_plotFeature_regulonTargetGene', 'active_cell'),
   Input('reik_plotFeature_stageSlider', 'value'),
@@ -657,7 +674,7 @@ def update_regulonGraph_by_targetGene(active_cell, stage, regulon):
 
 # In[]: callbacks/plotSeries
 
-@callback(
+@app.callback(
   Output('reik_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Output('reik_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
   State('reik_dropdown_featureType_series', 'value'),
@@ -699,10 +716,10 @@ def update_reik_plotFeature_graphSeries_pattern(featureType, pattern, click, sta
   else:
     raise PreventUpdate
 
-@callback(
+@app.callback(
   Output('reik_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Output('reik_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
-  Output('notifications-container-reik', 'children'),
+  Output('notifications-container', 'children'),
   State('reik_dropdown_featureType_series', 'value'),
   State('reik_textarea_featureLists_series', 'value'),
   Input('reik_inputButton_featureLists_series_plot', 'n_clicks'),
@@ -763,7 +780,7 @@ def update_reik_plotFeature_graphSeries_list(featureType, names, click, stage):
   else:
     raise PreventUpdate
 
-@callback(
+@app.callback(
   Output('reik_plotFeatureSeries_graph_ctp', 'figure'),
   Input('reik_dropdown_stage_series', 'value'),
 )
@@ -771,7 +788,7 @@ def update_reik_plotFeatureSeries_ctpGraph(stage):
   fig = show_celltype_umap_series(exp_data[stage], embedding = umap[stage], cmap=celltype_colors, sort=True)
   return fig
 
-@callback( # update series-gene's number
+@app.callback( # update series-gene's number
   Output('reik_text_seriesGeneNumber_series', 'children'),
   Input('reik_dropdown_featureType_series', 'value'),
   Input('reik_dropdown_stage_series', 'value'),
@@ -786,5 +803,16 @@ def update_spatial_text_seriesGeneNumber_series(featureType, stage, pattern):
   features = [i for i in adata.var_names if re.match(pattern, i)]
   str = f'{len(features)} genes'
   return str
+
+# In[]: run
+if __name__ == "__main__":
+    app.run_server(
+    host='10.193.0.208',
+    port='8053',
+    proxy=None,
+    threaded=True,
+    debug=True,
+    use_reloader=False
+)
 
 

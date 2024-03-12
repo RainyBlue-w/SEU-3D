@@ -1,54 +1,37 @@
-## In[] env
+#!/usr/bin/env python
+# coding: utf-8
 
-from math import isnan
+
+# In[] env
 import math
 from functools import reduce
 from dash import Dash, dcc, html, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
 from dash import ALL, MATCH, ALLSMALLER
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
-import dash_daq as daq
-import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import feffery_antd_components as fac
 import feffery_utils_components as fuc
 import dash_bootstrap_components as dbc
-from dash_extensions.enrich import Output, Input, html, callback, DashProxy, LogTransform, DashLogger, Serverside, ServersideOutputTransform
-from dash_extensions.enrich import MultiplexerTransform
-
+from dash_extensions.enrich import Output, Input, html, callback, Serverside
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly
-from plotly.subplots import make_subplots
 from plotnine import *
-import plotnine.options
-
 from PIL import Image
 import scanpy as sc
 import os
 import pandas as pd
-import dask.dataframe as dd
 import numpy as np
-# import loompy as lp
 import h5py
 import json
-import time
-
 import squidpy as sq
-
-from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-import matplotlib.pyplot as plt
 import re
-import seaborn as sns
 from concurrent import futures
 from typing import List, Dict, Tuple
 import diskcache
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/spatial/cache_test"))
-
-
-## In[] data
+background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/spatial/cache"))
+# In[] data
 
 exp_data = {
   'E7.5': sc.read_h5ad("/rad/wuc/dash_data/spatial/matrix_data/E7.5_HC0.5_min400.h5ad"),
@@ -89,21 +72,307 @@ for stage in ['E7.5', 'E7.75', 'E8.0']:
   h5.close()
 del(auc_mtx)
 
-genes_min_pval = pd.read_csv("/rad/wuc/dash_data/spatial/sparkX_res/genes_padj_minVal.csv",
-                             header=[0], index_col=[0,1]) 
-
-
 genes_all_pval = pd.read_csv("/rad/wuc/dash_data/spatial/sparkX_res/genes_padj_combine.csv",
-                             header=[0,1], index_col=[0,1]) 
+                             header=[0,1], index_col=[0,1])
 genes_all_pval = genes_all_pval.loc[:,[('ecto', 'adjustedPval'), ('meso', 'adjustedPval'), ('endo', 'adjustedPval'), ('all', 'adjustedPval')]]
 genes_all_pval.columns = ['ecto p.adj', 'meso p.adj', 'endo p.adj', 'all p.adj']
 genes_all_pval = genes_all_pval.groupby(level=0, group_keys=False
                                                ).apply(lambda x: x.sort_values(by='all p.adj'))
 ctp_cmap = pd.read_csv("/rad/wuc/dash_data/spatial/celltype_cmap.csv")
 ctp_cmap = dict(zip(ctp_cmap['celltype'], ctp_cmap['Epiblast']))
+# In[] append
+from dash_extensions.enrich import html, DashProxy, LogTransform, ServersideOutputTransform, MultiplexerTransform
+dbc_css = "/home/wuc/dashapps/css/dbc.min.css"
+app = DashProxy(
+  __name__, 
+  external_stylesheets=[
+    dbc.themes.BOOTSTRAP
+  ],
+  external_scripts = [
+    {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
+  ],
+  transforms=[
+    LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
+  ],
+  use_pages=False
+)
 
 
-# In[] functions:
+
+# In[] functions
+
+def show_celltype_spatial(adata, embedding, cmap = ctp_cmap, **kws):
+  embedding = embedding.loc[adata.obs_names,:]
+  pdf = pd.DataFrame(np.array(embedding), 
+                    index=adata.obs_names, 
+                    columns=['x', 'y'])
+  pdf = pd.concat([pdf, adata.obs[['celltype','germ_layer']]], axis=1)
+  pdf = pdf.sort_values(by='celltype')
+  plot = px.scatter(
+  	data_frame = pdf,
+    x = 'x', y = 'y', color = 'celltype',
+    color_discrete_map = cmap,
+    **kws
+  )
+  plot.update_yaxes(visible=False)
+  plot.update_xaxes(visible=False)
+  plot.update_traces(marker_size=4.5,
+                    marker_opacity=1)
+  plot.update_layout(
+    margin=dict(l=10, r=10, t=30, b=0),
+    plot_bgcolor = '#ffffff', 
+    uirevision='constant',
+    legend_itemsizing = 'constant'
+  )
+  plot.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1],
+                                      font_size = 20)) 
+
+  return plot
+
+def show_feature_spatial(adata, feature, embedding, cmap = None, sort=False, ascending=True, **kws):
+    embedding = embedding.loc[adata.obs_names,:]
+    if cmap is None:
+        cmap = [(0.00, "rgb(244,244,244)"),
+                (0.05, "rgb(244, 244, 244)"),
+                (1.00, "rgb(34, 94, 168)")
+                ]
+    pdf = pd.DataFrame(np.array(embedding), 
+                       index=adata.obs_names, 
+                       columns=['x', 'y'])
+    pdf = pd.concat([pdf, adata[:,feature].to_df(), adata.obs['germ_layer']], axis=1)
+    if sort is True:
+      pdf = pdf.sort_values(by=feature, ascending=ascending)
+    plot = px.scatter(
+    		data_frame = pdf,
+    		x = 'x', y = 'y', color = feature,
+    		color_continuous_scale = cmap,
+        **kws
+    	)
+    plot.update_yaxes(visible=False)
+    plot.update_xaxes(visible=False)
+    plot.update_traces(marker_size=4.5,
+                      marker_opacity=1)
+    plot.update_layout(
+      margin=dict(l=10, r=10, t=30, b=0),
+      plot_bgcolor = '#ffffff', 
+      uirevision='constant',
+      coloraxis = {
+        'colorbar' : {'tickformat': '4.2f'}
+      }
+    )
+    plot.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1],
+                                               font_size = 20)) 
+    return plot
+
+def show_multiFeatures_spatial(adata, features_dict, embedding, **kws):
+  
+  embedding = embedding.loc[adata.obs_names,:]
+  pdf = pd.DataFrame(np.array(embedding), 
+                      index=adata.obs_names, 
+                      columns=['x', 'y'])
+  features = list(features_dict.values())
+  pdf = pd.concat([pdf, adata[:,features].to_df(), adata.obs['germ_layer']], axis=1)
+  colors = multiGenes_show_color(adata, features_dict)
+  
+  plot = go.Figure()
+  plot.add_trace(go.Scatter(
+    x = pdf.x, y = pdf.y, mode='markers',
+    marker={'color': colors}
+  ))
+  plot.update_yaxes(visible=False)
+  plot.update_xaxes(visible=False)
+  plot.update_traces(marker_size=4.5,
+                    marker_opacity=1)
+  plot.update_layout(
+    margin=dict(l=10, r=10, t=30, b=0),
+    plot_bgcolor = '#ffffff', 
+    uirevision='constant',
+  )
+  plot.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1],
+                                              font_size = 20)) 
+  return plot
+
+def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding, pattern=None, features=None,cmap=None, sort=False, ascending=True, dpi=100, **kws):
+  embedding = embedding.loc[adata.obs_names,:]
+  if not features:
+
+    img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    if os.path.exists( img_dir ):
+      return img_dir
+
+    features = [i  for i in adata.var_names if re.match(pattern, i)]
+    features = [i for i in features if i in genes_all_pval.loc[stage].index.to_list()]
+
+  else:
+    img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+
+  ordered_features = genes_all_pval.loc[stage].loc[features].sort_values(by='all p.adj', ascending=True).index.to_list()
+
+  pdf = pd.DataFrame(np.array(embedding), index=adata.obs_names, columns=['x', 'y'])
+
+  features_df = adata[:,ordered_features].to_df()
+  features_df.columns = ['%s\n( %.2e )' % (i,genes_all_pval.loc[stage].loc[i, 'all p.adj']) for i in features_df.columns]
+
+  pdf = pd.concat([pdf, features_df, adata.obs.germ_layer], axis=1)
+  pdf = pd.melt(pdf, id_vars = ['x', 'y', 'germ_layer'], var_name='feature', value_name='value')
+  if sort:
+    pdf = pdf.sort_values(by='value', ascending=ascending)
+  pdf['feature'] = pdf['feature'].astype('category').values.reorder_categories(features_df.columns)
+  pdf['germ_layer'] = pdf['germ_layer'].astype('category').values.reorder_categories(['ectoderm','mesoderm','endoderm'])
+  
+  padj_df = genes_all_pval.loc[stage].loc[features, ['ecto p.adj', 'meso p.adj', 'endo p.adj']]
+  padj_df.index = ['%s\n( %.2e )' % (i,genes_all_pval.loc[stage].loc[i, 'all p.adj']) for i in padj_df.index]
+  padj_df.columns = ['ectoderm', 'mesoderm', 'endoderm']
+  padj_df['feature'] = padj_df.index
+  padj_df = pd.melt(padj_df, id_vars=['feature'], var_name='germ_layer')
+  padj_df.value = [('%.2e' % i) for i in padj_df.value]
+  padj_df['feature'] = padj_df['feature'].astype('category').values.reorder_categories(features_df.columns)
+  
+  # plotnine
+  (
+    ggplot() + 
+    geom_point(data = pdf, mapping=aes(x='x', y='y', color='value')) + 
+    geom_text(data = padj_df, x=0, mapping=aes(y=-50,label='value'), 
+              fontstyle='italic', fontweight='normal', size=18, color='#222222') +
+    facet_grid('feature ~ germ_layer') + 
+    scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
+    theme(
+      # legend_position='top',
+      # legend_direction='horizontal',
+      axis_title = element_text(size=16),
+      axis_text = element_text(size=10),
+      panel_grid = element_blank(),
+      panel_border = element_rect(linewidth=0.4, fill= 'None'),
+      panel_background = element_rect(fill= 'None'),
+      strip_text_x = element_text(size=16),
+      strip_text_y = element_text(size=16, face = 'bold', angle=-90),
+      
+    )
+  
+  ).save(img_dir, width=12, height=1+3.5*len(features), dpi=dpi, 
+          limitsize=False, verbose=False)
+  return img_dir
+
+def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, embedding, pattern=None, features=None, cmap=ctp_cmap, sort=False, ascending=True, dpi=150, **kws):
+  embedding = embedding.loc[adata.obs_names,:]
+  if not features:
+    img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    if os.path.exists( img_dir ):
+      return img_dir
+    features = [i  for i in adata.var_names if re.match(pattern, i)]
+    features = [i for i in features if i in genes_all_pval.loc[stage].index.to_list()]
+
+  else:
+    img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+
+  ordered_features = genes_all_pval.loc[stage].loc[features].sort_values(by='all p.adj', ascending=True).index.to_list()
+  
+  ctp_counts = {}
+  for gene in ordered_features:
+    df = adata[:,gene].to_df()
+    # thr = df.min()+(df.max()-df.min())*0.05
+    df = df[df[gene] > 0]
+    counts = pd.DataFrame(adata.obs['celltype'][df.index].value_counts())
+    counts['gene'] = gene
+    counts['count'] = counts['count']/sum(counts['count'])
+    ctp_counts[gene] = counts
+  ctp_counts = pd.concat(ctp_counts, axis=0)
+  ctp_counts['celltype'] = np.array(ctp_counts.index.to_list())[:,1]
+  ctp_counts['text_y'] = ctp_counts['count'].max()/2
+  ctp_counts['gene'] = ctp_counts['gene'].astype('category').values.reorder_categories(ordered_features)
+  bar_df = ctp_counts[ctp_counts['count']>0].groupby(['gene']).head(5)
+  bar_df['ctp_order'] = bar_df['celltype'] +'_' + bar_df['gene'].astype(str)
+  bar_df['ctp_order'] = bar_df['ctp_order'].astype('category').values.reorder_categories(bar_df['ctp_order'][::-1])
+  (
+    ggplot() + 
+      geom_bar(data = bar_df, mapping=aes(x='ctp_order', y='count', fill = 'celltype'), stat='summary') +
+      facet_grid(
+        'gene~.', scales='free_y'
+                ) +
+      scale_y_continuous( labels = lambda list: [("%.2f%%" % (x*100)) for x in list] ) +
+      scale_fill_manual(breaks=list(cmap.keys()),
+                        values=list(cmap.values())) +
+      guides(
+        fill= guide_legend(
+          ncol = 1,
+          byrow = True
+        )
+      ) + 
+      theme(legend_position='none',
+        axis_text_y = element_text(size=12),
+        axis_text_x = element_text(size=12),
+        axis_title_x = element_blank(),
+        axis_ticks_major_x = element_blank(),
+        axis_ticks_minor_x = element_blank(),
+        axis_title_y=element_blank(),
+        strip_text_y = element_text(size=16, face = 'bold', angle=-90)
+      ) +
+      scale_x_discrete(labels = lambda list: [re.search(r'^(.*?)_',x).group(1) for x in list]) + 
+      coord_flip()
+  ).save(img_dir, width=8, height=1+3.5*len(ordered_features), dpi=dpi, 
+           limitsize=False, verbose=False)
+  return img_dir
+
+def show_metadata_discrete_spatial_germLayer(adata, stage,  odir, embedding, obs=['celltype'], cmap = ctp_cmap, dpi=150, sort = False, ascending=True, **kws):
+  embedding = embedding.loc[adata.obs_names,:]
+  img_dir = '/rad/wuc/dash_data/spatial/tmp/%s/%s/poltFeatureSeries_%s_plot_dpi%d.png' % (odir, stage, obs, dpi)
+
+  # if os.path.exists( img_dir ):
+  #   return img_dir
+
+  pdf = pd.DataFrame(np.array(embedding), 
+                     index=adata.obs_names, 
+                     columns=['x', 'y'])
+  
+  obs_df = pd.DataFrame(adata.obs[obs])
+
+  pdf = pd.concat([pdf, obs_df, adata.obs.germ_layer], axis=1)
+  pdf = pd.melt(pdf, id_vars = ['x', 'y', 'germ_layer'], var_name='obs', value_name='value')
+  if sort:
+    pdf = pdf.sort_values(by='value', ascending=ascending)
+  pdf['obs'] = pdf['obs'].astype('category').values.reorder_categories(obs_df.columns)
+
+  # plotnine
+  (
+    ggplot() + 
+    geom_point(data = pdf, mapping=aes(x='x', y='y', color='value'), size=0.4) +
+    facet_grid('obs ~ germ_layer') + 
+    # scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
+    scale_color_manual(values = ctp_cmap) +
+    theme(
+      # legend_position='top',
+      # legend_direction='horizontal',
+      axis_title = element_text(size=16),
+      axis_text = element_text(size=10),
+      panel_grid = element_blank(),
+      panel_border = element_rect(linewidth=0.4, fill= 'None'),
+      panel_background = element_rect(fill= 'None'),
+      strip_text_x = element_text(size=16),
+      strip_text_y = element_text(size=16, face = 'bold', angle=0)
+    )
+  ).save(img_dir, width=12, height=1+3*len(obs), dpi=dpi, 
+         limitsize=False, verbose=False)
+  return img_dir
+
+def pre_SubsetCellsByObs(
+  obs : pd.DataFrame, 
+  germ_layers : List[str],
+  celltypes : List[str],
+  xyz_range : Dict,
+  ):
+  '''
+  germ_layers: ectoderm, mesoderm, endoderm
+  xy_range: dict(x=(minX, maxX),y=(minY, maxY))
+  '''
+  subset = obs.query(
+    '(germ_layer in @germ_layers) & \
+    (celltype in @celltypes) & \
+    ( @xyz_range["x"][0] <= x <= @xyz_range["x"][1] ) & \
+    ( @xyz_range["y"][0] <= y <= @xyz_range["y"][1] ) & \
+    ( @xyz_range["z"][0] <= z <= @xyz_range["z"][1] )'
+  )
+  return subset.index
+
 def show_expViolin(adata, feature, **kws):
   data = adata[:,feature].to_df()[feature]
   # data = data[data>0]
@@ -323,41 +592,6 @@ def cal_moran_3D(adata):
   df.columns = ["Moran's I"]
   return df
 
-# In[] app
-
-app = DashProxy(
-  __name__, 
-  external_stylesheets=[
-    dbc.themes.BOOTSTRAP
-  ],
-  external_scripts = [
-    {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
-  ],
-  transforms=[
-    LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
-  ],
-)
-
-header = dbc.NavbarSimple(
-    [
-        dbc.DropdownMenu(
-            children=[
-                # dbc.DropdownMenuItem('spatial', href='/'),
-                # dbc.DropdownMenuItem("atlas", href='/atlas'),
-                # dbc.DropdownMenuItem("reik", href='/reik'),
-            ],
-            nav=True,
-            in_navbar=True,
-            label="Dataset",
-        ),
-    ],
-    brand="Omics-viewer",
-    color="dark",
-    dark=True,
-    # sticky='top',
-    style = {"height": "6vh"}
-)
-
 # In[] global vars
 
 colorPicker_swatches = [
@@ -383,7 +617,49 @@ config_violin = {
   }
 }
 
-# In[] widgets
+# In[] app/wdigets/flat :
+
+spatial_dropdown_featureType = html.Div(
+    [
+        dbc.Label("Feature type"),
+        dcc.Dropdown(
+            ['Gene', 'Regulon'],
+            'Gene',
+            id="spatial_dropdown_featureType",
+            clearable=False,
+            searchable=True,
+        ),
+    ],
+    className="mb-4",
+)
+spatial_dropdown_featureName = html.Div(
+    [
+        dbc.Label("Feature name"),
+        dcc.Dropdown(
+            exp_data['E7.75'].var_names,
+            'Cdx1',
+            id="spatial_dropdown_featureName",
+            clearable=True,
+            searchable=True,
+        ),
+    ],
+    className="mb-4",
+)
+spatial_dropdown_stage = html.Div(
+    [
+        dbc.Label("Stage"),
+        dcc.Dropdown(
+            ['E7.5', 'E7.75', 'E8.0'],
+            'E7.75',
+            id="spatial_dropdown_stage",
+            clearable=False,
+            searchable=True,
+        ),
+    ],
+    className="mb-4",
+)
+
+# In[] app/widgets/3D:
 
 SET_STORE_JSONtoPlot_3D = html.Div(
   [
@@ -462,7 +738,158 @@ def drawerContent_ctpColorPicker(celltypes: List[str], cmap: Dict, swatches=colo
 
   return stack
 
-# In[] tab
+# In[] app/widgets/series:
+
+spatial_dropdown_featureType_series = html.Div(
+    [
+        dbc.Label("Feature type"),
+        dcc.Dropdown(
+            ['Gene'],
+            'Gene',
+            id="spatial_dropdown_featureType_series",
+            clearable=False,
+            searchable=True,
+        ),
+    ],
+    className="mb-4",
+)
+spatial_input_featureName_series = html.Div(
+    [
+        dbc.Label("Contains"),
+        dbc.InputGroup(
+          [
+            dmc.Grid(
+              children=[
+                dmc.Col(dbc.Input(id="spatial_input_featureName_series"), span=9),
+                dmc.Col(dbc.Button('Plot', id='spatial_inputButton_featureName_series_plot', n_clicks=0, color='primary'),
+                        span=3),
+                dmc.Col(dmc.Text(id='spatial_text_seriesGeneNumber_series', color='gray'),
+                        span=12),
+              ], gutter=3
+            )
+          ]
+        )
+    ],
+    className="mb-4",
+)
+spatial_textarea_featureLists_series = html.Div(
+  [
+    dbc.Label("name list:"),
+    dbc.Col(
+      [
+        dbc.Textarea(id = "spatial_textarea_featureLists_series",
+          placeholder="paste feature names here(seperated by any charactor)\ne.g.  A  B,C,  D\nE##G_H,#I@KK%%G%(U),(V)|(W)\"X\",\"Y\"^Q*I",
+          rows=8, className="mb-3",),
+        dbc.Button('Plot', id='spatial_inputButton_featureLists_series_plot',
+                          n_clicks=0, color='primary'),
+      ]
+    )
+  ],
+  className="mb-4",
+)
+spatial_dropdown_stage_series = html.Div(
+    [
+        dbc.Label("Stage"),
+        dcc.Dropdown(
+            ['E7.5', 'E7.75', 'E8.0'],
+            'E7.75',
+            id="spatial_dropdown_stage_series",
+            clearable=False,
+            searchable=True,
+        ),
+    ],
+    className="mb-4",
+)
+
+# In[] app/widgets/similarPattern
+
+spatial_controller_similarPattern = html.Div(
+  dbc.Col(
+    [
+      dbc.Label('Stage'),
+      dcc.Dropdown(
+        options=['E7.5', 'E7.75', 'E8.0'], value='E7.5',
+        id = 'DROPDOWN_stage_similar',
+        clearable=True, searchable=True
+      ),
+      dmc.Space(h=15),
+      
+      dbc.Label('Germ layer'),
+      dcc.Dropdown(
+        options=['ectoderm', 'mesoderm', 'endoderm'], value='ectoderm',
+        id = 'DROPDOWN_germLayer_similar',
+        clearable=True, searchable=True
+      ),
+      dmc.Space(h=15),
+      
+      dcc.Store(id='STORE_similarityTable_similar'),
+      
+      dbc.Label('Genes with pattern'),
+      dcc.Dropdown(id='DROPDOWN_geneSelected_similar',
+                 clearable=True, searchable=True),
+      dmc.Space(h=15),
+      
+      dbc.Label('Similarity:'),
+      dash_table.DataTable(
+        sort_action='native', page_action='native', filter_action='native', 
+        style_table={'overflowX': 'auto'}, fill_width=True, page_current=0, page_size=10,
+        style_cell={
+          'padding-right': '30px', 'padding-left': '10px', 'text-align': 'center',
+          'marginLeft': 'auto', 'marginRight': 'auto'
+        },
+        id='DATATABLE_patternGenes_similar'
+      ),
+    ]
+  )
+)
+
+spatial_panel_similarPattern = html.Div(
+  dmc.Grid(
+    [
+      dmc.Col(
+        [dcc.Graph(figure={}, id='FIGURE_celltype_similar', style={'height': '40vh'})],
+        span=40
+      ),
+      dmc.Col(
+        [dcc.Graph(figure={}, id='FIGURE_geneSelected_similar', style={'height': '40vh'})],
+        span=30
+      ),
+      dmc.Col(
+        [dcc.Graph(figure={}, id='FIGURE_geneOther_similar', style={'height': '40vh'})],
+        span=30
+      ),
+    ],
+    columns=100
+  )
+)
+
+# In[] app/tabs/:
+
+spatial_tab_plotFeature = dbc.Tab(
+  [dbc.Row([
+    dbc.Col([
+      dbc.Card(
+        [
+          spatial_dropdown_featureType,
+          spatial_dropdown_stage,
+          spatial_dropdown_featureName,
+        ],
+        body=True,
+        id = 'spatial_control_plotFeature'
+      ),      
+    ], width=2),
+    dbc.Col([dbc.Row([
+      dbc.Col([
+        dcc.Graph(figure={}, id="spatial_plotFeature_graph", style={'height': "40vh"}),
+      ],align = "center",className="g-0", width=12),
+      dbc.Col([
+        dcc.Graph(figure={}, id="spatial_plotFeature_graph_ctp", style={'height': "40vh"}),
+      ],align = "center",className="g-0", width=12)
+    ]),],width=10),
+  ])],
+  label = "Plot feature(flat)",
+  tab_id = "spatial_tab_plotFeature"
+)
 
 spatial_tab_plotFeature3D = dbc.Tab(
   [dmc.Grid([
@@ -936,14 +1363,203 @@ spatial_tab_plotFeature3D = dbc.Tab(
   tab_id = "spatial_tab_plotFeature3D",
 )
 
-spatial_tabs = dbc.Tabs(
-    children=[spatial_tab_plotFeature3D],
-    active_tab = 'spatial_tab_plotFeature3D',
-    id='tabs'
+spatial_tab_plotFeatureSeries = dbc.Tab(
+  [dbc.Row([
+    dbc.Col([
+      dbc.Card(
+        [
+          dbc.Col([
+            spatial_dropdown_featureType_series,
+            spatial_dropdown_stage_series,
+            spatial_input_featureName_series,
+            spatial_textarea_featureLists_series,
+          ])
+        ],
+        body=True,
+        style = {'position': 'fixed', 'width': '30vh'},
+        id = 'spatial_control_plotFeatureSeries'
+      )
+    ], width=2),
+    dbc.Col([
+      dbc.Row(
+        [
+          dbc.Col(width=2),
+          dbc.Col([
+            dcc.Graph(figure={}, id="spatial_plotFeatureSeries_graph_ctp", style={'height': "50vh"}),
+          ],align = "center",className="g-0", width=8),
+        ]
+      ),
+      dbc.Row([
+        dbc.Col(
+          [
+            html.Img(
+              # src = Image.open('/rad/wuc/dash_data/spatial/tmp/plotFeatureSeries/E7.75/plotFeatureSeries_E7.75_^Cdx_Gene_dpi100.png'),
+                     id = 'spatial_plotFeatureSeries_img', style = {'width': '90vh'})
+          ],
+          align = "center", className="g-0", width=7),
+        dbc.Col(
+          [
+            html.Img(
+              # src = Image.open('/rad/wuc/dash_data/spatial/tmp/plotFeatureSeries/E7.75/plotFeatureSeries_E7.75_ctpCounts_^Cdx_Gene_dpi150.png'),
+                     id = 'spatial_plotFeatureSeries_ctpCounts_img', style = {'width': '60vh'})
+          ],
+          
+          align = "center", className="g-0", width=5)
+      ],),
+    ], width=10)
+  ])],
+  label = "Plot feature(Series)",
+  tab_id = "spatial_tab_plotFeatureSeries"
+)
+
+spatial_tab_plotFeatureSparkx = dbc.Tab(
+  [
+    dcc.Store(
+      id='clientside_store_table_sparkx'
+    ),
+    dbc.Row([
+      dbc.Col([
+        html.Div(
+          dbc.Row([
+            dbc.Col([
+              dbc.Label("Feature type"),
+              dcc.Dropdown(['Gene'], 'Gene', id='spatial_dropdown_featureType_sparkx', clearable=False)
+            ], width=4),
+            dbc.Col([
+              dbc.Label("Stage"),
+              dcc.Dropdown(['E7.5', 'E7.75', 'E8.0'],'E7.75', id='spatial_dropdown_stage_sparkx', clearable=False)
+            ], width=4),
+            dbc.Col([
+              dbc.Label("Genes per page"),
+              dcc.Dropdown([10, 15, 20, 30, 50, 100], 15, id='spatial_dropdown_pageSize_sparkx', clearable=False)
+            ], width=4)
+          ])
+        ),
+        dash_table.DataTable(id = "spatial_dataTable_sparkx",
+          row_selectable = 'single', sort_action="native", page_action='native',
+          filter_action="native", page_current= 0, page_size= 15,fill_width=True, 
+          style_table={'overflowX': 'auto'},
+          style_cell={'padding-right': '10px', 'padding-left': '10px',
+            'text-align': 'center', 'marginLeft': 'auto', 'marginRight': 'auto' }
+        ),
+      ], width=4),
+      dbc.Col([
+        dbc.Col([
+          dcc.Graph(figure={}, id="spatial_featureGraph_sparkx", style={'height': "36vh", 'width': '130vh'}),
+          dcc.Graph(figure={}, id="spatial_celltypeGraph_sparkx", style={'height': "36vh", 'width': '130vh'}),
+        ], style = {'position': 'fixed'}),
+      ],width=8)
+    ]),
+  ],
+  label = "SPARK-X",
+  tab_id = "spatial_tab_plotFeatureSparkx"
+)
+
+spatial_tab_similarPattern = dbc.Tab(
+  children = [
+    dmc.Grid(
+      [
+        dmc.Col(
+          dbc.Card(
+            spatial_controller_similarPattern,
+            body=True,
+            style = {'position': 'fixed', 'width': '30vh'},
+          ),
+          span=2
+        ),
+        dmc.Col(
+          spatial_panel_similarPattern, 
+          span=10
+        ),
+      ],
+      columns=12
+    )
+  ],
+  label = "Patterns",
+  tab_id = 'spatial_tab_similarPattern'
+)
+
+spatial_tabs = dbc.Card(
+  dbc.Tabs(
+    [
+      spatial_tab_plotFeature,
+      spatial_tab_plotFeature3D, 
+      spatial_tab_plotFeatureSeries,
+      spatial_tab_plotFeatureSparkx,
+      spatial_tab_similarPattern
+    ],
+    active_tab = "spatial_tab_plotFeature",  
+    id = "spatial_tabs",
   ),
+)
+
+# In[] callbacks/flat :
+
+@app.callback(
+  Output('spatial_dropdown_featureName', 'options'),
+  Input('spatial_dropdown_featureName', 'search_value'),
+  Input('spatial_dropdown_featureType', 'value'),
+  Input('spatial_dropdown_stage', 'value')
+)
+def update_spatial_dropdown_featureName(search, featureType, stage):
+  if not search:
+    raise PreventUpdate
+  
+  if featureType == 'Gene':
+    if not search:
+      return exp_data[stage].var_names
+    else:
+      return exp_data[stage].var_names[exp_data[stage].var_names.str.startswith(search)].sort_values()
+  elif featureType == 'Regulon':
+    if not search:
+      return auc_data[stage].var_names
+    else:
+      return auc_data[stage].var_names[auc_data[stage].var_names.str.startswith(search)].sort_values()
+
+@app.callback(
+  Output('spatial_plotFeature_graph', 'figure'),
+  State('spatial_dropdown_featureType', 'value'),
+  Input('spatial_dropdown_featureName', 'value'),
+  Input('spatial_dropdown_stage', 'value'),
+  # background=True,
+  # manager=background_callback_manager,
+)
+def update_spatial_plotFeature_graph(featureType, name, stage):
+  if name is None:
+    raise PreventUpdate
+  
+  if featureType == 'Gene':
+      adata = exp_data[stage]
+  elif featureType == 'Regulon':
+      adata = auc_data[stage]
+  else:
+    raise PreventUpdate
+
+  return show_feature_spatial(adata, name, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True,
+                            facet_col = 'germ_layer', category_orders={'germ_layer':['ectoderm','mesoderm','endoderm']})
+
+@app.callback(
+  Output('spatial_plotFeature_graph_ctp', 'figure'),
+  State('spatial_dropdown_featureType', 'value'),
+  Input('spatial_dropdown_stage', 'value'),
+  background=True,
+  manager=background_callback_manager,
+)
+def update_spatial_plotFeature_ctpGraph(featureType, stage):
+
+  if featureType == 'Gene':
+      adata = exp_data[stage]
+  elif featureType == 'Regulon':
+      adata = auc_data[stage]
+  else:
+    raise PreventUpdate
+
+  return show_celltype_spatial(adata, embedding = coord_data[stage][['x_flatten', 'y_flatten']],
+                               facet_col = 'germ_layer', 
+                               category_orders={'germ_layer':['ectoderm','mesoderm','endoderm']})
 
 
-# In[] callbacks
+# In[] callbacks/3D:
 
 # download scale
 @app.callback(
@@ -1204,7 +1820,7 @@ def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
   return patch_children, nextNumber
 
 # store_previewRange
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='store_previewRange',
@@ -1216,7 +1832,7 @@ app.clientside_callback(
 )
 
 # store_sliceRange
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='store_sliceRange'),
@@ -1228,7 +1844,6 @@ app.clientside_callback(
 )
 
 # max range
-
 @app.callback(
   Output('STORE_maxRange_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -1251,16 +1866,13 @@ def update_maxRange_3D(stage):
   inputs = Input('STORE_maxRange_3D', 'data'),
 )
 def update_sliderRange_3D(maxRange):
-  
   res = [
     ( maxRange[f'{c}_min'], maxRange[f'{c}_max'], (maxRange[f'{c}_min'], maxRange[f'{c}_max']) )
     for c in ['x', 'y', 'z']
   ]
-  
   return  res
 
-# store_cellsInfo_forJSONtoPlot (download: ~2.5M,500ms ; compute 250ms)
-
+# store cells obsinfo forJSONtoPlot
 @app.callback(
   Output('STORE_obs_3D', 'data'),
   Input('DROPDOWN_stage_3D', 'value'),
@@ -1273,7 +1885,6 @@ def store_cellsObs_forJSONtoPlot_3D(stage, featureType):
     adata = auc_data[stage]
   else:
     raise PreventUpdate
-  
   obs = adata.obs[['x','y','z','germ_layer','celltype']]
   return obs.to_dict('index')
 
@@ -1503,7 +2114,7 @@ def store_ctpInfo_forJSONtoPlot_3D(selectedCtps, stage):
   return series.index.to_list()
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 # plot_3Dfigure_exp
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='exp_3Dscatter',
@@ -1671,7 +2282,7 @@ def update_chipColor_3D(color):
   return patch
 
 # plot_3Dfigure_ctp
-app.clientside_callback(
+clientside_callback(
   ClientsideFunction(
     namespace='plotFunc_3Dtab',
     function_name='ctp_3Dscatter',
@@ -1913,7 +2524,7 @@ def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti
 
   return fig
 
-# app.clientside_callback(
+# clientside_callback(
 #   ClientsideFunction(
 #     namespace='plotFunc_3Dtab',
 #     function_name='singleExpCtp_violin',
@@ -1973,28 +2584,384 @@ def cal_moranRes(click, cells, stage, featureType):
           ]
         )
 
-# In[] run:
+# In[] callbacks/series :
 
-tabs = html.Div(
+@app.callback(
+  Output('spatial_plotFeatureSeries_img', 'src', allow_duplicate=True),
+  Output('spatial_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
+  State('spatial_dropdown_featureType_series', 'value'),
+  State('spatial_input_featureName_series', 'value'),
+  Input('spatial_inputButton_featureName_series_plot', 'n_clicks'),
+  State('spatial_dropdown_stage_series', 'value'),
+  background=True,
+  manager=background_callback_manager,
+  running=[
+    (Output('spatial_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
+    (Output('spatial_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
+    (Output('spatial_inputButton_featureLists_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('spatial_textarea_featureLists_series', 'disabled', allow_duplicate=True),True, False),
+    (Output('spatial_inputButton_featureName_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
+    (Output('spatial_inputButton_featureName_series_plot', 'disabled', allow_duplicate=True), True, False),
+    (Output('spatial_inputButton_featureName_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('spatial_input_featureName_series', 'disabled', allow_duplicate=True),True, False),
+  ],
+  prevent_initial_call = True,
+)
+def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, stage):
+  if pattern is None:
+    raise PreventUpdate
+
+  if click:
+    if featureType == 'Gene':
+      adata = exp_data[stage]
+    elif featureType == 'Regulon':
+      adata = auc_mtx[stage]
+
+    with futures.ThreadPoolExecutor(max_workers=8) as executor:
+      t1 = executor.submit(show_features_spatial_regularExp, adata, stage, 'plotFeatureSeries', featureType, 
+                              pattern=pattern, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
+      t2 = executor.submit(show_featuresCtpcounts_spatial_regularExp, adata, stage,'plotFeatureSeries', featureType, 
+                              pattern=pattern, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
+      img_dir1 = t1.result()
+      img_dir2 = t2.result()
+    return Image.open(img_dir1), Image.open(img_dir2)
+  else:
+    raise PreventUpdate
+
+@app.callback(
+  Output('spatial_plotFeatureSeries_img', 'src', allow_duplicate=True),
+  Output('spatial_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
+  Output('notifications-container-spatial', 'children'),
+  State('spatial_dropdown_featureType_series', 'value'),
+  State('spatial_textarea_featureLists_series', 'value'),
+  Input('spatial_inputButton_featureLists_series_plot', 'n_clicks'),
+  State('spatial_dropdown_stage_series', 'value'),
+  background=True,
+  manager=background_callback_manager,
+  running=[
+    (Output('spatial_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
+    (Output('spatial_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
+    (Output('spatial_inputButton_featureLists_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('spatial_textarea_featureLists_series', 'disabled', allow_duplicate=True),True, False),
+    (Output('spatial_inputButton_featureName_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
+    (Output('spatial_inputButton_featureName_series_plot', 'disabled', allow_duplicate=True), True, False),
+    (Output('spatial_inputButton_featureName_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('spatial_input_featureName_series', 'disabled', allow_duplicate=True),True, False),
+  ],
+  prevent_initial_call = True,
+)
+def update_spatial_plotFeature_graphSeries_list(featureType, names, click, stage):
+  if names is None:
+    raise PreventUpdate
+
+  if click:
+
+    names = re.split(", |,| |\n|\'|\"|#|_|%|$|@|\(|\)|\||^|&", names)
+    names = [i for i in names if i]
+    names = list(set(names))
+
+    if featureType == 'Gene':
+      adata = exp_data[stage]
+    elif featureType == 'Regulon':
+      adata = auc_mtx[stage]
+    
+    
+    names_out = [i for i in names if (i not in adata.var_names) or (i not in genes_all_pval.loc[stage].index)]
+    if(names_out):
+      note = dmc.Notification(
+        title="Features don't exits",
+        id = 'series_list_featureNoExit',
+        action = 'show',
+        message = ','.join(names_out),
+        color='orange',
+        icon=DashIconify(icon="akar-icons:circle-alert"),
+      )
+    else:
+      note = no_update
+
+    names = list(set(names) - set(names_out))
+    
+    with futures.ThreadPoolExecutor(max_workers=8) as executor:
+      t1 = executor.submit(show_features_spatial_regularExp, adata, stage,  'plotFeatureSeries', featureType,
+                            features=names, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
+      t2 = executor.submit(show_featuresCtpcounts_spatial_regularExp, adata, stage,'plotFeatureSeries', featureType,
+                            features=names, embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True)
+      img_dir1 = t1.result()
+      img_dir2 = t2.result()
+    return Image.open(img_dir1), Image.open(img_dir2), note
+  else:
+    raise PreventUpdate
+
+@app.callback(
+  Output('spatial_plotFeatureSeries_graph_ctp', 'figure'),
+  Input('spatial_dropdown_stage_series', 'value'),
+)
+def update_spatial_plotFeatureSeries_ctpGraph(stage):
+  fig = show_celltype_spatial(exp_data[stage], embedding = coord_data[stage][['x_flatten', 'y_flatten']],
+                             facet_col = 'germ_layer', category_orders={'germ_layer':['ectoderm','mesoderm','endoderm']})
+  fig.update_layout(
+    legend = {
+      'orientation': 'h'
+    }
+  )
+  return fig
+
+@app.callback( # update series-gene's number
+  Output('spatial_text_seriesGeneNumber_series', 'children'),
+  Input('DROPDOWN_featureType_3D', 'value'),
+  Input('DROPDOWN_stage_3D', 'value'),
+  Input('spatial_input_featureName_series', 'value'),
+)
+def update_spatial_text_seriesGeneNumber_series(featureType, stage, pattern):
+  if featureType == 'Gene':
+    adata = exp_data[stage]
+  elif featureType == 'Regulon':
+    adata = auc_data[stage]
+  
+  features = [i for i in adata.var_names if re.match(pattern, i)]
+  if len(features) < 100:
+    features = [i for i in features if i in genes_all_pval.loc[stage].index.to_list()]
+  str = f'{len(features)} genes'
+  return str
+
+# In[] callbacks/sparkx:
+
+@app.callback(
+  [
+    Output('spatial_dataTable_sparkx', 'data'),
+    Output('spatial_dataTable_sparkx', 'columns'),
+    # Output('clientside_store_table_sparkx', 'data'),
+  ],
+  [
+    Input('spatial_dropdown_stage_sparkx', 'value'),
+    State('spatial_dropdown_featureType_sparkx', 'value'),
+  ]
+)
+def choose_sparkx_plotOptions(stage, featureType):
+  if not stage:
+    raise PreventUpdate
+  df = genes_all_pval.loc[stage].reset_index().rename(columns={"index": "gene"})
+  df['id'] = df['gene']
+  return (df.to_dict('records'), 
+          [{"name": i, "id": i, "deletable": False, 'type': 'numeric', 
+              'format':Format(precision=2, scheme=Scheme.exponent)} 
+             if i != 'gene' else
+             {"name": i, "id": i, "deletable": False} 
+             for i in df.columns if i != 'id'],
+          # {'data': df.to_dict('records'),
+          # 'columns': [{"name": i, "id": i, "deletable": False, 'type': 'numeric', 
+          #               'format':Format(precision=2, scheme=Scheme.exponent)} 
+          #            if i != 'gene' else
+          #              {"name": i, "id": i, "deletable": False} 
+          #            for i in df.columns if i != 'id']},
+          )
+
+@app.callback(
+  Output('spatial_dataTable_sparkx', 'page_size'),
+  Input('spatial_dropdown_pageSize_sparkx', 'value'),
+)
+def update_sprkx_tablePageSize(pageSize):
+  if not pageSize:
+    raise PreventUpdate
+  else:
+    return pageSize
+  
+@app.callback(
+  [
+    Output('spatial_dataTable_sparkx', 'style_data_conditional'),
+  ],
+  [
+    Input('spatial_dataTable_sparkx', 'derived_viewport_selected_row_ids'),
+  ],
+  prevent_initial_call=True
+)
+def update_highlightRow_store(rows):
+  if not rows:
+    raise PreventUpdate
+  row_highlighting = [
+      {
+          'if': {"filter_query": "{{id}} ={}".format(i)},
+          'background_color': 'tomato',
+          'color': 'white'
+      } for i in rows
+  ]
+  return (row_highlighting,)
+
+@app.callback(
+  [
+    Output('spatial_featureGraph_sparkx', 'figure'),
+  ],
+  [
+    Input('spatial_dataTable_sparkx', 'selected_row_ids'),
+    Input('spatial_dropdown_stage_sparkx', 'value'),
+    Input('spatial_dropdown_featureType_sparkx', 'value')
+  ],
+  prevent_initial_call=True,
+  background=True,
+  manager=background_callback_manager,
+)
+def choose_sparkx_featureToPlot(row_id, stage, featureType):
+  if not row_id:
+    raise PreventUpdate
+  if featureType == 'Gene':
+    adata = exp_data[stage]
+  elif featureType == 'Regulon':
+    adata = auc_mtx[stage]
+
+  return (
+    show_feature_spatial(adata, row_id[0], embedding = coord_data[stage][['x_flatten', 'y_flatten']], sort=True, ascending=True,
+                            facet_col = 'germ_layer', category_orders={'germ_layer':['ectoderm','mesoderm','endoderm']}),
+  )
+
+@app.callback(
+  [
+    Output('spatial_celltypeGraph_sparkx', 'figure'),
+  ],
+  [
+    Input('spatial_dropdown_stage_sparkx', 'value'),
+  ],
+  background=True,
+  manager=background_callback_manager,
+)
+def update_sparkx_stageCtpGraph(stage):
+  if not stage:
+    raise PreventUpdate
+  return (
+      show_celltype_spatial(exp_data[stage], embedding = coord_data[stage][['x_flatten', 'y_flatten']],
+                           facet_col = 'germ_layer', category_orders={'germ_layer':['ectoderm','mesoderm','endoderm']}),
+  )
+
+# In[] callbacks/patterns
+
+
+@app.callback(
+  Output('FIGURE_celltype_similar', 'figure'),
+  Input('DROPDOWN_stage_similar', 'value'),
+  Input('DROPDOWN_germLayer_similar', 'value')
+)
+def update_celltypeFigure_similar(stage, germ_layer):
+  
+  if not stage or not germ_layer:
+    raise PreventUpdate
+  
+  adata = exp_data[stage]
+  adata = adata[adata.obs.germ_layer == germ_layer]
+  fig = show_celltype_spatial(adata, embedding=adata.obs[['x_flatten', 'y_flatten']])
+  
+  return fig
+
+
+@app.callback(
+  Output('STORE_similarityTable_similar', 'data'),
+  Input('DROPDOWN_stage_similar', 'value'),
+  Input('DROPDOWN_germLayer_similar', 'value')
+)
+def store_similarityTable_similar(stage, germ_layer):
+
+  if not stage or not germ_layer:
+    raise PreventUpdate
+  
+  adata = exp_data[stage]
+  adata = adata[adata.obs.germ_layer == germ_layer]
+  similarity_df = pd.read_csv(
+    f'/rad/wuc/dash_data/spatial/patterns/{stage}_{germ_layer}_SVG.csv',
+    index_col=0
+  )
+  similarity_df = similarity_df.reset_index().rename(columns={"index": "id"})
+  similarity_df['gene'] = similarity_df['id']
+  return Serverside(similarity_df)
+
+@app.callback(
+  Output('DROPDOWN_geneSelected_similar', 'options'),
+  Input('STORE_similarityTable_similar', 'data'),
+)
+def update_dropdownOptions_gene_similar(similarity_df):
+  return similarity_df['id']
+
+@app.callback(
+  Output('FIGURE_geneSelected_similar', 'figure'),
+  Input('DROPDOWN_stage_similar', 'value'),
+  Input('DROPDOWN_germLayer_similar', 'value'),
+  Input('DROPDOWN_geneSelected_similar', 'value'),
+)
+def update_geneSelectedFigure_similar(stage, germ_layer, gene_selected):
+  
+  if not stage or not germ_layer or not gene_selected:
+    raise PreventUpdate
+  
+  adata = exp_data[stage]
+  adata = adata[adata.obs.germ_layer == germ_layer]
+  fig = show_feature_spatial(
+    adata, feature=gene_selected, embedding=adata.obs[['x_flatten', 'y_flatten']], 
+    sort=True, ascending=True, 
+  )
+  return fig
+
+@app.callback(
+  Output('DATATABLE_patternGenes_similar', 'data'),
+  Output('DATATABLE_patternGenes_similar', 'columns'),
+  
+  Input('STORE_similarityTable_similar', 'data'),
+  Input('DROPDOWN_geneSelected_similar', 'value'),
+)
+def update_similarGenesDataTable_similar(similarity_df, gene_selected):
+  
+  if not gene_selected:
+    raise PreventUpdate
+
+  df = similarity_df[['id', 'gene', gene_selected]]
+  df.columns = ['id', 'Gene', 'Similarity']
+  df = df.sort_values(by='Similarity', ascending=False)
+  return df.to_dict('records'), [{"name": i, "id": i, "deletable": False} for i in df.columns if i != 'id']
+
+@app.callback(
+  Output('FIGURE_geneOther_similar', 'figure'),
+  Input('DATATABLE_patternGenes_similar', 'active_cell'),
+  Input('DROPDOWN_stage_similar', 'value'),
+  Input('DROPDOWN_germLayer_similar', 'value'),
+)
+def update_geneOtherFigure_similar(active_cell, stage, germ_layer):
+  if not stage or not germ_layer or not active_cell:
+    raise PreventUpdate
+  
+  adata = exp_data[stage]
+  adata = adata[adata.obs.germ_layer == germ_layer]
+  fig = show_feature_spatial(
+    adata, feature=active_cell['row_id'], embedding=adata.obs[['x_flatten', 'y_flatten']], 
+    sort=True, ascending=True, 
+  )
+  return fig
+
+# In[] app/run:
+
+tabs = dbc.Col(
   spatial_tabs,
+  id = 'tabs'
 )
 
 app.layout = dbc.Container(
-  [
-    header,
-    dbc.Row([
-      dbc.Col([
-        tabs,
-      ], width=12)
-    ],)
-  ],
+    [
+      html.Div(id='notifications-container-spatial'),
+      dbc.Row([
+        dbc.Col([
+          tabs,
+        ], width=12)
+      ],)
+    ],
   fluid=True,
+  className="Container-all",
 )
 
-if __name__ == '__main__':
-  app.run_server(
+# In[] run
+if __name__ == "__main__":
+  app.run(
     host='10.193.0.208',
     port='8051',
+    threaded=True,
+    proxy=None,
     debug=True,
-    jupyter_mode = 'external'
+    use_reloader=False,
+    jupyter_mode='external'
   )
+
+# %%
