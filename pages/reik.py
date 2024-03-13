@@ -23,11 +23,15 @@ import os
 from dash_iconify import DashIconify
 from concurrent import futures
 from PIL import Image
-
+import matplotlib 
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
 import re
 import diskcache
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/reik/cache"))
 from dash_extensions.enrich import html
+background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/reik/cache"))
+matplotlib.use('agg')
 
 
 # In[]: data
@@ -295,6 +299,61 @@ def show_featuresCtpcounts_reik_regularExp(adata, stage, odir, featureType, embe
   ).save(img_dir, width=8, height=1+8*len(features), dpi=dpi, 
            limitsize=False, verbose=False)
   return img_dir
+
+def show_features_series_matplotlib(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
+                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=matplotlib.cm.viridis, **kws):
+  
+  embedding = embedding.loc[adata.obs_names,]
+  
+  if not features and pattern:
+    features = [i  for i in adata.var_names if re.match(pattern, i)]
+    features.sort()
+    
+  exp_df = adata[:,features].to_df()
+  
+  n_rows = int(np.ceil(len(features) / n_cols))
+  figsize = (figsize[0]*n_cols, figsize[1]*n_rows)
+  fig = plt.figure(figsize=figsize)
+
+  i=1
+  for feature in features:
+    exp_vec = exp_df[feature]
+    if sort:
+      exp_vec = exp_vec.sort_values(ascending=ascending)
+    embedding_plot = embedding.loc[exp_vec.index]
+    
+    ax = plt.subplot(n_rows, n_cols, i)
+    i = i+1
+    plt.scatter(
+      x = embedding_plot.iloc[:,0],
+      y = embedding_plot.iloc[:,1],
+      c = exp_vec,
+      cmap = cmap,
+      s = dot_size,
+      vmin = 0,
+      vmax = exp_vec.max()
+    )
+    plt.xlabel(embedding_plot.columns[0])
+    plt.ylabel(embedding_plot.columns[1])
+    plt.title(feature, fontsize=16)
+    # colorbar
+    normalize = matplotlib.colors.Normalize(vmin=0, vmax=exp_vec.max())
+    scalarmappable = matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap)
+    scalarmappable.set_array(exp_vec)
+    plt.colorbar(scalarmappable, ax=ax)
+
+  if len(features) > 1:
+    plt.tight_layout()
+
+  # save fig to a tempory buffer
+  buf = BytesIO()
+  fig.savefig(buf, format="png")
+  # Embed the result in the html output.
+  fig_data = base64.b64encode(buf.getbuffer()).decode("ascii")
+  fig_matplotlib = f'data:image/png;base64,{fig_data}'
+
+  return fig_matplotlib
+
 
 # In[]: app/widgets/plotFeature
 

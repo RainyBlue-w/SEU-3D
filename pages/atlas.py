@@ -3,6 +3,7 @@
 
 import dash
 dash.register_page(__name__)
+
 # In[1]:
 
 from dash import Dash, dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager
@@ -25,6 +26,12 @@ import dash_mantine_components as dmc
 from plotnine import *
 import re
 import diskcache
+import matplotlib 
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
+matplotlib.use('agg')
+
 background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/atlas/cache"))
 
 data_dir = "/rad/wuc/dash_data/atlas/"
@@ -90,6 +97,7 @@ for i in stage_list:
         df_tSNE = pd.concat([df_tSNE, pdf[i]], axis=0)
 
 exp_data = sc.read_h5ad(data_dir+ 'Time_series_tSNE/atlas.var.h5ad')
+exp_data = exp_data.raw.to_adata()
 exp_data = exp_data[df_tSNE.index,]
 exp_data.obs[['tSNE-1', 'tSNE-2']] = df_tSNE.loc[exp_data.obs.index][['tSNE-1', 'tSNE-2']]
 exp_data.obs.index.name = None
@@ -363,10 +371,62 @@ def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, emb
            limitsize=False, verbose=False)
   return img_dir
 
+def show_features_series_matplotlib_atlas(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
+                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=matplotlib.cm.viridis, **kws):
+  
+  embedding = embedding.loc[adata.obs_names,]
+  
+  if not features and pattern:
+    features = [i  for i in adata.var_names if re.match(pattern, i)]
+    features.sort()
+    
+  exp_df = adata[:,features].to_df()
+  
+  n_rows = int(np.ceil(len(features) / n_cols))
+  figsize = (figsize[0]*n_cols, figsize[1]*n_rows)
+  fig = plt.figure(figsize=figsize)
+
+  i=1
+  for feature in features:
+    exp_vec = exp_df[feature]
+    if sort:
+      exp_vec = exp_vec.sort_values(ascending=ascending)
+    embedding_plot = embedding.loc[exp_vec.index]
+    
+    ax = plt.subplot(n_rows, n_cols, i)
+    i = i+1
+    plt.scatter(
+      x = embedding_plot.iloc[:,0],
+      y = embedding_plot.iloc[:,1],
+      c = exp_vec,
+      cmap = cmap,
+      s = dot_size,
+      vmin = 0,
+      vmax = exp_vec.max()
+    )
+    plt.xlabel(embedding_plot.columns[0])
+    plt.ylabel(embedding_plot.columns[1])
+    plt.title(feature, fontsize=16)
+    # colorbar
+    normalize = matplotlib.colors.Normalize(vmin=0, vmax=exp_vec.max())
+    scalarmappable = matplotlib.cm.ScalarMappable(norm=normalize, cmap=cmap)
+    scalarmappable.set_array(exp_vec)
+    plt.colorbar(scalarmappable, ax=ax)
+
+  if len(features) > 1:
+    plt.tight_layout()
+
+  # save fig to a tempory buffer
+  buf = BytesIO()
+  fig.savefig(buf, format="png")
+  # Embed the result in the html output.
+  fig_data = base64.b64encode(buf.getbuffer()).decode("ascii")
+  fig_matplotlib = f'data:image/png;base64,{fig_data}'
+
+  return fig_matplotlib
+
+
 # In[10]:
-
-
-# define components
 
 dropdown_gene = html.Div(
     [
@@ -591,15 +651,14 @@ tab_series = dbc.Tab(
       dbc.Row([
         dbc.Col(
           [
-            html.Img(id = 'atlas_plotFeatureSeries_img', style = {'width': '90vh'})
+            html.Img(id = 'atlas_plotFeatureSeries_img', style = {'width': '160vh'})
           ],
-          align = "center", className="g-0", width=7),
-        dbc.Col(
-          [
-            html.Img(id = 'atlas_plotFeatureSeries_ctpCounts_img', style = {'width': '60vh'})
-          ],
-          
-          align = "center", className="g-0", width=5)
+          align = "center", className="g-0", width=12),
+        # dbc.Col(
+        #   [
+        #     html.Img(id = 'atlas_plotFeatureSeries_ctpCounts_img', style = {'width': '60vh'})
+        #   ],
+        #   align = "center", className="g-0", width=5)
       ],),
     ], width=10)
   ],
@@ -706,7 +765,7 @@ def update_tsne_byTargetGene(active_cell, regulon):
 
 @callback(
   Output('atlas_plotFeatureSeries_img', 'src', allow_duplicate=True),
-  Output('atlas_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
+  # Output('atlas_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
   State('atlas_dropdown_featureType_series', 'value'),
   State('atlas_input_featureName_series', 'value'),
   Input('atlas_inputButton_featureName_series_plot', 'n_clicks'),
@@ -737,20 +796,14 @@ def update_atlas_plotFeature_graphSeries_pattern(featureType, pattern, click, st
     else:
         raise PreventUpdate
 
-    with futures.ThreadPoolExecutor(max_workers=8) as executor:
-      t1 = executor.submit(show_features_atlas_regularExp, adata, stage, 'plotFeatureSeries', featureType, 
-                              pattern=pattern, embedding = adata.obs[['tSNE-1', 'tSNE-2']], sort=True, ascending=True)
-      t2 = executor.submit(show_featuresCtpcounts_atlas_regularExp, adata, stage,'plotFeatureSeries', featureType, 
-                              pattern=pattern, embedding = adata.obs[['tSNE-1', 'tSNE-2']], sort=True, ascending=True)
-      img_dir1 = t1.result()
-      img_dir2 = t2.result()
-    return Image.open(img_dir1), Image.open(img_dir2)
+    img = show_features_series_matplotlib_atlas(adata, embedding=adata.obs[['tSNE-1', 'tSNE-2']], 
+                          n_cols=4, pattern=pattern)
+    return img
   else:
     raise PreventUpdate
 
 @callback(
   Output('atlas_plotFeatureSeries_img', 'src', allow_duplicate=True),
-  Output('atlas_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
   Output('notifications-container-atlas', 'children'),
   State('atlas_dropdown_featureType_series', 'value'),
   State('atlas_textarea_featureLists_series', 'value'),
@@ -801,14 +854,8 @@ def update_atlas_plotFeature_graphSeries_list(featureType, names, click, stage):
     names = list(set(names) - set(names_out))
     names.sort(key=tmp.index)
 
-    with futures.ThreadPoolExecutor(max_workers=2) as executor:
-      t1 = executor.submit(show_features_atlas_regularExp, adata, stage,  'plotFeatureSeries', featureType,
-                            features=names, embedding = adata.obs[['tSNE-1', 'tSNE-2']], sort=True, ascending=True)
-      t2 = executor.submit(show_featuresCtpcounts_atlas_regularExp, adata, stage,'plotFeatureSeries', featureType,
-                            features=names, embedding = adata.obs[['tSNE-1', 'tSNE-2']], sort=True, ascending=True)
-      img_dir1 = t1.result()
-      img_dir2 = t2.result()
-    return Image.open(img_dir1), Image.open(img_dir2), note
+    img = show_features_series_matplotlib_atlas(adata, embedding=adata.obs[['tSNE-1', 'tSNE-2']], n_cols=4, features=names)
+    return img, note
   else:
     raise PreventUpdate
 
@@ -835,7 +882,3 @@ def update_spatial_text_seriesGeneNumber_series(featureType, stage, pattern):
   features = [i for i in adata.var_names if re.match(pattern, i)]
   str = f'{len(features)} genes'
   return str
-
-
-
-
