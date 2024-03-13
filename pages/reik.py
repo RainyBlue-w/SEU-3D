@@ -5,13 +5,10 @@ import dash
 dash.register_page(__name__)
 
 # In[]: env
-
 from dash import dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback
 from dash.exceptions import PreventUpdate
-
 import plotly.express as px
 from plotnine import *
-
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 import scanpy as sc
@@ -21,8 +18,6 @@ import loompy as lp
 import math
 import os
 from dash_iconify import DashIconify
-from concurrent import futures
-from PIL import Image
 import matplotlib 
 import matplotlib.pyplot as plt
 import base64
@@ -32,7 +27,6 @@ import diskcache
 from dash_extensions.enrich import html
 background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/reik/cache"))
 matplotlib.use('agg')
-
 
 # In[]: data
 
@@ -354,7 +348,6 @@ def show_features_series_matplotlib(adata, embedding, features=None, pattern=Non
 
   return fig_matplotlib
 
-
 # In[]: app/widgets/plotFeature
 
 reik_dropdown_plotFeature_gene = html.Div(
@@ -475,7 +468,7 @@ reik_dropdown_stage_series = html.Div(
         dbc.Label("Stage"),
         dcc.Dropdown(
             ['E7.5', 'E7.75', 'E8.0', 'E8.5', 'E8.75'],
-            'E7.0',
+            'E7.5',
             id="reik_dropdown_stage_series",
             clearable=False,
             searchable=True,
@@ -558,15 +551,9 @@ reik_tab_plotFeatureSeries = dbc.Tab(
       dbc.Row([
         dbc.Col(
           [
-            html.Img(id = 'reik_plotFeatureSeries_img', style = {'width': '90vh'})
+            html.Img(id = 'reik_plotFeatureSeries_img', style = {'width': '160vh'})
           ],
-          align = "center", className="g-0", width=7),
-        dbc.Col(
-          [
-            html.Img(id = 'reik_plotFeatureSeries_ctpCounts_img', style = {'width': '60vh'})
-          ],
-          
-          align = "center", className="g-0", width=5)
+          align = "center", className="g-0", width=12),
       ],),
     ], width=10)
   ])],
@@ -718,7 +705,7 @@ def update_regulonGraph_by_targetGene(active_cell, stage, regulon):
 
 @callback(
   Output('reik_plotFeatureSeries_img', 'src', allow_duplicate=True),
-  Output('reik_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
+  # Output('reik_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
   State('reik_dropdown_featureType_series', 'value'),
   State('reik_input_featureName_series', 'value'),
   Input('reik_inputButton_featureName_series_plot', 'n_clicks'),
@@ -747,20 +734,14 @@ def update_reik_plotFeature_graphSeries_pattern(featureType, pattern, click, sta
     elif featureType == 'Regulon':
       adata = auc_mtx[stage]
 
-    with futures.ThreadPoolExecutor(max_workers=8) as executor:
-      t1 = executor.submit(show_features_reik_regularExp, adata, stage, 'plotFeatureSeries', featureType, 
-                              pattern=pattern, embedding = umap[stage], sort=True, ascending=True)
-      t2 = executor.submit(show_featuresCtpcounts_reik_regularExp, adata, stage,'plotFeatureSeries', featureType, 
-                              pattern=pattern, embedding = umap[stage], sort=True, ascending=True)
-      img_dir1 = t1.result()
-      img_dir2 = t2.result()
-    return Image.open(img_dir1), Image.open(img_dir2)
+    img = show_features_series_matplotlib( adata, pattern=pattern, embedding = umap[stage], n_cols=4)
+    return img
   else:
     raise PreventUpdate
 
 @callback(
   Output('reik_plotFeatureSeries_img', 'src', allow_duplicate=True),
-  Output('reik_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
+  # Output('reik_plotFeatureSeries_ctpCounts_img', 'src', allow_duplicate=True),
   Output('notifications-container-reik', 'children'),
   State('reik_dropdown_featureType_series', 'value'),
   State('reik_textarea_featureLists_series', 'value'),
@@ -811,14 +792,8 @@ def update_reik_plotFeature_graphSeries_list(featureType, names, click, stage):
     names = list(set(names) - set(names_out))
     names.sort(key=tmp.index)
 
-    with futures.ThreadPoolExecutor(max_workers=2) as executor:
-      t1 = executor.submit(show_features_reik_regularExp, adata, stage,  'plotFeatureSeries', featureType,
-                            features=names, embedding = umap[stage], sort=True, ascending=True)
-      t2 = executor.submit(show_featuresCtpcounts_reik_regularExp, adata, stage,'plotFeatureSeries', featureType,
-                            features=names, embedding = umap[stage], sort=True, ascending=True)
-      img_dir1 = t1.result()
-      img_dir2 = t2.result()
-    return Image.open(img_dir1), Image.open(img_dir2), note
+    img = show_features_series_matplotlib(adata, features=names, embedding = umap[stage], n_cols=4)
+    return img, note
   else:
     raise PreventUpdate
 
@@ -845,5 +820,4 @@ def update_spatial_text_seriesGeneNumber_series(featureType, stage, pattern):
   features = [i for i in adata.var_names if re.match(pattern, i)]
   str = f'{len(features)} genes'
   return str
-
 

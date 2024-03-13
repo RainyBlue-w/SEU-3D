@@ -654,11 +654,6 @@ tab_series = dbc.Tab(
             html.Img(id = 'atlas_plotFeatureSeries_img', style = {'width': '160vh'})
           ],
           align = "center", className="g-0", width=12),
-        # dbc.Col(
-        #   [
-        #     html.Img(id = 'atlas_plotFeatureSeries_ctpCounts_img', style = {'width': '60vh'})
-        #   ],
-        #   align = "center", className="g-0", width=5)
       ],),
     ], width=10)
   ],
