@@ -213,6 +213,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
   padj_df = pd.melt(padj_df, id_vars=['feature'], var_name='germ_layer')
   padj_df.value = [('%.2e' % i) for i in padj_df.value]
   padj_df['feature'] = padj_df['feature'].astype('category').values.reorder_categories(features_df.columns)
+  padj_df['germ_layer'] = padj_df['germ_layer'].astype('category').values.reorder_categories(['ectoderm','mesoderm','endoderm'])
   
   # plotnine
   (
