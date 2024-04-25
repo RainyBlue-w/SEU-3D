@@ -595,7 +595,7 @@ config_scatter3d = {
     'format': 'png', # one of png, svg, jpeg, webp,
     'scale': 3
   }
-}
+} 
 
 config_violin = {
   'toImageButtonOptions': {
@@ -2169,7 +2169,7 @@ def store_multiNameInfo_3D(colors, genes):
 def linkage_colorPickerAndTextMulti_3D(value1, value2):
   id = ctx.triggered_id
   
-  if id['type'] == 'TEXT_colorSingle_3D':
+  if id['type'] == 'TEXT_colorMulti_3D':
     if((len(value1)==4) or (len(value1)==7)):
       color = value1
       icon = DashIconify(icon = 'fluent:circle-48-filled', color=color, width=48)
