@@ -2511,21 +2511,6 @@ def update_spatial_plotFeature3D_ctpExpViolin(featureType, stage, cells, ifmulti
 
   return fig
 
-# clientside_callback(
-#   ClientsideFunction(
-#     namespace='plotFunc_3Dtab',
-#     function_name='singleExpCtp_violin',
-#   ),
-#   Output('FIGURE_expViolin_3D', 'figure'),
-#   Output('FIGURE_ctpViolin_3D', 'figure'),
-#   Input('STORE_obs_3D', 'data'),
-#   Input('STORE_cellsIntersection_3D', 'data'),
-#   Input('STORE_singleExp_3D', 'data'),
-#   Input('STORE_ifmulti_3D', 'data'),
-#   Input('STORE_ctpCmap_3D', 'data'),
-#   State('SEGMENTEDCONTROL_violinPoints_3D', 'value'),
-# )
-
 # moran SVG offcanvas
 @callback(
   Output('OFFCANVAS_moranRes_3D', 'is_open'),
