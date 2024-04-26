@@ -32,7 +32,7 @@ import re
 from concurrent import futures
 from typing import List, Dict, Tuple
 import diskcache
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/spatial/cache"))
+background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/spatial/cache"))
 
 # In[] data
 

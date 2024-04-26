@@ -32,7 +32,7 @@ import base64
 from io import BytesIO
 matplotlib.use('agg')
 
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/wuc/dash_data/atlas/cache"))
+background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/atlas/cache"))
 
 data_dir = "/rad/wuc/dash_data/atlas/"
 

@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 from dash_extensions.enrich import html, DashProxy, LogTransform, ServersideOutputTransform, MultiplexerTransform
 import feffery_antd_components as fac
 
-dbc_css = "/home/wuc/dashapps/css/dbc.min.css"
+dbc_css = "/rad/share/omics-viewer/main/dbc.min.css"
 app = DashProxy(
   __name__, 
   external_stylesheets=[
