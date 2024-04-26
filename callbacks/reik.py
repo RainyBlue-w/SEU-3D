@@ -1,7 +1,6 @@
 from utils.reik import *
 import pandas as pd
-import numpy as np
-from dash import Input, Output, callback, no_update, State, DiskcacheManager, clientside_callback
+from dash import Input, Output, callback, no_update, State, DiskcacheManager
 from dash.exceptions import PreventUpdate
 from plotnine import *
 import dash_mantine_components as dmc

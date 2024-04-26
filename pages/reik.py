@@ -5,20 +5,12 @@ import dash
 dash.register_page(__name__)
 
 # In[]: env
-from dash import dcc, html, dash_table, Input, Output, callback, no_update, State, Patch, DiskcacheManager, clientside_callback
-from dash.exceptions import PreventUpdate
-import plotly.express as px
+from dash import dcc, html, dash_table
 from plotnine import *
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
-import loompy as lp
 import math
-import os
-from dash_iconify import DashIconify
 import matplotlib 
-import re
-import pickle
-import diskcache
 from dash_extensions.enrich import html
 from callbacks.reik import *
 matplotlib.use('agg')
