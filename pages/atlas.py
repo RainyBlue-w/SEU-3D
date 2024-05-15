@@ -34,7 +34,7 @@ matplotlib.use('agg')
 
 background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/atlas/cache"))
 
-data_dir = "/rad/wuc/dash_data/atlas/"
+data_dir = "/rad/share/omics-viewer/atlas/"
 
 # color palette
 celltype = ["ExE endoderm", "Epiblast", "ExE ectoderm", "Parietal endoderm", 
@@ -103,7 +103,7 @@ exp_data.obs[['tSNE-1', 'tSNE-2']] = df_tSNE.loc[exp_data.obs.index][['tSNE-1', 
 exp_data.obs.index.name = None
 # In[8]:
 
-lf = lp.connect('/rad/wuc/dash_data/atlas/pyscenic_output.loom', mode='r', validate=False )
+lf = lp.connect('/rad/share/omics-viewer/atlas/pyscenic_output.loom', mode='r', validate=False )
 auc_mtx = pd.DataFrame( lf.ca.RegulonsAUC, index=lf.ca.CellID)
 regulons = {}
 for i,r in pd.DataFrame(lf.ra.Regulons,index=lf.ra.Gene).items():
@@ -191,7 +191,7 @@ def show_regulon(regulon, auc_mtx, stage, cmap = None):
     plot.update_traces(marker_size=4.5,
                     marker_opacity=1)
     plot.update_layout(
-        margin=dict(l=10, r=10, t=10, b=10),
+        margin=dict(l=0, r=0, t=0, b=0),
         plot_bgcolor = '#ffffff',
         legend = dict(
             title='AUCell Score'
@@ -205,7 +205,7 @@ def show_celltype(pdf, cmap):
     plot = px.scatter(
             data_frame = pdf,
             x='tSNE-1', y='tSNE-2', color='celltype',
-            color_discrete_map = cmap,
+            color_discrete_map = cmap
     )
     # plot.update_layout(showlegend=False)
     plot.update_yaxes(visible=False)
@@ -225,25 +225,30 @@ def show_celltype(pdf, cmap):
     )
     return plot
 
-def show_celltype_series(pdf, cmap):
+def show_celltype_series(pdf, cmap, figwidth=800, figheight=300):
     plot = px.scatter(
             data_frame = pdf,
             x='tSNE-1', y='tSNE-2', color='celltype',
             color_discrete_map = cmap,
+            width=figwidth, height=figheight,
     )
-    # plot.update_layout(showlegend=False)
     plot.update_yaxes(visible=False)
     plot.update_xaxes(visible=False)
+    plot.update_traces(marker_size=3, marker_opacity=1)
     plot.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
-        plot_bgcolor = '#ffffff',
-        title = '',
-        legend = dict(
-            title = '',
-            orientation='h', yanchor='top',xanchor='left', y=1,x=1,
-            font = {'size': 12},
-            entrywidth=1, entrywidthmode='fraction'
-        )
+      margin=dict(l=0, t=0, b=0),
+      plot_bgcolor = '#ffffff',
+      title = '',
+      legend=dict(
+              title='',
+              orientation='h',
+              yanchor='middle',
+              xanchor='right',  # 设置图例在右侧
+              y=0.5,
+              x=2,  # 调整图例在横向的位置
+      ),
+      uirevision='constant',
+      legend_itemsizing = 'constant'
     )
     return plot
 
@@ -257,7 +262,7 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
     
-    img_dir = '/rad/wuc/dash_data/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     
@@ -266,7 +271,7 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
     # features = [i for i in features if i in genes_min_pval.loc[stage].index.to_list()]
 
   else:
-    img_dir = '/rad/wuc/dash_data/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
   # ordered_features = genes_min_pval.loc[stage].loc[features].sort_values(by='PadjMinVal', ascending=True).index.to_list()
 
@@ -311,7 +316,7 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
 def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, embedding, pattern=None, features=None, cmap=color_palette, sort=False, ascending=True, dpi=150, **kws):
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
-    img_dir = '/rad/wuc/dash_data/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     features = [i  for i in adata.var_names if re.match(pattern, i)]
@@ -319,7 +324,7 @@ def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, emb
     # features = [i for i in features if i in genes_min_pval.loc[stage].index.to_list()]
 
   else:
-    img_dir = '/rad/wuc/dash_data/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
   # ordered_features = genes_min_pval.loc[stage].loc[features].sort_values(by='PadjMinVal', ascending=True).index.to_list()
   
@@ -430,7 +435,7 @@ def show_features_series_matplotlib_atlas(adata, embedding, features=None, patte
 
 dropdown_gene = html.Div(
     [
-        dbc.Label("Gene to display"),
+        dbc.Label("Gene to Display"),
         dcc.Dropdown(
             exp_data.var_names,
             'Gata6',
@@ -444,16 +449,12 @@ dropdown_gene = html.Div(
 
 target_gene = html.Div(
     [
-        dbc.Label("Regulon's target gene"),
+        dbc.Label("Regulon's Target Gene"),
         dash_table.DataTable(sort_action="native", page_action='native',
-                             page_current= 0, page_size= 10,
+                             page_current= 0, page_size= 9,
                              id = "target_gene",fill_width=True, style_table={'overflowX': 'auto'},
                                 style_cell={
-                                'padding-right': '30px',
-                                'padding-left': '10px',
                                 'text-align': 'center',
-                                'marginLeft': 'auto',
-                                'marginRight': 'auto'
                                 },
                              filter_action="native", 
                             # filter_options={'case':'insensitive'}, 
@@ -464,7 +465,7 @@ target_gene = html.Div(
 
 dropdown_regulon = html.Div(
     [
-        dbc.Label("Regulon to display"),
+        dbc.Label("Regulon to Display"),
         dcc.Dropdown(
             auc_mtx.columns,
             'Gata6(+)',
@@ -491,19 +492,9 @@ stage_tsne = dcc.Slider(0, 6,
     id="stage_tsne"
 )
 
-tsne_controls = dbc.Card(
-    [
-        # dropdown_projType,
-        dropdown_gene,
-        dropdown_regulon,
-        target_gene,
-    ],
-    body=True,
-)
-
 atlas_dropdown_featureType_series = html.Div(
     [
-        dbc.Label("Feature type"),
+        dbc.Label("Feature Type"),
         dcc.Dropdown(
             ['Gene'],
             'Gene',
@@ -522,7 +513,8 @@ atlas_input_featureName_series = html.Div(
             dmc.Grid(
               children=[
                 dmc.Col(dbc.Input(id="atlas_input_featureName_series"), span=9),
-                dmc.Col(dbc.Button('Plot', id='atlas_inputButton_featureName_series_plot', n_clicks=0, color='primary'),
+                dmc.Col(dbc.Button('Plot', id='atlas_inputButton_featureName_series_plot', 
+                                   n_clicks=0, color='primary'),
                         span=3),
                 dmc.Col(dmc.Text(id='atlas_text_seriesGeneNumber_series', color='gray'),
                         span=12),
@@ -535,14 +527,18 @@ atlas_input_featureName_series = html.Div(
 )
 atlas_textarea_featureLists_series = html.Div(
   [
-    dbc.Label("name list:"),
+    html.Div(
+       [
+          dbc.Label("Name List"),
+          dbc.Button('Plot', id='atlas_inputButton_featureLists_series_plot',
+                          n_clicks=0, color='primary', style={'float': 'right', 'margin-bottom': '1vh'}),
+       ], className="mb-1"
+    ),
     dbc.Col(
       [
         dbc.Textarea(id = "atlas_textarea_featureLists_series",
           placeholder="paste feature names here(seperated by any charactor)\ne.g.  A  B,C,  D\nE##G_H,#I@KK%%G%(U),(V)|(W)\"X\",\"Y\"^Q*I",
-          rows=8, className="mb-3",),
-        dbc.Button('Plot', id='atlas_inputButton_featureLists_series_plot',
-                          n_clicks=0, color='primary'),
+          rows=8, className="mb-3",)
       ]
     )
   ],
@@ -566,28 +562,45 @@ series_controls = dbc.Card(
     dbc.Col(
         [
             atlas_dropdown_featureType_series,
+            atlas_dropdown_stage_series,
             atlas_input_featureName_series,
             atlas_textarea_featureLists_series,
-            atlas_dropdown_stage_series,
         ]
     ),
     body=True,
-    style = {'position': 'fixed', 'width': '30vh'},
+    style = {'width': '16.67vw', 'height':'83vh'},
     id = 'atlas_control_plotFeatureSeries'
 )
 
+tsne_controls = dbc.Card(
+    [
+        # dropdown_projType,
+        
+    ],
+    body=True,
+)
+
 # controls layout
-controls = dbc.Col(
-    tsne_controls,
-    id = "controls",
-    style = {'position': 'fixed'},
-    width=2
+tsne_controls = dbc.Card(
+   dbc.Col([
+        dropdown_gene,
+        dropdown_regulon,
+        target_gene,
+   ]),
+    id = "tsne_controls",
+    body=True,
+    style = {'position': 'fixed', 'width': '16.67vw', 'height':'100vh'},
 )
 
 # tabs layout
 tab_tsne = dbc.Tab(
     [
-        dbc.Col(
+        dbc.Row([
+           dbc.Col(
+            tsne_controls,
+            width = 2
+           ),
+           dbc.Col(
             [
                 dbc.Row(
                     [
@@ -595,69 +608,71 @@ tab_tsne = dbc.Tab(
                           dbc.Row(
                             [
                               # html.H5('Celltype',style={'textAlign': 'center'}),
-                              dcc.Graph(figure={}, id="tsne_ctp",style={'height': "75vh"})
+                              dcc.Graph(figure={}, id="tsne_ctp",style={'height': "76vh"})
                             ], 
-                            className="g-0",
                           ),
-                          width=6, xxl=4,
+                          width=4
                         ),
                         dbc.Col(
                           [
                             dbc.Row(
                               [
-                              dbc.Col(
-                                [
-                                  html.H5("Gene", style={'textAlign': 'center'}, id='gene_title'),
-                                  dcc.Graph(figure={}, id="tsne_gene", style={'height': "60vh"}),
-                                ],
-                                width=12, xxl=6,
-                              ),
-                              dbc.Col(
-                                [
-                                  html.H5("Regulon", style={'textAlign': 'center'}, id='regulon_title'),
-                                  dcc.Graph(figure={}, id="tsne_regulon", style={'height': "60vh"}),
-                                ],
-                                width=12, xxl=6,
-                              )
+                                dbc.Col(
+                                  [
+                                    html.H5("Gene", style={'textAlign': 'center'}, id='gene_title'),
+                                    dcc.Graph(figure={}, id="tsne_gene", style={'height': "60vh"}),
+                                  ],
+                                  width=6
+                                ),
+                                dbc.Col(
+                                  [
+                                    html.H5("Regulon", style={'textAlign': 'center'}, id='regulon_title'),
+                                    dcc.Graph(figure={}, id="tsne_regulon", style={'height': "60vh"}),
+                                  ],
+                                  width=6
+                                )
                               ],
-                              className="g-0",
                             )
-                          ],
-                          width=6, xxl=8,
+                          ]
                         ),
                     ],
                     align = "center",
                     className="g-0",
                 ),
                 stage_tsne,
-            ], 
-        )  
-    ], 
+            ], width = 10
+          )
+        ])], 
     label="tsne",
     tab_id = "tab_tsne"
 )
 
 tab_series = dbc.Tab(
   [
-    dbc.Col([
-      dbc.Row(
-        [
-          dbc.Col(width=2),
+    dbc.Row(
+       [
           dbc.Col([
-            dcc.Graph(figure={}, id="atlas_plotFeatureSeries_graph_ctp", style={'height': "40vh", 'width': '80vh'}),
-          ],align = "left",className="g-0", width=8),
-        ]
-      ),
-      dbc.Row([
-        dbc.Col(
-          [
-            html.Img(id = 'atlas_plotFeatureSeries_img', style = {'width': '160vh'})
-          ],
-          align = "center", className="g-0", width=12),
-      ],),
-    ], width=10)
+            series_controls
+          ], width=2),
+          dbc.Col([
+            dbc.Row([
+              dbc.Col(width=2),
+              dbc.Col([
+                dcc.Graph(figure={}, id="atlas_plotFeatureSeries_graph_ctp", style={'height': "40vh", 'width': '80vh'}),
+              ],align = "center",className="g-0", width=8),
+            ]),
+            dbc.Row([
+              dbc.Col(
+                [
+                  html.Img(id = 'atlas_plotFeatureSeries_img', style = {'width': '80vw', 'margin-top': '5vh', 'margin-left':'3vw'})
+                ],
+                align = "center", className="g-0", width=12),
+            ],),
+          ], width=10)
+       ]
+    )
   ],
-  label = "Plot feature(Series)",
+  label = "Plot Feature(Series)",
   tab_id = "tab_series"
 )
 
@@ -666,39 +681,29 @@ tabs = dbc.Card(
         [tab_tsne, tab_series],
         active_tab = "tab_tsne",  
         id = "tabs",
-    ),
+    ), 
+    style={'height':'90vh'}
 )
 
 # all layout
 layout = dbc.Container(
     [
         html.Div(id='notifications-container-atlas'),
-        dbc.Row(
-            [
-                dbc.Col(
-                    [controls],
-                    width=2,
-                ),
-                dbc.Col(
-                    [tabs],
-                   width=10
-                )
-            ],
-        ),
+        tabs
     ],
     fluid=True,
     className="dbc",
 )
 
-@callback(
-    Output("controls", "children"),
-    Input("tabs", "active_tab"), 
-)
-def update_controls(tab):
-    if tab == "tab_tsne":
-        return tsne_controls
-    elif tab == "tab_series":
-        return series_controls
+# @callback(
+#     Output("controls", "children"),
+#     Input("tabs", "active_tab"), 
+# )
+# def update_controls(tab):
+#     if tab == "tab_tsne":
+#         return tsne_controls
+#     elif tab == "tab_series":
+#         return series_controls
 
 @callback(
     Output("target_gene", "data"),
@@ -752,8 +757,8 @@ def update_tsne_regulon(value, regulon):
   State("regulon", "value"),
 )
 def update_tsne_byTargetGene(active_cell, regulon):
-  # if not active_cell:
-  #   raise PreventUpdate
+  if not active_cell:
+    raise PreventUpdate
   row = active_cell['row_id']
   df = get_regulon_targets(regulon)
   return df.iloc[row,0]
@@ -768,11 +773,11 @@ def update_tsne_byTargetGene(active_cell, regulon):
   background=True,
   manager=background_callback_manager,
   running=[
-    (Output('atlas_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
+    (Output('atlas_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Plot', 'Plot'),
     (Output('atlas_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
     (Output('atlas_inputButton_featureLists_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
     (Output('atlas_textarea_featureLists_series', 'disabled', allow_duplicate=True),True, False),
-    (Output('atlas_inputButton_featureName_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
+    (Output('atlas_inputButton_featureName_series_plot', 'children', allow_duplicate=True), 'Plot', 'Plot'),
     (Output('atlas_inputButton_featureName_series_plot', 'disabled', allow_duplicate=True), True, False),
     (Output('atlas_inputButton_featureName_series_plot', 'color', allow_duplicate=True), 'danger', 'primary'),
     (Output('atlas_input_featureName_series', 'disabled', allow_duplicate=True),True, False),
@@ -869,6 +874,8 @@ def update_atlas_plotFeatureSeries_ctpGraph(stage):
   Input('atlas_input_featureName_series', 'value'),
 )
 def update_spatial_text_seriesGeneNumber_series(featureType, stage, pattern):
+  if not pattern:
+     return ''
   if featureType == 'Gene':
     adata = exp_data[exp_data.obs.stage==stage]
 #   elif featureType == 'Regulon':
