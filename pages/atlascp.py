@@ -62,17 +62,19 @@ color_palette = dict(zip(celltype, celltype_color))
 color_palette.update(dict(zip(timepoint, timepoint_color)))
 
 
-# Code below shows how the anndata with diffgene results was generated:
+from matplotlib.colors import LinearSegmentedColormap
+color_exp = [(0.00, "#eeeeee"),
+              (0.05, "#eeeeee"),
+              (1.00, "#225EA8")
+            ]
+cmap_exp = LinearSegmentedColormap.from_list('custom_exp', color_exp)
 
-# In[3]:
-
-
-# adata = sc.read_h5ad(data_dir+ 'Time_series_tSNE/atlas.var.h5ad')
-# celltype=adata.obs["celltype"].unique()
-# for i in range(len(celltype)):
-    # sc.tl.rank_genes_groups(adata, 'celltype', groups=celltype.delete(i).to_numpy(), reference=celltype[i], method="wilcoxon", key_added="diff_ref:"+celltype[i])
-# adata.write_h5ad(data_dir+ 'Time_series_tSNE/atlas.var.diff_res.h5ad')
-
+color_auc = [(0.00, "#eeeeee"),
+              (0.05, "#eeeeee"),
+              (1.00, "#d53e4f")
+            ]
+cmap_auc = LinearSegmentedColormap.from_list('custom_auc', color_auc)
+        
 
 # In[7]:
 def get_pdf(stage):
@@ -86,8 +88,7 @@ stage_list = ['E7.0',
               'E7.75',
               'E8.0',
               'E8.25',
-              'E8.5',
-             ]
+              'E8.5']
 
 pdf = dict()
 df_tSNE = None
@@ -133,11 +134,7 @@ def convert_color(s):
     """
     return float(int(s[:2], 16)) / 255, float(int(s[2:4], 16)) / 255, float(int(s[4:6], 16)) / 255 
 
-def show_gene(gene, adata, embedding=None, cmap = None):
-    if cmap is None:
-        cmap = [(0.00, "#eeeeee"),
-              (0.05, "#eeeeee"),
-              (1.00, "#225EA8")]
+def show_gene(gene, adata, embedding=None, cmap = color_exp):
     if embedding is None:
         embedding = adata.obs[['tSNE-1', 'tSNE-2']]
     pdf = pd.DataFrame(np.array(embedding), 
@@ -166,11 +163,7 @@ def show_gene(gene, adata, embedding=None, cmap = None):
     )
     return plot
 
-def show_regulon(regulon, auc_mtx, stage, cmap = None):
-    if cmap is None:
-        cmap = [(0.00, "#eeeeee"),
-              (0.05, "#eeeeee"),
-              (1.00, "#d53e4f")]
+def show_regulon(regulon, auc_mtx, stage, cmap = color_auc):
     tmp = auc_mtx.index.isin(exp_data[exp_data.obs.stage==stage].obs_names)
     cell_id = auc_mtx.loc[tmp,:].index
     auc = auc_mtx.loc[cell_id,:]
@@ -259,6 +252,12 @@ def get_celltype(pdf):
 
 def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, pattern=None, features=None, sort=False, ascending=True, dpi=100, **kws):
   embedding = embedding.loc[adata.obs_names,:]
+
+  if featureType == 'Regulon':
+    colors = color_auc
+  else: 
+    colors = color_exp 
+  
   if not features:
     
     img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
@@ -296,10 +295,8 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
     ggplot() + 
     geom_point(data = pdf, mapping=aes(x='x', y='y', color='value')) +
     facet_grid('feature ~ .') + 
-    scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
+    scale_color_gradientn(colors = [i[1] for i in colors], values = [i[0] for i in colors]) +
     theme(
-      # legend_position='top',
-      # legend_direction='horizontal',
       axis_title = element_text(size=16),
       axis_text = element_text(size=10),
       panel_grid = element_blank(),
@@ -320,18 +317,13 @@ def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, emb
       return img_dir
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
-    # features = [i for i in features if i in genes_min_pval.loc[stage].index.to_list()]
 
   else:
     img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
-  # ordered_features = genes_min_pval.loc[stage].loc[features].sort_values(by='PadjMinVal', ascending=True).index.to_list()
-  
   ctp_counts = {}
-  # for gene in ordered_features:
   for gene in features:
     df = adata[:,gene].to_df()
-    # thr = df.min()+(df.max()-df.min())*0.05
     df = df[df[gene] > 0]
     counts = pd.DataFrame(adata.obs['celltype'][df.index].value_counts())
     counts['gene'] = gene
@@ -376,7 +368,7 @@ def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, emb
   return img_dir
 
 def show_features_series_matplotlib_atlas(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
-                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=None, **kws):
+                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=cmap_exp, **kws):
   
   embedding = embedding.loc[adata.obs_names,]
   if cmap==None:
