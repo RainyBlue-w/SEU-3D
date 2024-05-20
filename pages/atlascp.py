@@ -106,7 +106,7 @@ exp_data.obs[['tSNE-1', 'tSNE-2']] = df_tSNE.loc[exp_data.obs.index][['tSNE-1', 
 exp_data.obs.index.name = None
 # In[8]:
 
-lf = lp.connect('/rad/share/omics-viewer/atlas/pyscenic_output.loom', mode='r', validate=False )
+lf = lp.connect(data_dir+'pyscenic_output.loom', mode='r', validate=False )
 auc_mtx = pd.DataFrame( lf.ca.RegulonsAUC, index=lf.ca.CellID)
 regulons = {}
 for i,r in pd.DataFrame(lf.ra.Regulons,index=lf.ra.Gene).items():
@@ -235,9 +235,9 @@ def show_celltype_series(pdf, cmap, figwidth=800, figheight=300):
               title='',
               orientation='h',
               yanchor='middle',
-              xanchor='right',  # 设置图例在右侧
+              xanchor='right',
               y=0.5,
-              x=2,  # 调整图例在横向的位置
+              x=2,
       ),
       uirevision='constant',
       legend_itemsizing = 'constant'
@@ -260,7 +260,7 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
   
   if not features:
     
-    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = data_dir+'tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     
@@ -269,7 +269,7 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
     # features = [i for i in features if i in genes_min_pval.loc[stage].index.to_list()]
 
   else:
-    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = data_dir+'tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
   # ordered_features = genes_min_pval.loc[stage].loc[features].sort_values(by='PadjMinVal', ascending=True).index.to_list()
 
@@ -312,14 +312,14 @@ def show_features_atlas_regularExp(adata, stage, odir, featureType, embedding, p
 def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, embedding, pattern=None, features=None, cmap=color_palette, sort=False, ascending=True, dpi=150, **kws):
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
-    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = data_dir+'tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
 
   else:
-    img_dir = '/rad/share/omics-viewer/atlas/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = data_dir+'tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
   ctp_counts = {}
   for gene in features:
