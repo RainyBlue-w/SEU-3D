@@ -30,11 +30,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+import matplotlib.colors as mcolors
 matplotlib.use('agg')
 
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/atlas/cache"))
+data_dir = "/rad/share/omics-viewer/atlas-CP/"
 
-data_dir = "/rad/share/omics-viewer/atlas/"
+background_callback_manager = DiskcacheManager(diskcache.Cache(data_dir+"cache"))
+
 
 # color palette
 celltype = ["ExE endoderm", "Epiblast", "ExE ectoderm", "Parietal endoderm", 
@@ -110,6 +112,7 @@ regulons = {}
 for i,r in pd.DataFrame(lf.ra.Regulons,index=lf.ra.Gene).items():
     regulons[i] =  list(r[r==1].index.values)
 lf.close()
+
 
 # In[9]:
 
@@ -368,7 +371,9 @@ def show_features_series_matplotlib_atlas(adata, embedding, features=None, patte
                                           figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=cmap_exp, **kws):
   
   embedding = embedding.loc[adata.obs_names,]
-  
+  if cmap==None:
+     colors = [(0.00, "#eeeeee"), (0.05, "#eeeeee"), (1.00, "#225EA8")]
+     cmap = mcolors.LinearSegmentedColormap.from_list("custom_cmap", colors)
   if not features and pattern:
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
@@ -682,16 +687,6 @@ layout = dbc.Container(
     fluid=True,
     className="dbc",
 )
-
-# @callback(
-#     Output("controls", "children"),
-#     Input("tabs", "active_tab"), 
-# )
-# def update_controls(tab):
-#     if tab == "tab_tsne":
-#         return tsne_controls
-#     elif tab == "tab_series":
-#         return series_controls
 
 @callback(
     Output("target_gene", "data"),
