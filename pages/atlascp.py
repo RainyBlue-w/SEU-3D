@@ -30,11 +30,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+import matplotlib.colors as mcolors
 matplotlib.use('agg')
 
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/atlas/cache"))
+data_dir = "/rad/share/omics-viewer/atlas-CP/"
 
-data_dir = "/rad/share/omics-viewer/atlas/"
+background_callback_manager = DiskcacheManager(diskcache.Cache(data_dir+"cache"))
+
 
 # color palette
 celltype = ["ExE endoderm", "Epiblast", "ExE ectoderm", "Parietal endoderm", 
@@ -110,6 +112,7 @@ for i,r in pd.DataFrame(lf.ra.Regulons,index=lf.ra.Gene).items():
     regulons[i] =  list(r[r==1].index.values)
 lf.close()
 
+
 # In[9]:
 
 # functions
@@ -132,11 +135,9 @@ def convert_color(s):
 
 def show_gene(gene, adata, embedding=None, cmap = None):
     if cmap is None:
-        cmap = [(0.00, "rgb(150,150,150)"),
-                (50/256, "rgb(217, 217, 217)"),
-                (50/256, "rgb(191, 217, 237)"),
-                (1.00, "rgb(8, 48, 107)")
-                ]
+        cmap = [(0.00, "#eeeeee"),
+              (0.05, "#eeeeee"),
+              (1.00, "#225EA8")]
     if embedding is None:
         embedding = adata.obs[['tSNE-1', 'tSNE-2']]
     pdf = pd.DataFrame(np.array(embedding), 
@@ -167,11 +168,9 @@ def show_gene(gene, adata, embedding=None, cmap = None):
 
 def show_regulon(regulon, auc_mtx, stage, cmap = None):
     if cmap is None:
-        cmap = [(0.00, "rgb(150,150,150)"),
-                (50/256, "rgb(217, 217, 217)"),
-                (50/256, "rgb(191, 217, 237)"),
-                (1.00, "rgb(8, 48, 107)")
-                ]
+        cmap = [(0.00, "#eeeeee"),
+              (0.05, "#eeeeee"),
+              (1.00, "#d53e4f")]
     tmp = auc_mtx.index.isin(exp_data[exp_data.obs.stage==stage].obs_names)
     cell_id = auc_mtx.loc[tmp,:].index
     auc = auc_mtx.loc[cell_id,:]
@@ -377,10 +376,12 @@ def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, emb
   return img_dir
 
 def show_features_series_matplotlib_atlas(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
-                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=matplotlib.cm.viridis, **kws):
+                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=None, **kws):
   
   embedding = embedding.loc[adata.obs_names,]
-  
+  if cmap==None:
+     colors = [(0.00, "#eeeeee"), (0.05, "#eeeeee"), (1.00, "#225EA8")]
+     cmap = mcolors.LinearSegmentedColormap.from_list("custom_cmap", colors)
   if not features and pattern:
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
@@ -695,16 +696,6 @@ layout = dbc.Container(
     className="dbc",
 )
 
-# @callback(
-#     Output("controls", "children"),
-#     Input("tabs", "active_tab"), 
-# )
-# def update_controls(tab):
-#     if tab == "tab_tsne":
-#         return tsne_controls
-#     elif tab == "tab_series":
-#         return series_controls
-
 @callback(
     Output("target_gene", "data"),
     Output("target_gene", "columns"),
@@ -725,8 +716,7 @@ def update_target_gene(regulon):
 )
 def update_tsne_gene(value, gene):
     stage = stage_list[value]
-    plot_gene = show_gene(gene, exp_data[exp_data.obs.stage==stage], 
-                          cmap = 'Inferno')
+    plot_gene = show_gene(gene, exp_data[exp_data.obs.stage==stage])
     return gene, plot_gene
 
 @callback(
@@ -747,8 +737,7 @@ def update_tsne_ctp(value):
 )
 def update_tsne_regulon(value, regulon):
     stage = stage_list[value]
-    plot_regulon = show_regulon(regulon, auc_mtx, stage, 
-                               cmap = 'Inferno')
+    plot_regulon = show_regulon(regulon, auc_mtx, stage)
     return regulon, plot_regulon
 
 @callback(

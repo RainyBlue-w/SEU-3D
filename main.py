@@ -24,7 +24,8 @@ header = dbc.NavbarSimple(
         dbc.DropdownMenu(
             children=[
                 dbc.DropdownMenuItem('spatial', href='/'),
-                dbc.DropdownMenuItem("atlas", href='/atlas'),
+                dbc.DropdownMenuItem("atlas", href='/atlasall'),
+                dbc.DropdownMenuItem("atlas-cp", href='/atlascp'),
                 dbc.DropdownMenuItem("reik", href='/reik'),
             ],
             nav=True,
@@ -32,7 +33,7 @@ header = dbc.NavbarSimple(
             label="Dataset",
         ),
     ],
-    brand="Omics-viewer",
+    brand="Omics-Viewer",
     color="dark",
     dark=True,
     # sticky='top',
