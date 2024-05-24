@@ -14,6 +14,19 @@ import base64
 import plotly.graph_objects as go
 from sortedcontainers import SortedSet
 
+from matplotlib.colors import LinearSegmentedColormap
+color_exp = [(0.00, "#eeeeee"),
+              (0.05, "#eeeeee"),
+              (1.00, "#225EA8")
+            ]
+cmap_exp = LinearSegmentedColormap.from_list('custom_exp', color_exp)
+
+color_auc = [(0.00, "#eeeeee"),
+              (0.05, "#eeeeee"),
+              (1.00, "#d53e4f")
+            ]
+cmap_auc = LinearSegmentedColormap.from_list('custom_auc', color_auc)
+
 def formatStage(stage):
   """
     根据滑动条数值格式化stage
@@ -338,7 +351,7 @@ def sort_cell_by_score(marker, stage, gene):
     return ranked_cell_list
 
 def show_features_series_matplotlib(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
-                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=matplotlib.cm.viridis, **kws):
+                                          figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=cmap_exp, **kws):
   
   embedding = embedding.loc[adata.obs_names,]
   
