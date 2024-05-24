@@ -11,7 +11,7 @@ import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from plotnine import *
 import diskcache
-import matplotlib 
+import matplotlib
 matplotlib.use('agg')
 from callbacks.atlasall import *
 

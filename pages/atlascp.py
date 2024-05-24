@@ -371,9 +371,6 @@ def show_features_series_matplotlib_atlas(adata, embedding, features=None, patte
                                           figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=cmap_exp, **kws):
   
   embedding = embedding.loc[adata.obs_names,]
-  if cmap==None:
-     colors = [(0.00, "#eeeeee"), (0.05, "#eeeeee"), (1.00, "#225EA8")]
-     cmap = mcolors.LinearSegmentedColormap.from_list("custom_cmap", colors)
   if not features and pattern:
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
