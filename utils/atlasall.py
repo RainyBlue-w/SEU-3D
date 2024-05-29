@@ -91,6 +91,7 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
         yaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
         legend=dict(
               title='',
+              itemsizing='constant',
               orientation='h',
               yanchor='middle',
               xanchor='right',
@@ -173,7 +174,7 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage):
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
         yaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
-        legend=dict(title='')
+        legend=dict(title='', itemsizing='constant')
     )
     return data
 
