@@ -37,9 +37,9 @@ background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics
 # In[] data
 
 exp_data = {
-  'E7.5': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/E7.5_HC0.5_min400.h5ad"),
-  'E7.75': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/E7.75_HC0.5_min400.h5ad"),
-  'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/E8.0_HC0.5_min400.h5ad")
+  'E7.5': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400_Ann_HC0.5.h5ad"),
+  'E7.75': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
+  'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad")
 }
 
 # for stage, data in exp_data.items():
