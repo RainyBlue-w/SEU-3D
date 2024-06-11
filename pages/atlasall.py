@@ -174,7 +174,7 @@ atlasall_series_tab = dbc.Tab(
           dbc.Row([
             dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="atlasall_ctp_series", style={'height': "60vh", 'width': '75vw'})
           ]),
-          dbc.Row([], id="atlasall_geneExp_series")
+          dbc.Row([html.Img(id = 'atlasall_plotFeatureSeries_img', style = {'width': '80vw', 'margin-left':'1vw'})]),
         ], width=10)
       ]
     )

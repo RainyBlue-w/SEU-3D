@@ -31,14 +31,14 @@ stage_geneExp_pkl = root_pkl+stage_geneExp_pklName
 
 # 加载数据
 atlasAllData = loadAtlasAllData(h5ad_path, h5ad_pkl)
+cellColor = getCellTypeColor(atlasAllData, cell_color_pkl)
 geneList = getGeneList(atlasAllData, gene_list_pkl)
 stageDict = getStageDict(atlasAllData, stage_dict_pkl)
 stageValues = list(stageDict.values())
-cellColor = getCellTypeColor(atlasAllData, cell_color_pkl)
 celltypeUmap = getCellTypeUmap(atlasAllData, celltype_umap_pkl)
 stageGeneExp = getStageGeneExp(celltypeUmap, atlasAllData, geneList, stage_geneExp_pkl)
 
-# 回收数据
+# 数据回收
 del atlasAllData
 
 # 初始图像占位
@@ -48,7 +48,7 @@ stageGeneUmapPlaceholder = getGeneUmapFig(stageGeneExp, stageDict[7], geneList[1
 
 # 回调函数
 @callback(
-  Output('atlasall_geneExp_series', 'children', allow_duplicate=True),
+  Output('atlasall_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Input('atlasall_featureList_series_inputButton', 'n_clicks'),
   State('atlasall_featureList_series_textarea', 'value'),
   State('atlasall_stage_series_dropdown', 'value'),
@@ -71,18 +71,17 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage):
     raise PreventUpdate
   if click:
     names = re.split(", |,| |\n|\'|\"|#|_|%|$|@|\(|\)|\||^|&", names)
-    graphs = []
     geneSet = set(geneList)
+    genes = []
     for name in names:
        if name in geneSet:
-            geneExpFig = getGeneUmapSeriesFig(stageGeneExp, stage, name)
-            graphs.append(dcc.Graph(figure=geneExpFig, style={'height': "50vh", 'width': '27vw'}))   
-    return graphs
+            genes.append(name)   
+    return getGeneUmapSeriesImg(stageGeneExp, stage, genes)
   else:
     raise PreventUpdate
 
 @callback(
-  Output('atlasall_geneExp_series', 'children', allow_duplicate=True),
+  Output('atlasall_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Input('atlasall_featureName_series_inputButton', 'n_clicks'),
   State('atlasall_featureName_series_input', 'value'),
   State('atlasall_stage_series_dropdown', 'value'),
@@ -105,12 +104,11 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, pattern, stage):
     raise PreventUpdate
   if click:
     pattern = pattern.lower()
-    graphs = []
+    genes = []
     for gene in geneList:
        if pattern in gene.lower():
-          geneExpFig = getGeneUmapSeriesFig(stageGeneExp, stage, gene)
-          graphs.append(dcc.Graph(figure=geneExpFig, style={'height': "50vh", 'width': '27vw'}))
-    return graphs
+          genes.append(gene)
+    return getGeneUmapSeriesImg(stageGeneExp, stage, genes)
   else:
     raise PreventUpdate
 

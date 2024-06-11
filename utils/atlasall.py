@@ -3,6 +3,44 @@ import os
 import scanpy as sc
 import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
+import numpy as np
+from io import BytesIO
+from matplotlib.colors import LinearSegmentedColormap
+import base64
+
+def getGeneUmapSeriesImg(stageGeneExp, stage, genes, figsize=(6.4,4.8), n_cols=4, dot_size=4):
+    color_exp = [
+        (0.00, "#eeeeee"),
+        (0.05, "#eeeeee"),
+        (1.00, "#225EA8")
+    ]
+    cmp = LinearSegmentedColormap.from_list('custom_exp', color_exp)
+    n_rows = int(np.ceil(len(genes) / n_cols))
+    figsize = (figsize[0]*n_cols, figsize[1]*n_rows)
+    fig = plt.figure(figsize=figsize)
+    i = 1
+    for gene in genes:
+        df = stageGeneExp[stage][gene]
+        ax = plt.subplot(n_rows, n_cols, i)
+        i = i + 1
+        umap1 = df['umapX']
+        umap2 = df['umapY']
+        geneExp = df['geneExp']
+        plt.scatter(umap1, umap2, c=geneExp, cmap=cmp, s=dot_size, vmin = 0, vmax = geneExp.max())
+        plt.colorbar(label='')
+        plt.xlabel('UMAP-1')
+        plt.ylabel('UMAP-2')
+        plt.title(gene, fontsize=16)
+       
+    plt.tight_layout()
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    graph = base64.b64encode(image_png).decode('utf-8')
+    plt.close()
+    return 'data:image/png;base64,{}'.format(graph)
 
 def getStageGeneExp(celltypeUmap, adata, geneList, pkl_path):
     """
@@ -46,12 +84,14 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
     """
     data = px.scatter(celltypeUmap[stage], x="umapX", y="umapY", color="celltype",
                       color_discrete_map=cellColor)
+    data.update_traces(marker=dict(size=3))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
         yaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
         legend=dict(
               title='',
+              itemsizing='constant',
               orientation='h',
               yanchor='middle',
               xanchor='right',
@@ -105,6 +145,7 @@ def getGeneUmapFig(stageGeneExp, stage, gene):
         (1.00, "#225EA8")
     ]
     data = px.scatter(stageGeneExp[stage][gene], x="umapX", y="umapY", color="geneExp", color_continuous_scale=cmap)
+    data.update_traces(marker=dict(size=3))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
@@ -128,11 +169,12 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage):
     """
     data = px.scatter(celltypeUmap[stage], x="umapX", y="umapY", color="celltype",
                       color_discrete_map=cellColor)
+    data.update_traces(marker=dict(size=3))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
         yaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
-        legend=dict(title='')
+        legend=dict(title='', itemsizing='constant')
     )
     return data
 
