@@ -65,15 +65,15 @@ for stage in exp_data.keys():
 for k,v in exp_data.items():
   v.obs.germ_layer = [i.replace('exe-ecto', 'ectoderm') for i in v.obs.germ_layer.values]
 
-auc_data = {}
-regulon_geneset = {}
-for stage in ['E7.5', 'E7.75', 'E8.0']:
-  h5 = h5py.File( '/rad/share/omics-viewer/spatial/matrix_data/%s_auc_mtx.h5' % (stage))
-  auc_mtx = pd.DataFrame(h5['auc_matrix'], index=h5['cell'][:].astype(str), columns=h5['regulon'][:].astype(str))
-  auc_data[stage] = sc.AnnData(X=auc_mtx.loc[exp_data[stage].obs_names,:], obs=exp_data[stage].obs)
-  regulon_geneset[stage] = json.loads(h5['geneset'][()])
-  h5.close()
-del(auc_mtx)
+# auc_data = {}
+# regulon_geneset = {}
+# for stage in ['E7.5', 'E7.75', 'E8.0']:
+#   h5 = h5py.File( '/rad/share/omics-viewer/spatial/matrix_data/%s_auc_mtx.h5' % (stage))
+#   auc_mtx = pd.DataFrame(h5['auc_matrix'], index=h5['cell'][:].astype(str), columns=h5['regulon'][:].astype(str))
+#   auc_data[stage] = sc.AnnData(X=auc_mtx.loc[exp_data[stage].obs_names,:], obs=exp_data[stage].obs)
+#   regulon_geneset[stage] = json.loads(h5['geneset'][()])
+#   h5.close()
+# del(auc_mtx)
 
 genes_all_pval = pd.read_csv("/rad/share/omics-viewer/spatial/sparkX_res/genes_padj_combine.csv",
                              header=[0,1], index_col=[0,1])
@@ -610,7 +610,8 @@ spatial_dropdown_featureType = html.Div(
     [
         dbc.Label("Feature type"),
         dcc.Dropdown(
-            ['Gene', 'Regulon'],
+            # ['Gene', 'Regulon'],
+            ['Gene'],
             'Gene',
             id="spatial_dropdown_featureType",
             clearable=False,
@@ -900,7 +901,8 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   dmc.Col([
                     dbc.Label("Feature type"),
                     dcc.Dropdown(
-                      ['Gene', 'Regulon'],
+                      # ['Gene', 'Regulon'],
+                      ['Gene'],
                       'Gene',
                       id="DROPDOWN_featureType_3D",
                       clearable=False,
