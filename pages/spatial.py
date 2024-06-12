@@ -42,14 +42,6 @@ exp_data = {
   'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad")
 }
 
-# for stage, data in exp_data.items():
-
-# coord_data = {
-#   'E7.5': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E7.5.csv', sep=' '),
-#   'E7.75': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E7.75.csv', sep=' '),
-#   'E8.0': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E8.0.csv', sep=' ')
-# }
-
 coord_data = {}
 for stage, adata in exp_data.items():
   coord_data[stage] = adata.obs[['x', 'y', 'z', 'x_flatten', 'y_flatten']]
