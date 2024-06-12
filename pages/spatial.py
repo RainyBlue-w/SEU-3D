@@ -44,11 +44,16 @@ exp_data = {
 
 # for stage, data in exp_data.items():
 
-coord_data = {
-  'E7.5': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E7.5.csv', sep=' '),
-  'E7.75': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E7.75.csv', sep=' '),
-  'E8.0': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E8.0.csv', sep=' ')
-}
+# coord_data = {
+#   'E7.5': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E7.5.csv', sep=' '),
+#   'E7.75': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E7.75.csv', sep=' '),
+#   'E8.0': pd.read_csv('/rad/share/omics-viewer/spatial/spatial_coordinate.embryo_E8.0.csv', sep=' ')
+# }
+
+coord_data = {}
+for stage, adata in exp_data.items():
+  coord_data[stage] = adata.obs[['x', 'y', 'z', 'x_flatten', 'y_flatten']]
+
 
 for stage in exp_data.keys():
   exp_data[stage].obs[['x','y','z','x_flatten', 'y_flatten']] = coord_data[stage].loc[exp_data[stage].obs_names,['x','y','z','x_flatten', 'y_flatten']]
