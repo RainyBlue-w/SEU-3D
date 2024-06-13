@@ -22,7 +22,7 @@ atlasall_gene_dropdown = html.Div(
     dbc.Label("Gene to Display"),
     dcc.Dropdown(
       geneList,
-      geneList[1],
+      geneList[3],
       id="atlasall_gene_dropdown",
       clearable=False,
       searchable=True,

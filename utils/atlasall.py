@@ -9,7 +9,7 @@ from io import BytesIO
 from matplotlib.colors import LinearSegmentedColormap
 import base64
 
-def getGeneUmapSeriesImg(stageGeneExp, stage, genes, figsize=(6.4,4.8), n_cols=4, dot_size=4):
+def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsize=(6.4,4.8), n_cols=4, dot_size=4):
     color_exp = [
         (0.00, "#eeeeee"),
         (0.05, "#eeeeee"),
@@ -21,7 +21,7 @@ def getGeneUmapSeriesImg(stageGeneExp, stage, genes, figsize=(6.4,4.8), n_cols=4
     fig = plt.figure(figsize=figsize)
     i = 1
     for gene in genes:
-        df = stageGeneExp[stage][gene]
+        df = getStageGeneExp(celltypeUmap, adata, stage, gene, geneIndexDict)
         ax = plt.subplot(n_rows, n_cols, i)
         i = i + 1
         umap1 = df['umapX']
@@ -42,32 +42,52 @@ def getGeneUmapSeriesImg(stageGeneExp, stage, genes, figsize=(6.4,4.8), n_cols=4
     plt.close()
     return 'data:image/png;base64,{}'.format(graph)
 
-def getStageGeneExp(celltypeUmap, adata, geneList, pkl_path):
+def getStageGeneExp(celltypeUmap, adata, stage, geneName, geneIndexDict):
     """
         计算每个时期不同基因的表达情况
         
         Params:
         celltypeUmap(dict):键为stage，值为dataFrame，记录了celltype和对应umap坐标
         adata(Anndata):单细胞Anndata对象
-        geneList(list):基因列表
-        pkl_path(str):计算结果序列化数据保存位置
+        stage(str):发育时期
+        genename(str):基因
+        geneIndexDict(dict):key->geneName, value->index
 
         Returns:
-        data(dict):二重字典，第一层key为stage，第二层key为gene，值为dataframe，对应基因表达和umap坐标        
+        data(dataframe):对应基因表达和umap坐标        
     """
-    if os.path.exists(pkl_path):
-        return loadPkl(pkl_path)
-    else:
-        data = {}
-        for stage in celltypeUmap:
-            data[stage] = {}
-            df = celltypeUmap[stage].loc[:, ['umapX', 'umapY']]
-            stageX = adata[adata.obs['stage'] == stage].X
-            for index, geneName in enumerate(geneList):
-                data[stage][geneName] = df.copy()
-                data[stage][geneName]['geneExp'] = list(stageX[:, index])
-        dumpPkl(data, pkl_path)
-        return data
+    data = celltypeUmap[stage].loc[:, ['umapX', 'umapY']]
+    stageX = adata[adata.obs['stage'] == stage].X
+    data['geneExp'] = stageX[:, geneIndexDict[geneName]].toarray()
+    return data
+
+# def getStageGeneExp(celltypeUmap, adata, geneList, pkl_path):
+#     """
+#         计算每个时期不同基因的表达情况
+        
+#         Params:
+#         celltypeUmap(dict):键为stage，值为dataFrame，记录了celltype和对应umap坐标
+#         adata(Anndata):单细胞Anndata对象
+#         geneList(list):基因列表
+#         pkl_path(str):计算结果序列化数据保存位置
+
+#         Returns:
+#         data(dict):二重字典，第一层key为stage，第二层key为gene，值为dataframe，对应基因表达和umap坐标        
+#     """
+#     if os.path.exists(pkl_path):
+#         return loadPkl(pkl_path)
+#     else:
+#         data = {}
+#         for stage in celltypeUmap:
+#             data[stage] = {}
+#             df = celltypeUmap[stage].loc[:, ['umapX', 'umapY']]
+#             stageX = adata[adata.obs['stage'] == stage].X
+#             for index, geneName in enumerate(geneList):
+#                 data[stage][geneName] = df.copy()
+#                 # data[stage][geneName]['geneExp'] = list(stageX[:, index])
+#                 data[stage][geneName]['geneExp'] = stageX[:, index].toarray()
+#         dumpPkl(data, pkl_path)
+#         return data
 
 def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
     """
@@ -101,7 +121,7 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
     )
     return data
 
-def getGeneUmapSeriesFig(stageGeneExp, stage, gene):
+def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict):
     """
         绘制基因umap图
 
@@ -118,33 +138,8 @@ def getGeneUmapSeriesFig(stageGeneExp, stage, gene):
         (0.05, "#eeeeee"),
         (1.00, "#225EA8")
     ]
-    data = px.scatter(stageGeneExp[stage][gene], x="umapX", y="umapY", color="geneExp", color_continuous_scale=cmap)
-    data.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(showgrid=True, showline=True, showticklabels=True, title='umap1', linecolor='black', dtick=5),
-        yaxis=dict(showgrid=True, showline=True, showticklabels=True, title='umap2', linecolor='black', dtick=5),
-        coloraxis_colorbar_title=gene
-    )
-    return data
-
-def getGeneUmapFig(stageGeneExp, stage, gene):
-    """
-        绘制基因umap图
-
-        Params:
-        stageGeneExp(dict):二重字典，第一层key为stage，第二层key为gene，值为dataframe，对应基因表达和umap坐标
-        stage(str):绘制某个时期的基因umap
-        gene(str):要绘制的基因名称
-
-        Returns：
-        data(Figure):绘制的基因umap图
-    """
-    cmap = [
-        (0.00, "#eeeeee"),
-        (0.05, "#eeeeee"),
-        (1.00, "#225EA8")
-    ]
-    data = px.scatter(stageGeneExp[stage][gene], x="umapX", y="umapY", color="geneExp", color_continuous_scale=cmap)
+    df = getStageGeneExp(celltypeUmap, adata, stage, gene, geneIndexDict)
+    data = px.scatter(df, x="umapX", y="umapY", color="geneExp", color_continuous_scale=cmap)
     data.update_traces(marker=dict(size=3))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
@@ -176,6 +171,23 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage):
         yaxis=dict(showgrid=False, showline=False, showticklabels=False, title=''),
         legend=dict(title='', itemsizing='constant')
     )
+    return data
+
+def getGeneIndexDict(adata):
+    """
+        获取gene对应索引映射
+
+        Params:
+        adata(anndata):单细胞Anndata对象
+
+        Returns：
+        data(dict):key->geneName, value->index
+    """
+    data = {}
+    index = 0
+    for geneName in adata.var['_index']:
+        data[geneName] = index
+        index+=1
     return data
 
 def getCellTypeUmap(adata, pkl_path):
@@ -252,7 +264,7 @@ def getGeneList(adata, pkl_path):
     if os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:
-        data = adata.var['features'].unique().tolist()
+        data = adata.var['_index'].unique().tolist()
         dumpPkl(data, pkl_path)
         return data
 
@@ -271,6 +283,7 @@ def loadAtlasAllData(h5ad_path, pkl_path):
         return loadPkl(pkl_path)
     else:
         adata = sc.read_h5ad(h5ad_path)
+        adata = adata.raw.to_adata()
         dumpPkl(adata, pkl_path)
         return adata
 
