@@ -18,7 +18,7 @@ gene_list_pklName = fileName+'_geneList.pkl'
 stage_dict_pklName = fileName+'_stageDict.pkl'
 cell_color_pklName = fileName+'_cellColor.pkl'
 celltype_umap_pklName = fileName+'_celltypeUmap.pkl'
-stage_geneExp_pklName = fileName+'_stageGeneExp.pkl'
+# stage_geneExp_pklName = fileName+'_stageGeneExp.pkl'
 
 # 设置文件路径
 h5ad_path = root_path+h5ad_fileName
@@ -27,24 +27,22 @@ gene_list_pkl = root_pkl+gene_list_pklName
 stage_dict_pkl = root_pkl+stage_dict_pklName
 cell_color_pkl = root_pkl+cell_color_pklName
 celltype_umap_pkl = root_pkl+celltype_umap_pklName
-stage_geneExp_pkl = root_pkl+stage_geneExp_pklName
+# stage_geneExp_pkl = root_pkl+stage_geneExp_pklName
 
 # 加载数据
 atlasAllData = loadAtlasAllData(h5ad_path, h5ad_pkl)
+geneIndexDict = getGeneIndexDict(atlasAllData)
 cellColor = getCellTypeColor(atlasAllData, cell_color_pkl)
 geneList = getGeneList(atlasAllData, gene_list_pkl)
 stageDict = getStageDict(atlasAllData, stage_dict_pkl)
 stageValues = list(stageDict.values())
 celltypeUmap = getCellTypeUmap(atlasAllData, celltype_umap_pkl)
-stageGeneExp = getStageGeneExp(celltypeUmap, atlasAllData, geneList, stage_geneExp_pkl)
-
-# 数据回收
-del atlasAllData
+# stageGeneExp = getStageGeneExp(celltypeUmap, atlasAllData, geneList, stage_geneExp_pkl)
 
 # 初始图像占位
 celltytpeUmapPlaceholder = getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[7])
 celltypeUmapSeriesPlaceholder = getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stageDict[4])
-stageGeneUmapPlaceholder = getGeneUmapFig(stageGeneExp, stageDict[7], geneList[1])
+stageGeneUmapPlaceholder = getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[7], geneList[3], geneIndexDict)
 
 # 回调函数
 @callback(
@@ -76,7 +74,7 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage):
     for name in names:
        if name in geneSet:
             genes.append(name)   
-    return getGeneUmapSeriesImg(stageGeneExp, stage, genes)
+    return getGeneUmapSeriesImg(celltypeUmap, atlasAllData, stage, genes, geneIndexDict)
   else:
     raise PreventUpdate
 
@@ -108,7 +106,7 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, pattern, stage):
     for gene in geneList:
        if pattern in gene.lower():
           genes.append(gene)
-    return getGeneUmapSeriesImg(stageGeneExp, stage, genes)
+    return getGeneUmapSeriesImg(celltypeUmap, atlasAllData, stage, genes, geneIndexDict)
   else:
     raise PreventUpdate
 
@@ -137,7 +135,7 @@ def update_atlasall_series_gene_umap(stage):
     Input('atlasall_stage_slider', 'value')
 )
 def update_atlasall_gene_umap(gene_name, stageIndex):
-    return getGeneUmapFig(stageGeneExp, stageDict[stageIndex], gene_name)
+    return getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[stageIndex], gene_name, geneIndexDict)
 
 @callback(
     Output('atlasall_ctp_umap', 'figure'),
