@@ -40,9 +40,9 @@ celltypeUmap = getCellTypeUmap(atlasAllData, celltype_umap_pkl)
 # stageGeneExp = getStageGeneExp(celltypeUmap, atlasAllData, geneList, stage_geneExp_pkl)
 
 # 初始图像占位
-celltytpeUmapPlaceholder = getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[7])
-celltypeUmapSeriesPlaceholder = getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stageDict[4])
-stageGeneUmapPlaceholder = getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[7], geneList[3], geneIndexDict)
+celltytpeUmapPlaceholder = getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[2])
+celltypeUmapSeriesPlaceholder = getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stageDict[2])
+stageGeneUmapPlaceholder = getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[2], geneList[3], geneIndexDict)
 
 # 回调函数
 @callback(
