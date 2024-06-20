@@ -9,25 +9,26 @@ from io import BytesIO
 from matplotlib.colors import LinearSegmentedColormap
 import base64
 
-def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsize=(6.4,4.8), n_cols=4, dot_size=4):
+def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsize=(6.4,5.2), n_cols=3, dot_size=1, umap1='stagedUmap1', umap2='stagedUmap2'):
     color_exp = [
-        (0.00, "#eeeeee"),
-        (0.05, "#eeeeee"),
-        (1.00, "#225EA8")
+        (0.00, "#BFBFBF"),
+        (0.05, "#BFBFBF"),
+        (0.75, "#225EA8"),
+        (1.00, "#000000")
     ]
     cmp = LinearSegmentedColormap.from_list('custom_exp', color_exp)
     n_rows = int(np.ceil(len(genes) / n_cols))
     figsize = (figsize[0]*n_cols, figsize[1]*n_rows)
-    fig = plt.figure(figsize=figsize)
+    fig = plt.figure(figsize=figsize, dpi=200)
     i = 1
     for gene in genes:
         df = getStageGeneExp(celltypeUmap, adata, stage, gene, geneIndexDict)
         ax = plt.subplot(n_rows, n_cols, i)
         i = i + 1
-        umap1 = df['umapX']
-        umap2 = df['umapY']
+        umapX = df[umap1]
+        umapY = df[umap2]
         geneExp = df['geneExp']
-        plt.scatter(umap1, umap2, c=geneExp, cmap=cmp, s=dot_size, vmin = 0, vmax = geneExp.max())
+        plt.scatter(umapX, umapY, c=geneExp, cmap=cmp, s=dot_size, vmin = 0, vmax = geneExp.max())
         plt.colorbar(label='')
         plt.xlabel('UMAP-1')
         plt.ylabel('UMAP-2')
@@ -42,7 +43,7 @@ def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsi
     plt.close()
     return 'data:image/png;base64,{}'.format(graph)
 
-def getStageGeneExp(celltypeUmap, adata, stage, geneName, geneIndexDict):
+def getStageGeneExp(celltypeUmap, adata, stage, geneName, geneIndexDict, umap1='stagedUmap1', umap2='stagedUmap2'):
     """
         计算每个时期不同基因的表达情况
         
@@ -56,10 +57,10 @@ def getStageGeneExp(celltypeUmap, adata, stage, geneName, geneIndexDict):
         Returns:
         data(dataframe):对应基因表达和umap坐标        
     """
-    data = celltypeUmap[stage].loc[:, ['umapX', 'umapY']]
+    data = celltypeUmap[stage].loc[:, [umap1, umap2]]
     stageX = adata[adata.obs['stage'] == stage].X
     data['geneExp'] = stageX[:, geneIndexDict[geneName]].toarray()
-    return data
+    return data.sort_values(by='geneExp')
 
 # def getStageGeneExp(celltypeUmap, adata, geneList, pkl_path):
 #     """
@@ -89,7 +90,7 @@ def getStageGeneExp(celltypeUmap, adata, stage, geneName, geneIndexDict):
 #         dumpPkl(data, pkl_path)
 #         return data
 
-def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
+def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap2='stagedUmap2'):
     """
         绘制series tab细胞umap图
 
@@ -102,7 +103,7 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
         Returns：
         data(Figure):绘制的细胞umap图
     """
-    data = px.scatter(celltypeUmap[stage], x="umapX", y="umapY", color="celltype",
+    data = px.scatter(celltypeUmap[stage], x=umap1, y=umap2, color="celltype",
                       color_discrete_map=cellColor)
     data.update_traces(marker=dict(size=3))
     data.update_layout(
@@ -121,7 +122,7 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage):
     )
     return data
 
-def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict):
+def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict, umap1='stagedUmap1', umap2='stagedUmap2'):
     """
         绘制基因umap图
 
@@ -134,12 +135,13 @@ def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict):
         data(Figure):绘制的基因umap图
     """
     cmap = [
-        (0.00, "#eeeeee"),
-        (0.05, "#eeeeee"),
-        (1.00, "#225EA8")
+        (0.00, "#BFBFBF"),
+        (0.05, "#BFBFBF"),
+        (0.75, "#225EA8"),
+        (1.00, "#000000")
     ]
     df = getStageGeneExp(celltypeUmap, adata, stage, gene, geneIndexDict)
-    data = px.scatter(df, x="umapX", y="umapY", color="geneExp", color_continuous_scale=cmap)
+    data = px.scatter(df, x=umap1, y=umap2, color="geneExp", color_continuous_scale=cmap)
     data.update_traces(marker=dict(size=3))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
@@ -149,7 +151,7 @@ def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict):
     )
     return data
 
-def getCelltypeUmapFig(celltypeUmap, cellColor, stage):
+def getCelltypeUmapFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap2='stagedUmap2'):
     """
         绘制细胞umap图
 
@@ -162,7 +164,7 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage):
         Returns：
         data(Figure):绘制的细胞umap图
     """
-    data = px.scatter(celltypeUmap[stage], x="umapX", y="umapY", color="celltype",
+    data = px.scatter(celltypeUmap[stage], x=umap1, y=umap2, color="celltype",
                       color_discrete_map=cellColor)
     data.update_traces(marker=dict(size=3))
     data.update_layout(
@@ -199,14 +201,14 @@ def getCellTypeUmap(adata, pkl_path):
         pkl_path(str):序列化celltypeUmap坐标路径
 
         Returns：
-        data(dict):键为stage，值为dataFrame，列celltype， umapX， umapY
+        data(dict):键为stage，值为dataFrame，列celltype， umapX， umapY， stagedUMAP1， stagedUMAP2
     """
     if os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:
         data = {}
         for stage, group in adata.obs.groupby('stage'):
-            data[stage] = pd.DataFrame(group[['celltype', 'umapX', 'umapY']])
+            data[stage] = pd.DataFrame(group[['celltype', 'umapX', 'umapY', 'stagedUmap1', 'stagedUmap2']])
         dumpPkl(data, pkl_path)
         return data
 
@@ -283,6 +285,28 @@ def loadAtlasAllData(h5ad_path, pkl_path):
         return loadPkl(pkl_path)
     else:
         adata = sc.read_h5ad(h5ad_path)
+        # 根据stage计算新的UMAP坐标
+        stageList = adata.obs['stage'].unique()
+        stagedUmap1 = {}
+        stagedUmap2 = {}
+        for stage in stageList:
+            subset = adata[adata.obs['stage']==stage]
+            sc.tl.pca(subset, svd_solver='arpack')
+            if subset.obs['sequencing.batch'].unique().size<2:
+                sc.pp.neighbors(subset, n_neighbors=10, n_pcs=40)
+            else:
+                sc.external.pp.bbknn(subset, batch_key='sequencing.batch')
+            sc.tl.umap(subset)
+            for i, name in enumerate(subset.obs.index):
+                stagedUmap1[name] = subset.obsm['X_umap'][i][0]
+                stagedUmap2[name] = subset.obsm['X_umap'][i][1]
+        sUmap1 = []
+        sUmap2 = []
+        for cellid in adata.obs.index:
+            sUmap1.append(stagedUmap1[cellid])
+            sUmap2.append(stagedUmap2[cellid])
+        adata.obs['stagedUmap1'] = sUmap1
+        adata.obs['stagedUmap2'] = sUmap2
         adata = adata.raw.to_adata()
         dumpPkl(adata, pkl_path)
         return adata

@@ -35,7 +35,7 @@ atlasall_stage_slider = html.Div(
     0, len(stageDict)-1,
     step = None,
     marks=stageDict,
-    value=7,
+    value=2,
     id="atlasall_stage_slider"
   ), style={'width': '97%'}
 )
@@ -172,7 +172,7 @@ atlasall_series_tab = dbc.Tab(
         ),
         dbc.Col([
           dbc.Row([
-            dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="atlasall_ctp_series", style={'height': "60vh", 'width': '75vw'})
+            dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="atlasall_ctp_series", style={'height': "63vh", 'width': '75vw'})
           ]),
           dbc.Row([html.Img(id = 'atlasall_plotFeatureSeries_img', style = {'width': '80vw', 'margin-left':'1vw'})]),
         ], width=10)
