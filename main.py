@@ -16,7 +16,8 @@ app = DashProxy(
   transforms=[
     LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
   ],
-  use_pages=True
+  use_pages=True,
+#  requests_pathname_prefix='/mouseEmbryo/',
 )
 
 header = dbc.NavbarSimple(
