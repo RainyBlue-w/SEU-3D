@@ -39,16 +39,15 @@ background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics
 exp_data = {
   'E7.5': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400_Ann_HC0.5.h5ad"),
   'E7.75': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
-  'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad")
+  'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
+  'E7.5_ext': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
+  'E7.75_ext': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
 }
+
 
 coord_data = {}
 for stage, adata in exp_data.items():
   coord_data[stage] = adata.obs[['x', 'y', 'z', 'x_flatten', 'y_flatten']]
-
-
-for stage in exp_data.keys():
-  exp_data[stage].obs[['x','y','z','x_flatten', 'y_flatten']] = coord_data[stage].loc[exp_data[stage].obs_names,['x','y','z','x_flatten', 'y_flatten']]
 
 for stage in exp_data.keys():
   exp_data[stage].raw = exp_data[stage].copy()
@@ -64,7 +63,7 @@ for k,v in exp_data.items():
 
 # auc_data = {}
 # regulon_geneset = {}
-# for stage in ['E7.5', 'E7.75', 'E8.0']:
+# for stage in list(exp_data.keys()):
 #   h5 = h5py.File( '/rad/share/omics-viewer/spatial/matrix_data/%s_auc_mtx.h5' % (stage))
 #   auc_mtx = pd.DataFrame(h5['auc_matrix'], index=h5['cell'][:].astype(str), columns=h5['regulon'][:].astype(str))
 #   auc_data[stage] = sc.AnnData(X=auc_mtx.loc[exp_data[stage].obs_names,:], obs=exp_data[stage].obs)
@@ -621,7 +620,7 @@ spatial_dropdown_featureName = html.Div(
     [
         dbc.Label("Feature name"),
         dcc.Dropdown(
-            exp_data['E7.75'].var_names,
+            exp_data['E7.5'].var_names,
             'Cdx1',
             id="spatial_dropdown_featureName",
             clearable=True,
@@ -634,8 +633,8 @@ spatial_dropdown_stage = html.Div(
     [
         dbc.Label("Stage"),
         dcc.Dropdown(
-            ['E7.5', 'E7.75', 'E8.0'],
-            'E7.75',
+            options = list(exp_data.keys()),
+            value= 'E7.5',
             id="spatial_dropdown_stage",
             clearable=False,
             searchable=True,
@@ -776,8 +775,8 @@ spatial_dropdown_stage_series = html.Div(
     [
         dbc.Label("Stage"),
         dcc.Dropdown(
-            ['E7.5', 'E7.75', 'E8.0'],
-            'E7.75',
+            options = list(exp_data.keys()),
+            value = 'E7.5',
             id="spatial_dropdown_stage_series",
             clearable=False,
             searchable=True,
@@ -793,7 +792,7 @@ spatial_controller_similarPattern = html.Div(
     [
       dbc.Label('Stage'),
       dcc.Dropdown(
-        options=['E7.5', 'E7.75', 'E8.0'], value='E7.5',
+        options=list(exp_data.keys()), value='E7.5',
         id = 'DROPDOWN_stage_similar',
         clearable=True, searchable=True
       ),
@@ -909,7 +908,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                   dmc.Col([
                     dbc.Label("Stage"),
                     dcc.Dropdown(
-                      ['E7.5', 'E7.75', 'E8.0'],
+                      list(exp_data.keys()),
                       'E7.5',
                       id="DROPDOWN_stage_3D",
                       clearable=False,
@@ -1413,7 +1412,7 @@ spatial_tab_plotFeatureSparkx = dbc.Tab(
             ], width=4),
             dbc.Col([
               dbc.Label("Stage"),
-              dcc.Dropdown(['E7.5', 'E7.75', 'E8.0'],'E7.75', id='spatial_dropdown_stage_sparkx', clearable=False)
+              dcc.Dropdown(list(exp_data.keys()),'E7.5', id='spatial_dropdown_stage_sparkx', clearable=False)
             ], width=4),
             dbc.Col([
               dbc.Label("Genes per page"),
