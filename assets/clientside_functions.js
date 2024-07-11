@@ -32,7 +32,7 @@ function plot_expScatter3D(obs, cells, singleExp, mixcolor, ifmulti, hideAxes, p
             'plot_bgcolor': '#ffffff',
             'coloraxis': {
                 'colorscale': [
-                    [0.00, "rgb(244,244,244)"],
+                    [0.00, "rgb(229,229,229)"],
                     [1.00, "rgb(34, 94, 168)"],
                 ],
             },

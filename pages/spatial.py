@@ -34,6 +34,8 @@ from typing import List, Dict, Tuple
 import diskcache
 background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/spatial/cache"))
 
+from utils import model_to_figure_mesh3d
+
 # In[] data
 
 exp_data = {
@@ -42,8 +44,9 @@ exp_data = {
   'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
   'E7.5_ext': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
   'E7.75_ext': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
+  'E7.75_ext_gut3': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
+  'E8.0_min300': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
 }
-
 
 coord_data = {}
 for stage, adata in exp_data.items():
@@ -1464,6 +1467,37 @@ spatial_tab_similarPattern = dbc.Tab(
   tab_id = 'spatial_tab_similarPattern'
 )
 
+spatial_tab_3dModel = dbc.Tab(
+  children = html.Div(
+    className = 'div-spatial-tab-3dModal',
+    children=[
+      dmc.Grid([
+        dmc.Col(
+          fac.AntdSelect(
+            id='SELECT_3dModel_spatial',
+            options = [
+              {
+                'label': filename,
+                'value': os.path.join('/rad/share/omics-viewer/3D_model', filename)
+              } for filename in os.listdir('/rad/share/omics-viewer/3D_model')
+            ],
+            value=os.path.join('/rad/share/omics-viewer/3D_model', os.listdir('/rad/share/omics-viewer/3D_model')[0]),
+            mode = 'multiple',
+            className='fac-select-3dModal-spatial'
+          ),
+          span=4,
+        ),
+        dmc.Col(
+          dcc.Graph(id='FIGURE_3dModel_spatial', className='dcc-graph-3dModal-spatial'),
+          span=8
+        )
+      ]),
+    ]
+  ),
+  label = '3D model',
+  tab_id = 'spatial_tab_3dModel',
+)
+
 spatial_tabs = dbc.Card(
   dbc.Tabs(
     [
@@ -1471,7 +1505,8 @@ spatial_tabs = dbc.Card(
       spatial_tab_plotFeature3D, 
       spatial_tab_plotFeatureSeries,
       spatial_tab_plotFeatureSparkx,
-      spatial_tab_similarPattern
+      spatial_tab_similarPattern,
+      spatial_tab_3dModel,
     ],
     active_tab = "spatial_tab_plotFeature",  
     id = "spatial_tabs",
@@ -2901,6 +2936,22 @@ def update_geneOtherFigure_similar(active_cell, stage, germ_layer):
     sort=True, ascending=True, 
   )
   return fig
+
+# In[] callback/3D model
+
+@callback(
+  Output('FIGURE_3dModel_spatial', 'figure'),
+  Input('SELECT_3dModel_spatial', 'value'),
+)
+def render_3dModel(models):
+  if type(models) != 'list' :
+    models = list(models)
+  models_dict = {}
+  for path in models:
+    if os.path.exists(path):
+      name = os.path.basename(path)
+      models_dict[name] = path
+  return model_to_figure_mesh3d(models_dict, width=None, height=None)
 
 # In[] app/run:
 

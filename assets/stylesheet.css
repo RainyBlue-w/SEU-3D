@@ -126,3 +126,21 @@
   font-weight: bold;
   color: #4080ee;
 }
+
+.div-spatial-tab-3dModal {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#SELECT_3dModel_spatial .root{
+  width: 400px;
+}
+
+.fac-select-3dModal-spatial {
+  width: 300px;
+}
+
+.dcc-graph-3dModal-spatial {
+  height: 600px;
+  width: 600px;
+}
