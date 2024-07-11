@@ -55,6 +55,6 @@ if __name__ == "__main__":
     threaded=True,
     proxy=None,
     debug=False,
-    use_reloader=True
+    use_reloader=False
     # jupyter_mode='external'
   )
