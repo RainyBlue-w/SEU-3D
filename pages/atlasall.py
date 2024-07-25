@@ -58,7 +58,7 @@ atlasall_stage_series_dropdown = html.Div(
     dbc.Label("Stage"),
     dcc.Dropdown(
       stageValues,
-      stageValues[4],
+      stageValues[3],
       id="atlasall_stage_series_dropdown",
       clearable=False,
       searchable=True,
@@ -172,7 +172,7 @@ atlasall_series_tab = dbc.Tab(
         ),
         dbc.Col([
           dbc.Row([
-            dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="atlasall_ctp_series", style={'height': "63vh", 'width': '75vw'})
+            dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="atlasall_ctp_series")
           ]),
           dbc.Row([html.Img(id = 'atlasall_plotFeatureSeries_img', style = {'width': '80vw', 'margin-left':'1vw'})]),
         ], width=10)

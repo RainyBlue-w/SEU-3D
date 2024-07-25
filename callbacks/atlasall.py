@@ -41,7 +41,7 @@ celltypeUmap = getCellTypeUmap(atlasAllData, celltype_umap_pkl)
 
 # 初始图像占位
 celltytpeUmapPlaceholder = getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[2])
-celltypeUmapSeriesPlaceholder = getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stageDict[2])
+celltypeUmapSeriesPlaceholder = getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stageDict[3])
 stageGeneUmapPlaceholder = getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[2], geneList[3], geneIndexDict)
 
 # 回调函数
