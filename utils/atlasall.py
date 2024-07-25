@@ -103,7 +103,8 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1'
         Returns：
         data(Figure):绘制的细胞umap图
     """
-    data = px.scatter(celltypeUmap[stage], x=umap1, y=umap2, color="celltype",
+    sorted_df = celltypeUmap[stage].sort_values('celltype')
+    data = px.scatter(sorted_df, x=umap1, y=umap2, color="celltype",
                       color_discrete_map=cellColor)
     data.update_traces(marker=dict(size=3))
     data.update_layout(
@@ -115,10 +116,12 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1'
               itemsizing='constant',
               orientation='h',
               yanchor='middle',
-              xanchor='right',
+              xanchor='left',
               y=0.5,
-              x=3
-        )
+              x=1
+        ),
+        width=1160,
+        height=580
     )
     return data
 
@@ -164,7 +167,8 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap
         Returns：
         data(Figure):绘制的细胞umap图
     """
-    data = px.scatter(celltypeUmap[stage], x=umap1, y=umap2, color="celltype",
+    sorted_df = celltypeUmap[stage].sort_values('celltype')
+    data = px.scatter(sorted_df, x=umap1, y=umap2, color="celltype",
                       color_discrete_map=cellColor)
     data.update_traces(marker=dict(size=3))
     data.update_layout(

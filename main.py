@@ -51,7 +51,7 @@ app.layout = dmc.NotificationsProvider(html.Div([
 if __name__ == "__main__":
   app.run(
     host='::',
-    port='8050',
+    port='8181',
     threaded=True,
     proxy=None,
     debug=False,
