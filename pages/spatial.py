@@ -32,7 +32,6 @@ import re
 from concurrent import futures
 from typing import List, Dict, Tuple
 import diskcache
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/spatial/cache"))
 
 from utils import model_to_figure_mesh3d
 
@@ -258,6 +257,8 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
     df = adata[:,gene].to_df()
     # thr = df.min()+(df.max()-df.min())*0.05
     df = df[df[gene] > 0]
+    if df.shape[0] == 0:
+      continue
     counts = pd.DataFrame(adata.obs['celltype'][df.index].value_counts())
     counts['gene'] = gene
     counts['count'] = counts['count']/sum(counts['count'])
@@ -265,7 +266,7 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
   ctp_counts = pd.concat(ctp_counts, axis=0)
   ctp_counts['celltype'] = np.array(ctp_counts.index.to_list())[:,1]
   ctp_counts['text_y'] = ctp_counts['count'].max()/2
-  ctp_counts['gene'] = ctp_counts['gene'].astype('category').values.reorder_categories(ordered_features)
+  ctp_counts['gene'] = ctp_counts['gene'].astype('category').values.reorder_categories([i for i in ordered_features if i in ctp_counts['gene'].unique()])
   bar_df = ctp_counts[ctp_counts['count']>0].groupby(['gene']).head(5)
   bar_df['ctp_order'] = bar_df['celltype'] +'_' + bar_df['gene'].astype(str)
   bar_df['ctp_order'] = bar_df['ctp_order'].astype('category').values.reorder_categories(bar_df['ctp_order'][::-1])
@@ -1542,7 +1543,6 @@ def update_spatial_dropdown_featureName(search, featureType, stage):
   Input('spatial_dropdown_featureName', 'value'),
   Input('spatial_dropdown_stage', 'value'),
   # background=True,
-  # manager=background_callback_manager,
 )
 def update_spatial_plotFeature_graph(featureType, name, stage):
   if name is None:
@@ -1563,7 +1563,6 @@ def update_spatial_plotFeature_graph(featureType, name, stage):
   State('spatial_dropdown_featureType', 'value'),
   Input('spatial_dropdown_stage', 'value'),
   background=True,
-  manager=background_callback_manager,
 )
 def update_spatial_plotFeature_ctpGraph(featureType, stage):
 
@@ -2564,7 +2563,7 @@ def show_moranRes_offcanvas(click):
   State('DROPDOWN_featureType_3D', 'value'),
   prevent_initial_call=True,
   background = True,
-  manager = background_callback_manager,
+  # manager = background_callback_manager,
   running = [
     (Output('BUTTON_showMoran_3D', 'disabled'), True, False),
     (Output('BUTTON_calMoran_3D', 'children'), '< 1min', 'Compute'),
@@ -2599,7 +2598,6 @@ def cal_moranRes(click, cells, stage, featureType):
   Input('spatial_inputButton_featureName_series_plot', 'n_clicks'),
   State('spatial_dropdown_stage_series', 'value'),
   background=True,
-  manager=background_callback_manager,
   running=[
     (Output('spatial_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
     (Output('spatial_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
@@ -2642,7 +2640,6 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
   Input('spatial_inputButton_featureLists_series_plot', 'n_clicks'),
   State('spatial_dropdown_stage_series', 'value'),
   background=True,
-  manager=background_callback_manager,
   running=[
     (Output('spatial_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
     (Output('spatial_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
@@ -2803,7 +2800,6 @@ def update_highlightRow_store(rows):
   ],
   prevent_initial_call=True,
   background=True,
-  manager=background_callback_manager,
 )
 def choose_sparkx_featureToPlot(row_id, stage, featureType):
   if not row_id:
@@ -2826,7 +2822,6 @@ def choose_sparkx_featureToPlot(row_id, stage, featureType):
     Input('spatial_dropdown_stage_sparkx', 'value'),
   ],
   background=True,
-  manager=background_callback_manager,
 )
 def update_sparkx_stageCtpGraph(stage):
   if not stage:
