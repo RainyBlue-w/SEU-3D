@@ -33,7 +33,7 @@ from io import BytesIO
 import matplotlib.colors as mcolors
 matplotlib.use('agg')
 
-data_dir = "/rad/share/omics-viewer/atlas-CP/"
+data_dir = "/data1/share/omics-viewer/atlas-CP/"
 
 background_callback_manager = DiskcacheManager(diskcache.Cache(data_dir+"cache"))
 

@@ -7,9 +7,9 @@ from dash import DiskcacheManager
 import diskcache
 from dash_extensions.enrich import FileSystemBackend
 
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/cache"))
+background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/cache"))
 
-dbc_css = "/rad/share/omics-viewer/main/dbc.min.css"
+dbc_css = "/data1/share/omics-viewer/main/dbc.min.css"
 app = DashProxy(
   __name__, 
   external_stylesheets=[
@@ -20,7 +20,7 @@ app = DashProxy(
   ],
   transforms=[
     LogTransform(), 
-    ServersideOutputTransform(backends=[FileSystemBackend("/rad/share/omics-viewer/cache")]), 
+    ServersideOutputTransform(backends=[FileSystemBackend("/data1/share/omics-viewer/cache")]), 
     MultiplexerTransform()
   ],
   use_pages=True,
@@ -59,7 +59,7 @@ app.layout = dmc.NotificationsProvider(html.Div([
 if __name__ == "__main__":
   app.run(
     host='::',
-    port='8181',
+    port='8050',
     threaded=True,
     proxy=None,
     debug=False,

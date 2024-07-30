@@ -4,11 +4,11 @@ from dash.exceptions import PreventUpdate
 import re
 from dash import callback, Output, Input, State, DiskcacheManager, dcc
 
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/atlas-CP/cache"))
+background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/atlas-CP/cache"))
 
 # 设置根路径
-root_path = '/rad/share/omics-viewer/atlas-ALL/'
-root_pkl = '/rad/share/omics-viewer/atlas-ALL/pickle/'
+root_path = '/data1/share/omics-viewer/atlas-ALL/'
+root_pkl = '/data1/share/omics-viewer/atlas-ALL/pickle/'
 
 # 设置文件名称
 fileName = 'atlasAll'

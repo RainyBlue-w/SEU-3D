@@ -8,7 +8,7 @@ from dash_iconify import DashIconify
 import diskcache
 import dash
 import re
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/reik/cache"))
+background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/reik/cache"))
 
 # 数据路径
 h5ad_path = get_file_path('anndata.h5ad')

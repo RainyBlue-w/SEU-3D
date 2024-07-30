@@ -108,8 +108,8 @@ def model_to_figure_mesh3d(
 
 if __name__ == '__main__':
     path_dict = {
-        'M6_10_E7': '/rad/share/omics-viewer/3D_model/Model6_10_E7.obj',
-        'M6_9_E3':  '/rad/share/omics-viewer/3D_model/Model6_9_E3.obj'
+        'M6_10_E7': '/data1/share/omics-viewer/3D_model/Model6_10_E7.obj',
+        'M6_9_E3':  '/data1/share/omics-viewer/3D_model/Model6_9_E3.obj'
     }
     fig = model_to_figure_mesh3d(path_dict)
     fig.show()

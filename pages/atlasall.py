@@ -15,7 +15,7 @@ import matplotlib
 matplotlib.use('agg')
 from callbacks.atlasall import *
 
-background_callback_manager = DiskcacheManager(diskcache.Cache('/rad/share/omics-viewer/atlas-ALL/cache'))
+background_callback_manager = DiskcacheManager(diskcache.Cache('/data1/share/omics-viewer/atlas-ALL/cache'))
 
 atlasall_gene_dropdown = html.Div(
   [
