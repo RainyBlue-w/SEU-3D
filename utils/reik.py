@@ -73,7 +73,7 @@ def get_file_path(file_folder_name):
 
     return full_path(str) : 文件或文件夹完整路径
   """
-  root = '/rad/share/omics-viewer/reik/'
+  root = '/data1/share/omics-viewer/reik/'
   return root+file_folder_name
 
 def load_exp_data(path, pickle_root, stage_list):
@@ -305,7 +305,7 @@ def get_marker_tableData(marker, stage_list, pkl_path):
         params:
         marker (dict): 键为发育阶段，值为对应时期wilcoxon检验后的结果
         stage_list (list): 发育时期
-        pkl_path (str): 序列化后结果存储路径:/rad/zhouyb/pyProject/multi_page/reik/marker
+        pkl_path (str): 序列化后结果存储路径:/data1/zhouyb/pyProject/multi_page/reik/marker
 
         return df (dict): 两重字典，key1->stage, key2->celltype, value->DataFrame("marker name", "score")
     """
@@ -472,13 +472,13 @@ def show_marker_violin(marker, stage, gene, celltype_colors, w=1200, h=600):
 def show_features_reik_regularExp(adata, stage, odir, featureType, embedding, pattern=None, features=None, sort=False, ascending=True, dpi=100, **kws):
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
-    img_dir = '/rad/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = '/data1/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
   else:
-    img_dir = '/rad/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = '/data1/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
   pdf = pd.DataFrame(np.array(embedding), 
                       index=adata.obs_names, 
                       columns=['x', 'y'])
@@ -513,13 +513,13 @@ def show_features_reik_regularExp(adata, stage, odir, featureType, embedding, pa
 def show_featuresCtpcounts_reik_regularExp(adata, stage, odir, featureType, embedding, cmap, pattern=None, features=None, sort=False, ascending=True, dpi=150, **kws):
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
-    img_dir = '/rad/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = '/data1/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
   else:
-    img_dir = '/rad/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = '/data1/wuc/dash_data/reik/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
   ctp_counts = {}
   # for gene in ordered_features:
   for gene in features:

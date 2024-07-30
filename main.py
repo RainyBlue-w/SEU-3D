@@ -3,8 +3,13 @@ import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from dash_extensions.enrich import html, DashProxy, LogTransform, ServersideOutputTransform, MultiplexerTransform
 import feffery_antd_components as fac
+from dash import DiskcacheManager
+import diskcache
+from dash_extensions.enrich import FileSystemBackend
 
-dbc_css = "/rad/share/omics-viewer/main/dbc.min.css"
+background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/cache"))
+
+dbc_css = "/data1/share/omics-viewer/main/dbc.min.css"
 app = DashProxy(
   __name__, 
   external_stylesheets=[
@@ -14,10 +19,13 @@ app = DashProxy(
     {'src': 'https://deno.land/x/corejs@v3.31.1/index.js', 'type': 'module'}
   ],
   transforms=[
-    LogTransform(), ServersideOutputTransform(), MultiplexerTransform()
+    LogTransform(), 
+    ServersideOutputTransform(backends=[FileSystemBackend("/data1/share/omics-viewer/cache")]), 
+    MultiplexerTransform()
   ],
   use_pages=True,
-#  requests_pathname_prefix='/mouseEmbryo/',
+  requests_pathname_prefix='/',
+  background_callback_manager=background_callback_manager
 )
 
 header = dbc.NavbarSimple(
@@ -51,7 +59,7 @@ app.layout = dmc.NotificationsProvider(html.Div([
 if __name__ == "__main__":
   app.run(
     host='::',
-    port='8181',
+    port='8050',
     threaded=True,
     proxy=None,
     debug=False,

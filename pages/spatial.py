@@ -32,20 +32,19 @@ import re
 from concurrent import futures
 from typing import List, Dict, Tuple
 import diskcache
-background_callback_manager = DiskcacheManager(diskcache.Cache("/rad/share/omics-viewer/spatial/cache"))
 
 from utils import model_to_figure_mesh3d
 
 # In[] data
 
 exp_data = {
-  'E7.5': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400_Ann_HC0.5.h5ad"),
-  'E7.75': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
-  'E8.0': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
-  'E7.5_ext': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
-  'E7.75_ext': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
-  'E7.75_ext_gut3': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
-  'E8.0_min300': sc.read_h5ad("/rad/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
+  'E7.5': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400_Ann_HC0.5.h5ad"),
+  'E7.75': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
+  'E8.0': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
+  'E7.5_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
+  'E7.75_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
+  'E7.75_ext_gut3': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
+  'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
 }
 
 coord_data = {}
@@ -67,20 +66,20 @@ for k,v in exp_data.items():
 # auc_data = {}
 # regulon_geneset = {}
 # for stage in list(exp_data.keys()):
-#   h5 = h5py.File( '/rad/share/omics-viewer/spatial/matrix_data/%s_auc_mtx.h5' % (stage))
+#   h5 = h5py.File( '/data1/share/omics-viewer/spatial/matrix_data/%s_auc_mtx.h5' % (stage))
 #   auc_mtx = pd.DataFrame(h5['auc_matrix'], index=h5['cell'][:].astype(str), columns=h5['regulon'][:].astype(str))
 #   auc_data[stage] = sc.AnnData(X=auc_mtx.loc[exp_data[stage].obs_names,:], obs=exp_data[stage].obs)
 #   regulon_geneset[stage] = json.loads(h5['geneset'][()])
 #   h5.close()
 # del(auc_mtx)
 
-genes_all_pval = pd.read_csv("/rad/share/omics-viewer/spatial/sparkX_res/genes_padj_combine.csv",
+genes_all_pval = pd.read_csv("/data1/share/omics-viewer/spatial/sparkX_res/genes_padj_combine.csv",
                              header=[0,1], index_col=[0,1])
 genes_all_pval = genes_all_pval.loc[:,[('ecto', 'adjustedPval'), ('meso', 'adjustedPval'), ('endo', 'adjustedPval'), ('all', 'adjustedPval')]]
 genes_all_pval.columns = ['ecto p.adj', 'meso p.adj', 'endo p.adj', 'all p.adj']
 genes_all_pval = genes_all_pval.groupby(level=0, group_keys=False
                                                ).apply(lambda x: x.sort_values(by='all p.adj'))
-ctp_cmap = pd.read_csv("/rad/share/omics-viewer/spatial/celltype_cmap.csv")
+ctp_cmap = pd.read_csv("/data1/share/omics-viewer/spatial/celltype_cmap.csv")
 ctp_cmap = dict(zip(ctp_cmap['celltype'], ctp_cmap['Epiblast']))
 
 
@@ -181,7 +180,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
 
-    img_dir = '/rad/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = '/data1/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
 
@@ -189,7 +188,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
     features = [i for i in features if i in genes_all_pval.loc[stage].index.to_list()]
 
   else:
-    img_dir = '/rad/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = '/data1/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
   ordered_features = genes_all_pval.loc[stage].loc[features].sort_values(by='all p.adj', ascending=True).index.to_list()
 
@@ -242,14 +241,14 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
 def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, embedding, pattern=None, features=None, cmap=ctp_cmap, sort=False, ascending=True, dpi=150, **kws):
   embedding = embedding.loc[adata.obs_names,:]
   if not features:
-    img_dir = '/rad/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
+    img_dir = '/data1/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, pattern, featureType, dpi)
     if os.path.exists( img_dir ):
       return img_dir
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features = [i for i in features if i in genes_all_pval.loc[stage].index.to_list()]
 
   else:
-    img_dir = '/rad/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
+    img_dir = '/data1/share/omics-viewer/spatial/tmp/%s/%s/plotFeatureSeries_%s_%s_%s_dpi%d.png' % (odir, stage, stage, "tmp", featureType, dpi)
 
   ordered_features = genes_all_pval.loc[stage].loc[features].sort_values(by='all p.adj', ascending=True).index.to_list()
   
@@ -258,6 +257,8 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
     df = adata[:,gene].to_df()
     # thr = df.min()+(df.max()-df.min())*0.05
     df = df[df[gene] > 0]
+    if df.shape[0] == 0:
+      continue
     counts = pd.DataFrame(adata.obs['celltype'][df.index].value_counts())
     counts['gene'] = gene
     counts['count'] = counts['count']/sum(counts['count'])
@@ -265,7 +266,7 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
   ctp_counts = pd.concat(ctp_counts, axis=0)
   ctp_counts['celltype'] = np.array(ctp_counts.index.to_list())[:,1]
   ctp_counts['text_y'] = ctp_counts['count'].max()/2
-  ctp_counts['gene'] = ctp_counts['gene'].astype('category').values.reorder_categories(ordered_features)
+  ctp_counts['gene'] = ctp_counts['gene'].astype('category').values.reorder_categories([i for i in ordered_features if i in ctp_counts['gene'].unique()])
   bar_df = ctp_counts[ctp_counts['count']>0].groupby(['gene']).head(5)
   bar_df['ctp_order'] = bar_df['celltype'] +'_' + bar_df['gene'].astype(str)
   bar_df['ctp_order'] = bar_df['ctp_order'].astype('category').values.reorder_categories(bar_df['ctp_order'][::-1])
@@ -301,7 +302,7 @@ def show_featuresCtpcounts_spatial_regularExp(adata, stage, odir, featureType, e
 
 def show_metadata_discrete_spatial_germLayer(adata, stage,  odir, embedding, obs=['celltype'], cmap = ctp_cmap, dpi=150, sort = False, ascending=True, **kws):
   embedding = embedding.loc[adata.obs_names,:]
-  img_dir = '/rad/share/omics-viewer/spatial/tmp/%s/%s/poltFeatureSeries_%s_plot_dpi%d.png' % (odir, stage, obs, dpi)
+  img_dir = '/data1/share/omics-viewer/spatial/tmp/%s/%s/poltFeatureSeries_%s_plot_dpi%d.png' % (odir, stage, obs, dpi)
 
   # if os.path.exists( img_dir ):
   #   return img_dir
@@ -1381,14 +1382,14 @@ spatial_tab_plotFeatureSeries = dbc.Tab(
         dbc.Col(
           [
             html.Img(
-              # src = Image.open('/rad/share/omics-viewer/spatial/tmp/plotFeatureSeries/E7.75/plotFeatureSeries_E7.75_^Cdx_Gene_dpi100.png'),
+              # src = Image.open('/data1/share/omics-viewer/spatial/tmp/plotFeatureSeries/E7.75/plotFeatureSeries_E7.75_^Cdx_Gene_dpi100.png'),
                      id = 'spatial_plotFeatureSeries_img', style = {'width': '90vh'})
           ],
           align = "center", className="g-0", width=7),
         dbc.Col(
           [
             html.Img(
-              # src = Image.open('/rad/share/omics-viewer/spatial/tmp/plotFeatureSeries/E7.75/plotFeatureSeries_E7.75_ctpCounts_^Cdx_Gene_dpi150.png'),
+              # src = Image.open('/data1/share/omics-viewer/spatial/tmp/plotFeatureSeries/E7.75/plotFeatureSeries_E7.75_ctpCounts_^Cdx_Gene_dpi150.png'),
                      id = 'spatial_plotFeatureSeries_ctpCounts_img', style = {'width': '60vh'})
           ],
           
@@ -1478,10 +1479,10 @@ spatial_tab_3dModel = dbc.Tab(
             options = [
               {
                 'label': filename,
-                'value': os.path.join('/rad/share/omics-viewer/3D_model', filename)
-              } for filename in os.listdir('/rad/share/omics-viewer/3D_model')
+                'value': os.path.join('/data1/share/omics-viewer/3D_model', filename)
+              } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
             ],
-            value=os.path.join('/rad/share/omics-viewer/3D_model', os.listdir('/rad/share/omics-viewer/3D_model')[0]),
+            value=os.path.join('/data1/share/omics-viewer/3D_model', os.listdir('/data1/share/omics-viewer/3D_model')[0]),
             mode = 'multiple',
             className='fac-select-3dModal-spatial'
           ),
@@ -1542,7 +1543,6 @@ def update_spatial_dropdown_featureName(search, featureType, stage):
   Input('spatial_dropdown_featureName', 'value'),
   Input('spatial_dropdown_stage', 'value'),
   # background=True,
-  # manager=background_callback_manager,
 )
 def update_spatial_plotFeature_graph(featureType, name, stage):
   if name is None:
@@ -1563,7 +1563,6 @@ def update_spatial_plotFeature_graph(featureType, name, stage):
   State('spatial_dropdown_featureType', 'value'),
   Input('spatial_dropdown_stage', 'value'),
   background=True,
-  manager=background_callback_manager,
 )
 def update_spatial_plotFeature_ctpGraph(featureType, stage):
 
@@ -2564,7 +2563,7 @@ def show_moranRes_offcanvas(click):
   State('DROPDOWN_featureType_3D', 'value'),
   prevent_initial_call=True,
   background = True,
-  manager = background_callback_manager,
+  # manager = background_callback_manager,
   running = [
     (Output('BUTTON_showMoran_3D', 'disabled'), True, False),
     (Output('BUTTON_calMoran_3D', 'children'), '< 1min', 'Compute'),
@@ -2599,7 +2598,6 @@ def cal_moranRes(click, cells, stage, featureType):
   Input('spatial_inputButton_featureName_series_plot', 'n_clicks'),
   State('spatial_dropdown_stage_series', 'value'),
   background=True,
-  manager=background_callback_manager,
   running=[
     (Output('spatial_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
     (Output('spatial_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
@@ -2642,7 +2640,6 @@ def update_spatial_plotFeature_graphSeries_pattern(featureType, pattern, click, 
   Input('spatial_inputButton_featureLists_series_plot', 'n_clicks'),
   State('spatial_dropdown_stage_series', 'value'),
   background=True,
-  manager=background_callback_manager,
   running=[
     (Output('spatial_inputButton_featureLists_series_plot', 'children', allow_duplicate=True), 'Loading', 'Plot'),
     (Output('spatial_inputButton_featureLists_series_plot', 'disabled', allow_duplicate=True), True, False),
@@ -2803,7 +2800,6 @@ def update_highlightRow_store(rows):
   ],
   prevent_initial_call=True,
   background=True,
-  manager=background_callback_manager,
 )
 def choose_sparkx_featureToPlot(row_id, stage, featureType):
   if not row_id:
@@ -2826,7 +2822,6 @@ def choose_sparkx_featureToPlot(row_id, stage, featureType):
     Input('spatial_dropdown_stage_sparkx', 'value'),
   ],
   background=True,
-  manager=background_callback_manager,
 )
 def update_sparkx_stageCtpGraph(stage):
   if not stage:
@@ -2869,7 +2864,7 @@ def store_similarityTable_similar(stage, germ_layer):
   adata = exp_data[stage]
   adata = adata[adata.obs.germ_layer == germ_layer]
   similarity_df = pd.read_csv(
-    f'/rad/share/omics-viewer/spatial/patterns/{stage}_{germ_layer}_SVG.csv',
+    f'/data1/share/omics-viewer/spatial/patterns/{stage}_{germ_layer}_SVG.csv',
     index_col=0
   )
   similarity_df = similarity_df.reset_index().rename(columns={"index": "id"})
