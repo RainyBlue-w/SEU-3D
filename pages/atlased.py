@@ -13,98 +13,98 @@ from plotnine import *
 import diskcache
 import matplotlib
 matplotlib.use('agg')
-from callbacks.atlasall import *
+from callbacks.atlased import *
 
-background_callback_manager = DiskcacheManager(diskcache.Cache('/data1/share/omics-viewer/atlas-ALL/cache'))
+background_callback_manager = DiskcacheManager(diskcache.Cache('/data1/share/omics-viewer/atlas-Endoderm/cache'))
 
-atlasall_gene_dropdown = html.Div(
+endoderm_gene_dropdown = html.Div(
   [
     dbc.Label("Gene to Display"),
     dcc.Dropdown(
       geneList,
       geneList[3],
-      id="atlasall_gene_dropdown",
+      id="endoderm_gene_dropdown",
       clearable=False,
       searchable=True,
     ),
   ], className="mb-4",
 )
 
-atlasall_markerSize_dropdown = html.Div(
+endoderm_markerSize_dropdown = html.Div(
   [
     dbc.Label("Marker Size"),
     dcc.Dropdown(
       [1,2,3,4,5,6,7,8,9,10],
-      4,
-      id="atlasall_markerSize_dropdown",
+      5,
+      id="endoderm_markerSize_dropdown",
       clearable=False,
       searchable=True,
     ),
   ], className="mb-4",
 )
 
-atlasall_stage_slider = html.Div(
+endoderm_stage_slider = html.Div(
   dcc.Slider(
     0, len(stageDict)-1,
     step = None,
     marks=stageDict,
     value=2,
-    id="atlasall_stage_slider"
+    id="endoderm_stage_slider"
   ), style={'width': '97%'}
 )
 
-atlasall_featureType_series_dropdown = html.Div(
+endoderm_featureType_series_dropdown = html.Div(
   [
     dbc.Label("Feature Type"),
     dcc.Dropdown(
-      ['Gene'],
-      'Gene',
-      id="atlasall_featureType_series_dropdown",
+      ['celltype', 'stage', 'endo_gutCluster'],
+      'celltype',
+      id="endoderm_featureType_series_dropdown",
       clearable=False,
       searchable=True,
     ),
   ], className="mb-4",
 )
 
-atlasall_stage_series_dropdown = html.Div(
+endoderm_stage_series_dropdown = html.Div(
   [
     dbc.Label("Stage"),
     dcc.Dropdown(
       stageValues,
       stageValues[3],
-      id="atlasall_stage_series_dropdown",
+      id="endoderm_stage_series_dropdown",
       clearable=False,
       searchable=True,
     ),
   ], className="mb-4",
 )
 
-atlasall_marker_gene_dropdown = html.Div(
+endoderm_marker_gene_dropdown = html.Div(
   [
     dbc.Label("Marker Gene"),
     dmc.Grid(
       [
           dmc.Col(dcc.Dropdown(
-            id="atlasall_marker_gene_dropdown",
+            id="endoderm_marker_gene_dropdown",
             clearable=False,
             searchable=True,
           ), span=9),
-          dmc.Col(dbc.Button('Get', id='atlasall_marker_gene_button', n_clicks=0, color='primary'), span=3),
+          dmc.Col(dbc.Button('Get', id='endoderm_marker_gene_button', n_clicks=0, color='primary'), span=3),
       ], gutter=3
     )
   ], className="mb-4",
 )
 
-atlasall_featureName_series_input = html.Div(
+endoderm_featureName_series_input = html.Div(
   [
     dbc.Label("Contains"),
     dbc.InputGroup(
       [
         dmc.Grid(
           children=[
-            dmc.Col(dbc.Input(id="atlasall_featureName_series_input"), span=9),
-            dmc.Col(dbc.Button('Plot', id='atlasall_featureName_series_inputButton', n_clicks=0, color='primary'), span=3),
-            dmc.Col(dmc.Text(id='atlasall_geneNumber_series_text', color='gray'), span=12),
+            dmc.Col(dbc.Input(id="endoderm_featureName_series_input"), span=9),
+            dmc.Col(dbc.Button('Plot', id='endoderm_featureName_series_inputButton', n_clicks=0, color='primary'), span=3),
+            dmc.Col(dmc.Text(id='endoderm_geneNumber_series_text', color='gray'), span=12),
           ], gutter=3
         )
       ]
@@ -112,51 +112,51 @@ atlasall_featureName_series_input = html.Div(
   ], className="mb-4",
 )
 
-atlasall_featureList_series_textarea = html.Div(
+endoderm_featureList_series_textarea = html.Div(
   [
     html.Div(
       dmc.Grid(
         [
           dmc.Col(dbc.Label("Name List"), span=9),
-          dmc.Col(dbc.Button('Plot', id='atlasall_featureList_series_inputButton', n_clicks=0, color='primary'), span=3)
+          dmc.Col(dbc.Button('Plot', id='endoderm_featureList_series_inputButton', n_clicks=0, color='primary'), span=3)
         ], gutter=3
       ), className="mb-2"
     ),
     html.Div(
-      dbc.Textarea(id = "atlasall_featureList_series_textarea",
+      dbc.Textarea(id = "endoderm_featureList_series_textarea",
         placeholder="paste feature names here(seperated by any charactor)\ne.g.  A  B,C,  D\nE##G_H,#I@KK%%G%(U),(V)|(W)\"X\",\"Y\"^Q*I",
         rows=8, className="mb-3",)
     )
   ], className="mb-4",
 )
 
-atlasall_series_controls = dbc.Card(
+endoderm_series_controls = dbc.Card(
   dbc.Col(
     [
-      atlasall_featureType_series_dropdown,
-      atlasall_stage_series_dropdown,
-      atlasall_marker_gene_dropdown,
-      atlasall_featureName_series_input,
-      atlasall_featureList_series_textarea,
+      endoderm_featureType_series_dropdown,
+      endoderm_stage_series_dropdown,
+      endoderm_marker_gene_dropdown,
+      endoderm_featureName_series_input,
+      endoderm_featureList_series_textarea,
     ]
   ),
   body=True,
   style = {'height':'100vh'},
-  id = 'atlasall_series_controls'
+  id = 'endoderm_series_controls'
 )
 
-atlasall_umap_controls = dbc.Card(
-  [atlasall_gene_dropdown, atlasall_markerSize_dropdown],
-  id = "atlasall_umap_controls",
+endoderm_umap_controls = dbc.Card(
+  [endoderm_gene_dropdown, endoderm_markerSize_dropdown],
+  id = "endoderm_umap_controls",
   body=True,
   style = {'height':'86vh'},
 )
 
-atlasall_umap_tab = dbc.Tab(
+endoderm_umap_tab = dbc.Tab(
   [
     dbc.Row([
       dbc.Col(
-        atlasall_umap_controls,
+        endoderm_umap_controls,
         width = 2
       ),
       dbc.Col(
@@ -164,7 +164,7 @@ atlasall_umap_tab = dbc.Tab(
           dbc.Row(
             [
               dbc.Col(
-                dcc.Graph(figure=celltytpeUmapPlaceholder, id="atlasall_ctp_umap",style={'height': "80vh", 'width': '43vw'})
+                dcc.Graph(figure=celltytpeUmapPlaceholder, id="endoderm_ctp_umap",style={'height': "80vh", 'width': '43vw'})
               ),
               dbc.Col(
                 [
@@ -172,7 +172,7 @@ atlasall_umap_tab = dbc.Tab(
                     [
                       dbc.Col(
                         [
-                          dcc.Graph(figure=stageGeneUmapPlaceholder, id="atlasall_gene_umap", style={'height': "80vh", 'width': '31vw'}),
+                          dcc.Graph(figure=stageGeneUmapPlaceholder, id="endoderm_gene_umap", style={'height': "80vh", 'width': '31vw'}),
                         ]
                       )
                     ]
@@ -181,50 +181,50 @@ atlasall_umap_tab = dbc.Tab(
               ),
             ], align = "center", style={'height': '80vh'}
           ), 
-          atlasall_stage_slider
+          endoderm_stage_slider
         ]
       )
     ])
   ], 
   label="UMAP",
-  tab_id = "atlasall_umap_tab"
+  tab_id = "endoderm_umap_tab"
 )
 
-atlasall_series_tab = dbc.Tab(
+endoderm_series_tab = dbc.Tab(
   [
     dbc.Row(
       [
         dbc.Col(
           [
-            atlasall_series_controls
+            endoderm_series_controls
           ], 
           width=2
         ),
         dbc.Col([
           dbc.Row([
-            dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="atlasall_ctp_series")
+            dcc.Graph(figure=celltypeUmapSeriesPlaceholder, id="endoderm_ctp_series")
           ]),
-          dbc.Row([html.Img(id = 'atlasall_plotFeatureSeries_img', style = {'width': '80vw', 'margin-left':'1vw'})]),
+          dbc.Row([html.Img(id = 'endoderm_plotFeatureSeries_img', style = {'width': '80vw', 'margin-left':'1vw'})]),
         ], width=10)
       ]
     )
   ],
   label = "Plot Feature(Series)",
-  tab_id = "atlasall_series_tab"
+  tab_id = "endoderm_series_tab"
 )
 
-atlasall_tabs = dbc.Card(
+endoderm_tabs = dbc.Card(
   dbc.Tabs(
-    [atlasall_umap_tab, atlasall_series_tab],
-    active_tab = "atlasall_umap_tab",  
-    id = "atlasall_tabs",
+    [endoderm_umap_tab, endoderm_series_tab],
+    active_tab = "endoderm_umap_tab",  
+    id = "endoderm_tabs",
   )
 )
 
 layout = dbc.Container(
   [
-    html.Div(id='atlasall_container'),
-    atlasall_tabs
+    html.Div(id='endoderm_container'),
+    endoderm_tabs
   ],
   fluid=True,
   className="dbc",

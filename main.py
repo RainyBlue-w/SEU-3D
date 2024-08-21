@@ -35,6 +35,7 @@ header = dbc.NavbarSimple(
                 dbc.DropdownMenuItem('spatial', href='/'),
                 dbc.DropdownMenuItem("atlas", href='/atlasall'),
                 dbc.DropdownMenuItem("atlas-cp", href='/atlascp'),
+                dbc.DropdownMenuItem("atlas-endoderm", href='/atlased'),
                 dbc.DropdownMenuItem("reik", href='/reik'),
             ],
             nav=True,

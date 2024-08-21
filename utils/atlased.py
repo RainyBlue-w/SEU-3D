@@ -30,7 +30,7 @@ def getMarkerGenes(adata, celltypeUmap_df, points):
     gene_list = combined_ad.uns['rank_genes_groups']['names']['selected'].tolist()
     return gene_list
 
-def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsize=(6.4,5.2), n_cols=3, dot_size=4, umap1='stagedUmap1', umap2='stagedUmap2'):
+def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsize=(6.4,5.2), n_cols=3, dot_size=5, umap1='stagedUmap1', umap2='stagedUmap2'):
     color_exp = [
         (0.00, "#BFBFBF"),
         (0.05, "#BFBFBF"),
@@ -111,7 +111,7 @@ def getStageGeneExp(celltypeUmap, adata, stage, geneName, geneIndexDict, umap1='
 #         dumpPkl(data, pkl_path)
 #         return data
 
-def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap2='stagedUmap2', markerSize=4):
+def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap2='stagedUmap2', markerSize=5, feature='celltype'):
     """
         绘制series tab细胞umap图
 
@@ -124,9 +124,12 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1'
         Returns：
         data(Figure):绘制的细胞umap图
     """
-    sorted_df = celltypeUmap[stage].sort_values('celltype')
-    data = px.scatter(sorted_df, x=umap1, y=umap2, color="celltype",
-                      color_discrete_map=cellColor)
+    sorted_df = celltypeUmap[stage].sort_values(feature)
+    sorted_df[feature] = pd.Categorical(sorted_df[feature], categories=list(sorted_df[feature].unique()))
+    if feature!='celltype':
+        cellColor = {'NA':'#D3D3D3'}
+    data = px.scatter(sorted_df, x=umap1, y=umap2, color=feature,
+                    color_discrete_map=cellColor)
     data.update_traces(marker=dict(size=markerSize))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
@@ -146,7 +149,7 @@ def getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1'
     )
     return data
 
-def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict, umap1='stagedUmap1', umap2='stagedUmap2', markerSize=4):
+def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict, umap1='stagedUmap1', umap2='stagedUmap2', markerSize=5):
     """
         绘制基因umap图
 
@@ -175,7 +178,7 @@ def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict, umap1='stage
     )
     return data
 
-def getCelltypeUmapFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap2='stagedUmap2', markerSize=4):
+def getCelltypeUmapFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap2='stagedUmap2', markerSize=5):
     """
         绘制细胞umap图
 
@@ -184,11 +187,11 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap
         cellColor(dict):细胞对应颜色
         stage(str):绘制某个时期的细胞umap
         width(number):绘制图像的宽度
-
         Returns：
         data(Figure):绘制的细胞umap图
     """
     sorted_df = celltypeUmap[stage].sort_values('celltype')
+    sorted_df['celltype'] = pd.Categorical(sorted_df['celltype'], categories=list(sorted_df['celltype'].unique()))
     data = px.scatter(sorted_df, x=umap1, y=umap2, color="celltype",
                       color_discrete_map=cellColor)
     data.update_traces(marker=dict(size=markerSize))
@@ -212,7 +215,7 @@ def getGeneIndexDict(adata):
     """
     data = {}
     index = 0
-    for geneName in adata.var['_index']:
+    for geneName in adata.var.index:
         data[geneName] = index
         index+=1
     return data
@@ -233,7 +236,7 @@ def getCellTypeUmap(adata, pkl_path):
     else:
         data = {}
         for stage, group in adata.obs.groupby('stage'):
-            data[stage] = pd.DataFrame(group[['celltype', 'umapX', 'umapY', 'stagedUmap1', 'stagedUmap2']])
+            data[stage] = pd.DataFrame(group[['celltype', 'umapX', 'umapY', 'stagedUmap1', 'stagedUmap2', 'orig.stage', 'endo_gutCluster']])
             data[stage]['cell_id'] = data[stage].index
             data[stage].index = data[stage].apply(lambda row: f"{row['stagedUmap1']} {row['stagedUmap2']}", axis=1)
         dumpPkl(data, pkl_path)
@@ -293,11 +296,11 @@ def getGeneList(adata, pkl_path):
     if os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:
-        data = adata.var['_index'].unique().tolist()
+        data = adata.var['gene'].unique().tolist()
         dumpPkl(data, pkl_path)
         return data
 
-def loadAtlasAllData(h5ad_path, pkl_path):
+def loadData(h5ad_path, pkl_path):
     """
         加载atlasAll.h5ad数据
 
@@ -323,6 +326,8 @@ def loadAtlasAllData(h5ad_path, pkl_path):
                 sc.pp.neighbors(subset, n_neighbors=10, n_pcs=40)
             else:
                 sc.external.pp.bbknn(subset, batch_key='sequencing.batch')
+            # if '-' in stage:
+            #     sc.external.pp.bbknn(subset, batch_key='orig.stage')
             sc.tl.umap(subset)
             for i, name in enumerate(subset.obs.index):
                 stagedUmap1[name] = subset.obsm['X_umap'][i][0]
@@ -334,7 +339,7 @@ def loadAtlasAllData(h5ad_path, pkl_path):
             sUmap2.append(stagedUmap2[cellid])
         adata.obs['stagedUmap1'] = sUmap1
         adata.obs['stagedUmap2'] = sUmap2
-        adata = adata.raw.to_adata()
+        # adata = adata.raw.to_adata()
         dumpPkl(adata, pkl_path)
         return adata
 
