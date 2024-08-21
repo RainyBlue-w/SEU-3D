@@ -45,11 +45,61 @@ celltypeUmapSeriesPlaceholder = getCelltypeUmapSeriesFig(celltypeUmap, cellColor
 stageGeneUmapPlaceholder = getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[2], geneList[3], geneIndexDict)
 
 # 回调函数
+
+# 点击标记基因，更新feature列表
+@callback(
+  Output('atlasall_featureList_series_textarea', 'value', allow_duplicate=True),
+  Input('atlasall_marker_gene_dropdown', 'value'),
+  State('atlasall_featureList_series_textarea', 'value'),
+  prevent_initial_call = True,
+)
+def update_featureList(gene, gene_list):
+  if gene:
+    if gene_list:
+      if gene not in gene_list:
+        gene_list += " "+gene
+    else:
+      gene_list = gene
+  return gene_list 
+
+# 根据套索内容获取标记基因
+@callback(
+  Output('atlasall_marker_gene_dropdown', 'options'),
+  Output('atlasall_marker_gene_dropdown', 'value'),
+  Output('atlasall_featureList_series_textarea', 'value', allow_duplicate=True),
+  Input('atlasall_marker_gene_button','n_clicks'),
+  State('atlasall_ctp_series', 'selectedData'),
+  State('atlasall_stage_series_dropdown', 'value'),
+  prevent_initial_call = True,
+  background=True,
+  manager=background_callback_manager,
+  running=[
+    (Output('atlasall_marker_gene_dropdown', 'disabled', allow_duplicate=True),True, False),
+    (Output('atlasall_marker_gene_button', 'disabled', allow_duplicate=True), True, False),
+    (Output('atlasall_marker_gene_button', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('atlasall_featureList_series_inputButton', 'children', allow_duplicate=True), 'Plot', 'Plot'),
+    (Output('atlasall_featureList_series_inputButton', 'disabled', allow_duplicate=True), True, False),
+    (Output('atlasall_featureList_series_inputButton', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('atlasall_featureList_series_textarea', 'disabled', allow_duplicate=True),True, False),
+    (Output('atlasall_featureName_series_inputButton', 'children', allow_duplicate=True), 'Plot', 'Plot'),
+    (Output('atlasall_featureName_series_inputButton', 'disabled', allow_duplicate=True), True, False),
+    (Output('atlasall_featureName_series_inputButton', 'color', allow_duplicate=True), 'danger', 'primary'),
+    (Output('atlasall_featureName_series_input', 'disabled', allow_duplicate=True),True, False),
+  ],
+)
+def obtain_marker_gene(click, selectedData, stage):
+  if click and selectedData:
+     gene_list = getMarkerGenes(atlasAllData, celltypeUmap[stage], selectedData['points'])
+     return gene_list, None, None
+  else:
+     raise PreventUpdate
+
 @callback(
   Output('atlasall_plotFeatureSeries_img', 'src', allow_duplicate=True),
   Input('atlasall_featureList_series_inputButton', 'n_clicks'),
   State('atlasall_featureList_series_textarea', 'value'),
   State('atlasall_stage_series_dropdown', 'value'),
+  State('atlasall_markerSize_dropdown', 'value'),
   background=True,
   manager=background_callback_manager,
   running=[
@@ -64,7 +114,7 @@ stageGeneUmapPlaceholder = getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[
   ],
   prevent_initial_call = True,
 )
-def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage):
+def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage, markerSize):
   if names is None:
     raise PreventUpdate
   if click:
@@ -74,7 +124,7 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage):
     for name in names:
        if name in geneSet:
             genes.append(name)   
-    return getGeneUmapSeriesImg(celltypeUmap, atlasAllData, stage, genes, geneIndexDict)
+    return getGeneUmapSeriesImg(celltypeUmap, atlasAllData, stage, genes, geneIndexDict, dot_size=2*markerSize)
   else:
     raise PreventUpdate
 
@@ -83,6 +133,7 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage):
   Input('atlasall_featureName_series_inputButton', 'n_clicks'),
   State('atlasall_featureName_series_input', 'value'),
   State('atlasall_stage_series_dropdown', 'value'),
+  State('atlasall_markerSize_dropdown', 'value'),
   background=True,
   manager=background_callback_manager,
   running=[
@@ -97,7 +148,7 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, names, stage):
   ],
   prevent_initial_call = True,
 )
-def update_atlasall_plotFeature_graphSeries_pattern(click, pattern, stage):
+def update_atlasall_plotFeature_graphSeries_pattern(click, pattern, stage, markerSize):
   if pattern is None:
     raise PreventUpdate
   if click:
@@ -106,7 +157,7 @@ def update_atlasall_plotFeature_graphSeries_pattern(click, pattern, stage):
     for gene in geneList:
        if pattern in gene.lower():
           genes.append(gene)
-    return getGeneUmapSeriesImg(celltypeUmap, atlasAllData, stage, genes, geneIndexDict)
+    return getGeneUmapSeriesImg(celltypeUmap, atlasAllData, stage, genes, geneIndexDict, dot_size=2*markerSize)
   else:
     raise PreventUpdate
 
@@ -125,21 +176,24 @@ def update_atlasall_geneNumber_series(pattern):
 @callback(
     Output('atlasall_ctp_series', 'figure'),
     Input('atlasall_stage_series_dropdown', 'value'),
+    Input('atlasall_markerSize_dropdown', 'value'),
 )
-def update_atlasall_series_gene_umap(stage):
-    return getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage)
+def update_atlasall_series_gene_umap(stage, markerSize):
+    return getCelltypeUmapSeriesFig(celltypeUmap, cellColor, stage, markerSize=markerSize)
 
 @callback(
     Output('atlasall_gene_umap', 'figure'),
     Input('atlasall_gene_dropdown', 'value'),
-    Input('atlasall_stage_slider', 'value')
+    Input('atlasall_stage_slider', 'value'),
+    Input('atlasall_markerSize_dropdown', 'value'),
 )
-def update_atlasall_gene_umap(gene_name, stageIndex):
-    return getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[stageIndex], gene_name, geneIndexDict)
+def update_atlasall_gene_umap(gene_name, stageIndex, markerSize):
+    return getGeneUmapFig(celltypeUmap, atlasAllData, stageDict[stageIndex], gene_name, geneIndexDict, markerSize=markerSize)
 
 @callback(
     Output('atlasall_ctp_umap', 'figure'),
-    Input('atlasall_stage_slider', 'value')
+    Input('atlasall_stage_slider', 'value'),
+    Input('atlasall_markerSize_dropdown', 'value'),
 )
-def update_atlasall_ctp_umap(stageIndex):
-    return getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[stageIndex])
+def update_atlasall_ctp_umap(stageIndex, markerSize):
+    return getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[stageIndex], markerSize=markerSize)
