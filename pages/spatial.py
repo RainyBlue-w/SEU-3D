@@ -33,7 +33,7 @@ from concurrent import futures
 from typing import List, Dict, Tuple
 import diskcache
 
-from utils import model_to_figure_mesh3d
+from utils import obj_mtl_to_mesh3d
 
 # In[] data
 
@@ -1474,19 +1474,13 @@ spatial_tab_3dModel = dbc.Tab(
     children=[
       dmc.Grid([
         dmc.Col(
-          dcc.Location(id='URL_tab_3dModel'),
-          fac.AntdSelect(
-            id='SELECT_3dModel_spatial',
-            options = [
-              {
-                'label': filename,
-                'value': os.path.join('/data1/share/omics-viewer/3D_model', filename)
-              } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
-            ],
-            # value=os.path.join('/data1/share/omics-viewer/3D_model', os.listdir('/data1/share/omics-viewer/3D_model')[0]),
-            mode = 'multiple',
-            className='fac-select-3dModal-spatial',
-          ),
+          children = [
+            dcc.Location(id='URL_tab_3dModel'),
+            fac.AntdSelect(
+              id='SELECT_3dModel_spatial',
+              className='fac-select-3dModal-spatial',
+            ),
+          ],
           span=4,
         ),
         dmc.Col(
@@ -2942,8 +2936,8 @@ def update_geneOtherFigure_similar(active_cell, stage, germ_layer):
 def update_3dmodel_options(pathname):
   options = [
     {
-      'label': filename,
-      'value': os.path.join('/data1/share/omics-viewer/3D_model', filename)
+      'label': filename.split('.')[0],
+      'value': filename.split('.')[0]
     } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
     if filename.endswith('.obj')
   ]
@@ -2952,16 +2946,13 @@ def update_3dmodel_options(pathname):
 @callback(
   Output('FIGURE_3dModel_spatial', 'figure'),
   Input('SELECT_3dModel_spatial', 'value'),
+  prevent_initial_call=True,
 )
-def render_3dModel(models):
-  if type(models) != 'list' :
-    models = list(models)
-  models_dict = {}
-  for path in models:
-    if os.path.exists(path):
-      name = os.path.basename(path)
-      models_dict[name] = path
-  return model_to_figure_mesh3d(models_dict, width=None, height=None)
+def render_3dModel(filename):
+  return obj_mtl_to_mesh3d(
+    model_name = filename,
+    path = '/data1/share/omics-viewer/3D_model',
+  )
 
 # In[] app/run:
 
