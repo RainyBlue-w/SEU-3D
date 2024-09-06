@@ -1,5 +1,5 @@
-from .mesh import model_to_figure_mesh3d
+from .mesh import obj_mtl_to_mesh3d
 
 __all__ = [
-    'model_to_figure_mesh3d'
+    'obj_mtl_to_mesh3d'
 ]
