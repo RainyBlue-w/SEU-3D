@@ -1486,7 +1486,6 @@ spatial_tab_3dModel = dbc.Tab(
             # value=os.path.join('/data1/share/omics-viewer/3D_model', os.listdir('/data1/share/omics-viewer/3D_model')[0]),
             mode = 'multiple',
             className='fac-select-3dModal-spatial',
-            id = 'SELECT_3dModel_spatial'
           ),
           span=4,
         ),
