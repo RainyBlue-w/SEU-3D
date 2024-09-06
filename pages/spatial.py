@@ -1474,6 +1474,7 @@ spatial_tab_3dModel = dbc.Tab(
     children=[
       dmc.Grid([
         dmc.Col(
+          dcc.Location(id='URL_tab_3dModel'),
           fac.AntdSelect(
             id='SELECT_3dModel_spatial',
             options = [
@@ -1482,9 +1483,10 @@ spatial_tab_3dModel = dbc.Tab(
                 'value': os.path.join('/data1/share/omics-viewer/3D_model', filename)
               } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
             ],
-            value=os.path.join('/data1/share/omics-viewer/3D_model', os.listdir('/data1/share/omics-viewer/3D_model')[0]),
+            # value=os.path.join('/data1/share/omics-viewer/3D_model', os.listdir('/data1/share/omics-viewer/3D_model')[0]),
             mode = 'multiple',
-            className='fac-select-3dModal-spatial'
+            className='fac-select-3dModal-spatial',
+            id = 'SELECT_3dModel_spatial'
           ),
           span=4,
         ),
@@ -2933,6 +2935,20 @@ def update_geneOtherFigure_similar(active_cell, stage, germ_layer):
   return fig
 
 # In[] callback/3D model
+
+@callback(
+  Output('SELECT_3dModel_spatial', 'options'),
+  Input('URL_tab_3dModel', 'pathname'),
+)
+def update_3dmodel_options(pathname):
+  options = [
+    {
+      'label': filename,
+      'value': os.path.join('/data1/share/omics-viewer/3D_model', filename)
+    } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
+    if filename.endswith('.obj')
+  ]
+  return options
 
 @callback(
   Output('FIGURE_3dModel_spatial', 'figure'),
