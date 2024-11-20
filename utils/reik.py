@@ -15,17 +15,13 @@ import plotly.graph_objects as go
 from sortedcontainers import SortedSet
 
 from matplotlib.colors import LinearSegmentedColormap
-color_exp = [(0.00, "#eeeeee"),
-              (0.05, "#eeeeee"),
-              (1.00, "#225EA8")
-            ]
-cmap_exp = LinearSegmentedColormap.from_list('custom_exp', color_exp)
-
-color_auc = [(0.00, "#eeeeee"),
-              (0.05, "#eeeeee"),
-              (1.00, "#d53e4f")
-            ]
-cmap_auc = LinearSegmentedColormap.from_list('custom_auc', color_auc)
+color_map = [
+        (0.00, "#BFBFBF"),
+        (0.75, "#225EA8"),
+        (1.00, "#000000")
+    ]
+cmap_exp = LinearSegmentedColormap.from_list('custom_exp', color_map)
+cmap_auc = LinearSegmentedColormap.from_list('custom_auc', color_map)
 
 def formatStage(stage):
   """
@@ -161,10 +157,7 @@ def show_feature_umap(adata, feature, embedding, cmap = None, sort=False, ascend
       绘制特征umap
     """
     if cmap is None:
-        cmap = [(0.00, "rgb(244,244,244)"),
-                (0.05, "rgb(244, 244, 244)"),
-                (1.00, "rgb(34, 94, 168)")
-                ]
+        cmap = color_map
     embedding.columns = ['umap_1', 'umap_2']
     pdf = pd.concat([embedding, adata[:,feature].to_df()], axis=1)
     if sort is True:
@@ -177,7 +170,7 @@ def show_feature_umap(adata, feature, embedding, cmap = None, sort=False, ascend
     	)
     plot.update_yaxes(visible=False)
     plot.update_xaxes(visible=False)
-    plot.update_traces(marker_size=4,
+    plot.update_traces(marker_size=3,
                       marker_opacity=1)
     plot.update_layout(
       margin=dict(l=0, t=0, b=0),
@@ -494,7 +487,7 @@ def show_features_reik_regularExp(adata, stage, odir, featureType, embedding, pa
     ggplot() + 
     geom_point(data = pdf, mapping=aes(x='x', y='y', color='value')) +
     facet_grid('feature ~ .') + 
-    scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
+    scale_color_gradientn(colors = ['#BFBFBF','#225ea8','#000000'], values = [0,0.75,1]) +
     theme(
       # legend_position='top',
       # legend_direction='horizontal',

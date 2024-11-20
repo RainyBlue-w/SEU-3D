@@ -63,15 +63,16 @@ color_palette.update(dict(zip(timepoint, timepoint_color)))
 
 
 from matplotlib.colors import LinearSegmentedColormap
-color_exp = [(0.00, "#eeeeee"),
-              (0.05, "#eeeeee"),
-              (1.00, "#225EA8")
-            ]
+color_exp = [
+        (0.00, "#BFBFBF"),
+        (0.75, "#225EA8"),
+        (1.00, "#000000")
+    ]
 cmap_exp = LinearSegmentedColormap.from_list('custom_exp', color_exp)
 
-color_auc = [(0.00, "#eeeeee"),
-              (0.05, "#eeeeee"),
-              (1.00, "#d53e4f")
+color_auc = [(0.00, "#BFBFBF"),
+              (0.75, "#d53e4f"),
+              (1.00, "#000000")
             ]
 cmap_auc = LinearSegmentedColormap.from_list('custom_auc', color_auc)
         
@@ -142,6 +143,7 @@ def show_gene(gene, adata, embedding=None, cmap = color_exp):
                        columns=['tSNE-1', 'tSNE-2'])
 
     pdf[gene] = adata.to_df()[gene].tolist()
+    pdf = pdf.sort_values(by=gene, ascending=True)
     plot = px.scatter(
       data_frame = pdf,
       x = 'tSNE-1', y = 'tSNE-2', color = gene,
@@ -150,7 +152,7 @@ def show_gene(gene, adata, embedding=None, cmap = color_exp):
     plot.update_layout(showlegend=False)
     plot.update_yaxes(visible=False)
     plot.update_xaxes(visible=False)
-    plot.update_traces(marker_size=4.5,
+    plot.update_traces(marker_size=5,
                     marker_opacity=1)
     plot.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
@@ -172,6 +174,7 @@ def show_regulon(regulon, auc_mtx, stage, cmap = color_auc):
                       index = cell_id,
                       columns=['tSNE-1', 'tSNE-2'])
     pdf[regulon] = auc[regulon].tolist()
+    pdf = pdf.sort_values(by=regulon, ascending=True)
     plot = px.scatter(
         data_frame = pdf,
         x = 'tSNE-1', y = 'tSNE-2', color = regulon,
@@ -180,7 +183,7 @@ def show_regulon(regulon, auc_mtx, stage, cmap = color_auc):
     plot.update_layout(showlegend=False)
     plot.update_yaxes(visible=False)
     plot.update_xaxes(visible=False)
-    plot.update_traces(marker_size=4.5,
+    plot.update_traces(marker_size=5,
                     marker_opacity=1)
     plot.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
@@ -202,6 +205,8 @@ def show_celltype(pdf, cmap):
     # plot.update_layout(showlegend=False)
     plot.update_yaxes(visible=False)
     plot.update_xaxes(visible=False)
+    plot.update_traces(marker_size=5,
+                    marker_opacity=1)
     plot.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
         plot_bgcolor = '#ffffff',
