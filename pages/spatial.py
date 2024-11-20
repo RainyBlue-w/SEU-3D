@@ -116,10 +116,11 @@ def show_celltype_spatial(adata, embedding, cmap = ctp_cmap, **kws):
 def show_feature_spatial(adata, feature, embedding, cmap = None, sort=False, ascending=True, **kws):
     embedding = embedding.loc[adata.obs_names,:]
     if cmap is None:
-        cmap = [(0.00, "rgb(244,244,244)"),
-                (0.05, "rgb(244, 244, 244)"),
-                (1.00, "rgb(34, 94, 168)")
-                ]
+        cmap = [
+            (0.00, "#BFBFBF"),
+            (0.75, "#225EA8"),
+            (1.00, "#000000")
+        ]
     pdf = pd.DataFrame(np.array(embedding), 
                        index=adata.obs_names, 
                        columns=['x', 'y'])
@@ -220,7 +221,7 @@ def show_features_spatial_regularExp(adata, stage,  odir, featureType, embedding
     geom_text(data = padj_df, x=0, mapping=aes(y=-50,label='value'), 
               fontstyle='italic', fontweight='normal', size=18, color='#222222') +
     facet_grid('feature ~ germ_layer') + 
-    scale_color_gradientn(colors = ['#e0e0e0', '#e0e0e0','#225ea8'], values = [0,0.05,1]) +
+    scale_color_gradientn(colors = ['#BFBFBF', '#225EA8','#000000'], values = [0,0.75,1]) +
     theme(
       # legend_position='top',
       # legend_direction='horizontal',

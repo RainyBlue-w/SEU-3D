@@ -33,7 +33,6 @@ def getMarkerGenes(adata, celltypeUmap_df, points):
 def getGeneUmapSeriesImg(celltypeUmap, adata, stage, genes, geneIndexDict, figsize=(6.4,5.2), n_cols=3, dot_size=4, umap1='stagedUmap1', umap2='stagedUmap2'):
     color_exp = [
         (0.00, "#BFBFBF"),
-        (0.05, "#BFBFBF"),
         (0.75, "#225EA8"),
         (1.00, "#000000")
     ]
@@ -160,7 +159,6 @@ def getGeneUmapFig(celltypeUmap, adata, stage, gene, geneIndexDict, umap1='stage
     """
     cmap = [
         (0.00, "#BFBFBF"),
-        (0.05, "#BFBFBF"),
         (0.75, "#225EA8"),
         (1.00, "#000000")
     ]
