@@ -7,37 +7,46 @@ from dash import callback, Output, Input, State, DiskcacheManager, dcc
 background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/atlas-CP/cache"))
 
 # 设置根路径
-root_path = '/data1/share/omics-viewer/atlas-ALL/'
-root_pkl = '/data1/share/omics-viewer/atlas-ALL/pickle/'
+# root_path = '/data1/share/omics-viewer/atlas-ALL/'
+# root_pkl = '/data1/share/omics-viewer/atlas-ALL/pickle/'
 
 # 设置文件名称
-fileName = 'atlasAll'
-h5ad_fileName = fileName+'.h5ad'
-h5ad_pklName = fileName+'_h5ad.pkl'
-gene_list_pklName = fileName+'_geneList.pkl'
-stage_dict_pklName = fileName+'_stageDict.pkl'
-cell_color_pklName = fileName+'_cellColor.pkl'
-celltype_umap_pklName = fileName+'_celltypeUmap.pkl'
+# fileName = 'atlasAll'
+# h5ad_fileName = fileName+'.h5ad'
+# h5ad_pklName = fileName+'_h5ad.pkl'
+# gene_list_pklName = fileName+'_geneList.pkl'
+# stage_dict_pklName = fileName+'_stageDict.pkl'
+# cell_color_pklName = fileName+'_cellColor.pkl'
+# celltype_umap_pklName = fileName+'_celltypeUmap.pkl'
 # stage_geneExp_pklName = fileName+'_stageGeneExp.pkl'
 
 # 设置文件路径
-h5ad_path = root_path+h5ad_fileName
-h5ad_pkl = root_pkl+h5ad_pklName
-gene_list_pkl = root_pkl+gene_list_pklName
-stage_dict_pkl = root_pkl+stage_dict_pklName
-cell_color_pkl = root_pkl+cell_color_pklName
-celltype_umap_pkl = root_pkl+celltype_umap_pklName
+# h5ad_path = root_path+h5ad_fileName
+# h5ad_pkl = root_pkl+h5ad_pklName
+# gene_list_pkl = root_pkl+gene_list_pklName
+# stage_dict_pkl = root_pkl+stage_dict_pklName
+# cell_color_pkl = root_pkl+cell_color_pklName
+# celltype_umap_pkl = root_pkl+celltype_umap_pklName
 # stage_geneExp_pkl = root_pkl+stage_geneExp_pklName
 
 # 加载数据
-atlasAllData = loadAtlasAllData(h5ad_path, h5ad_pkl)
+# atlasAllData = loadAtlasAllData(h5ad_path, h5ad_pkl)
+# geneIndexDict = getGeneIndexDict(atlasAllData)
+# cellColor = getCellTypeColor(atlasAllData, cell_color_pkl)
+# geneList = getGeneList(atlasAllData, gene_list_pkl)
+# stageDict = getStageDict(atlasAllData, stage_dict_pkl)
+# stageValues = list(stageDict.values())
+# celltypeUmap = getCellTypeUmap(atlasAllData, celltype_umap_pkl)
+
+h5ad_path = '/data1/share/omics-viewer/atlas-ALL/backedModeData/atlasAll.h5ad'
+# 加载数据
+atlasAllData = loadAtlasAllData(h5ad_path)
 geneIndexDict = getGeneIndexDict(atlasAllData)
-cellColor = getCellTypeColor(atlasAllData, cell_color_pkl)
-geneList = getGeneList(atlasAllData, gene_list_pkl)
-stageDict = getStageDict(atlasAllData, stage_dict_pkl)
+cellColor = getCellTypeColor(atlasAllData)
+geneList = getGeneList(atlasAllData)
+stageDict = getStageDict(atlasAllData)
 stageValues = list(stageDict.values())
-celltypeUmap = getCellTypeUmap(atlasAllData, celltype_umap_pkl)
-# stageGeneExp = getStageGeneExp(celltypeUmap, atlasAllData, geneList, stage_geneExp_pkl)
+celltypeUmap = getCellTypeUmap(atlasAllData)
 
 # 初始图像占位
 celltytpeUmapPlaceholder = getCelltypeUmapFig(celltypeUmap, cellColor, stageDict[2])

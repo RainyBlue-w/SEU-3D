@@ -19,8 +19,8 @@ def getMarkerGenes(adata, celltypeUmap_df, points):
     leftIndex = allIndex-pointIndex    
     points_cellid = celltypeUmap_df.loc[list(pointIndex)]['cell_id']
     left_cellid = celltypeUmap_df.loc[list(leftIndex)]['cell_id']
-    selectedData = adata[points_cellid]
-    leftData = adata[left_cellid]
+    selectedData = adata[points_cellid, :].to_memory()
+    leftData = adata[left_cellid, :].to_memory()
     selectedData.obs = selectedData.obs.iloc[:, 0:0]
     selectedData.obs['group'] = 'selected'
     leftData.obs = leftData.obs.iloc[:, 0:0]
@@ -187,8 +187,8 @@ def getCelltypeUmapFig(celltypeUmap, cellColor, stage, umap1='stagedUmap1', umap
         data(Figure):绘制的细胞umap图
     """
     sorted_df = celltypeUmap[stage].sort_values('celltype')
-    data = px.scatter(sorted_df, x=umap1, y=umap2, color="celltype",
-                      color_discrete_map=cellColor)
+    data = px.scatter(sorted_df, x=umap1, y=umap2, color="celltype", color_discrete_map=cellColor)
+
     data.update_traces(marker=dict(size=markerSize))
     data.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
@@ -210,12 +210,12 @@ def getGeneIndexDict(adata):
     """
     data = {}
     index = 0
-    for geneName in adata.var['_index']:
+    for geneName in adata.var_names:
         data[geneName] = index
         index+=1
     return data
 
-def getCellTypeUmap(adata, pkl_path):
+def getCellTypeUmap(adata, pkl_path=None):
     """
         根据adata获取celltype umap坐标
 
@@ -226,18 +226,23 @@ def getCellTypeUmap(adata, pkl_path):
         Returns：
         data(dict):键为stage，值为dataFrame，列celltype， umapX， umapY， stagedUMAP1， stagedUMAP2
     """
-    if os.path.exists(pkl_path):
+    if pkl_path and os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:
         data = {}
-        for stage, group in adata.obs.groupby('stage'):
-            data[stage] = pd.DataFrame(group[['celltype', 'umapX', 'umapY', 'stagedUmap1', 'stagedUmap2']])
+        for stage in adata.obs['stage'].unique():
+            obs = adata.obs
+            data[stage] = obs[obs['stage']==stage][['celltype', 'umapX', 'umapY', 'stagedUmap1', 'stagedUmap2']]
             data[stage]['cell_id'] = data[stage].index
             data[stage].index = data[stage].apply(lambda row: f"{row['stagedUmap1']} {row['stagedUmap2']}", axis=1)
-        dumpPkl(data, pkl_path)
+            uniqueType = data[stage]['celltype'].unique().tolist()
+            data[stage]['celltype'] = pd.Categorical(data[stage]['celltype'], categories=uniqueType)
+
+        if pkl_path:
+            dumpPkl(data, pkl_path)
         return data
 
-def getCellTypeColor(adata, pkl_path):
+def getCellTypeColor(adata, pkl_path=None):
      """
         从adata中获取细胞与颜色的映射
 
@@ -248,16 +253,17 @@ def getCellTypeColor(adata, pkl_path):
         Return:
         data(dict):细胞类型与颜色映射字典
      """
-     if os.path.exists(pkl_path):
+     if pkl_path and os.path.exists(pkl_path):
         return loadPkl(pkl_path)
      else:
         celltype = adata.obs['celltype']
         cellcolor = adata.obs['colour']
         data = {cell:color for cell,color in zip(celltype, cellcolor)}
-        dumpPkl(data, pkl_path)
+        if pkl_path:
+            dumpPkl(data, pkl_path)
         return data
     
-def getStageDict(adata, pkl_path):
+def getStageDict(adata, pkl_path=None):
     """
         根据adata获取stage
 
@@ -268,16 +274,17 @@ def getStageDict(adata, pkl_path):
         Returns:
         data(dict):胚胎发育阶段及对应数字索引
     """
-    if os.path.exists(pkl_path):
+    if pkl_path and os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:
         data = adata.obs['stage'].unique().tolist()
         data.sort()
         data = {i:data[i] for i in range(len(data))}
-        dumpPkl(data, pkl_path)
+        if pkl_path:
+            dumpPkl(data, pkl_path)
         return data
 
-def getGeneList(adata, pkl_path):
+def getGeneList(adata, pkl_path=None):
     """
         根据adata获取gene列表
 
@@ -288,14 +295,15 @@ def getGeneList(adata, pkl_path):
         Returns:
         data(list):基因列表
     """
-    if os.path.exists(pkl_path):
+    if pkl_path and os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:
-        data = adata.var['_index'].unique().tolist()
-        dumpPkl(data, pkl_path)
+        data = adata.var_names.unique().tolist()
+        if pkl_path:
+            dumpPkl(data, pkl_path)
         return data
 
-def loadAtlasAllData(h5ad_path, pkl_path):
+def loadAtlasAllData(h5ad_path, pkl_path=None):
     """
         加载atlasAll.h5ad数据
 
@@ -306,6 +314,8 @@ def loadAtlasAllData(h5ad_path, pkl_path):
         Returns:
         adata(Anndata):单细胞数据Anndata对象
     """
+    if not pkl_path:
+        return sc.read_h5ad(h5ad_path, backed='r')
     if os.path.exists(pkl_path):
         return loadPkl(pkl_path)
     else:

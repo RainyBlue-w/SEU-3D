@@ -100,11 +100,13 @@ for i in stage_list:
     else:
         df_tSNE = pd.concat([df_tSNE, pdf[i]], axis=0)
 
-exp_data = sc.read_h5ad(data_dir+ 'Time_series_tSNE/atlas.var.h5ad')
-exp_data = exp_data.raw.to_adata()
-exp_data = exp_data[df_tSNE.index,]
-exp_data.obs[['tSNE-1', 'tSNE-2']] = df_tSNE.loc[exp_data.obs.index][['tSNE-1', 'tSNE-2']]
-exp_data.obs.index.name = None
+exp_data = sc.read_h5ad(data_dir+ 'backedModeData/atlasCP.h5ad', backed='r')
+
+# exp_data = sc.read_h5ad(data_dir+ 'Time_series_tSNE/atlas.var.h5ad', backed='r')
+# exp_data = exp_data.raw.to_adata()
+# exp_data = exp_data[df_tSNE.index,]
+# exp_data.obs[['tSNE-1', 'tSNE-2']] = df_tSNE.loc[exp_data.obs.index][['tSNE-1', 'tSNE-2']]
+# exp_data.obs.index.name = None
 # In[8]:
 
 lf = lp.connect(data_dir+'pyscenic_output.loom', mode='r', validate=False )
@@ -372,15 +374,18 @@ def show_featuresCtpcounts_atlas_regularExp(adata, stage, odir, featureType, emb
            limitsize=False, verbose=False)
   return img_dir
 
-def show_features_series_matplotlib_atlas(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
+def show_features_series_matplotlib_atlas(adata, stage, embedding=None, features=None, pattern=None, sort=True, ascending=True, 
                                           figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=cmap_exp, **kws):
   
-  embedding = embedding.loc[adata.obs_names,]
   if not features and pattern:
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
-    
-  exp_df = adata[:,features].to_df()
+
+  adata = adata[adata.obs.stage==stage, features]
+
+  embedding = embedding.loc[adata.obs_names,]
+
+  exp_df = adata.to_df()
   
   n_rows = int(np.ceil(len(features) / n_cols))
   figsize = (figsize[0]*n_cols, figsize[1]*n_rows)
@@ -773,14 +778,15 @@ def update_atlas_plotFeature_graphSeries_pattern(featureType, pattern, click, st
 
   if click:
     if featureType == 'Gene':
-      adata = exp_data[exp_data.obs.stage==stage]
+      embedding = exp_data[exp_data.obs.stage==stage].obs[['tSNE-1', 'tSNE-2']]
+      adata = exp_data
+
     # elif featureType == 'Regulon':
     #   adata = auc_mtx[stage]
     else:
         raise PreventUpdate
 
-    img = show_features_series_matplotlib_atlas(adata, embedding=adata.obs[['tSNE-1', 'tSNE-2']], 
-                          n_cols=4, pattern=pattern)
+    img = show_features_series_matplotlib_atlas(adata, stage, embedding=embedding, n_cols=4, pattern=pattern)
     return img
   else:
     raise PreventUpdate
@@ -817,7 +823,8 @@ def update_atlas_plotFeature_graphSeries_list(featureType, names, click, stage):
     names = list(set(tmp))
 
     if featureType == 'Gene':
-      adata = exp_data[exp_data.obs.stage==stage]
+      embedding = exp_data[exp_data.obs.stage==stage].obs[['tSNE-1', 'tSNE-2']]
+      adata = exp_data
     # elif featureType == 'Regulon':
     #   adata = auc_mtx[stage]
 
@@ -837,7 +844,7 @@ def update_atlas_plotFeature_graphSeries_list(featureType, names, click, stage):
     names = list(set(names) - set(names_out))
     names.sort(key=tmp.index)
 
-    img = show_features_series_matplotlib_atlas(adata, embedding=adata.obs[['tSNE-1', 'tSNE-2']], n_cols=4, features=names)
+    img = show_features_series_matplotlib_atlas(adata, stage, embedding=embedding, n_cols=4, features=names)
     return img, note
   else:
     raise PreventUpdate
