@@ -4,3 +4,4 @@ __pycache__/
 dashapps.code-workspace
 .ipynb_checkpoints/
 resources/
+site/
