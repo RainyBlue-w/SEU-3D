@@ -21,4 +21,4 @@ build:
 
 mkdocs:
 
-  configuration: mkdocs.yml
+  configuration: mkdocs/mkdocs.yml
