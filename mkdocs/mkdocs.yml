@@ -1,10 +1,19 @@
 site_name: SEU-3D
 site_description: Digital reconstruction of full embryos during early mouse organogenesis (web server part)
 nav:
-- Home:
+- Home: index.md
+- Documents:
   - Plot feature (flat): plot feature (flat).md
   - Plot feature (3D): plot feature (3D).md
-  - Plot feature (series): plot feature (series).md
+  - Plot feature (series): plot feature (Series).md
   - SPARK-X: SPARK-X.md
   - Patterns: Patterns.md
   - 3D model: 3D model.md
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
