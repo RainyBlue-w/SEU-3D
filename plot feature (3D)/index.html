@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Plot feature (3D) - SEU-3D</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">SEU-3D</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href=".." class="nav-link">Welcome to MkDocs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../3D%20model/" class="nav-link">3D model</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../Patterns/" class="nav-link">Patterns</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../SPARK-X/" class="nav-link">SPARK-X</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Plot feature (3D)</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../plot%20feature%20%28Series%29/" class="nav-link">Plot feature (Series)</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../plot%20feature%20%28flat%29/" class="nav-link">Plot feature (flat)</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../SPARK-X/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../plot%20feature%20%28Series%29/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#plot-feature-3d" class="nav-link">Plot feature (3D)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="plot-feature-3d">Plot feature (3D)</h1>
+<p><img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203103443025.png" alt="image-20241203103443025" style="zoom:50%;" /></p>
+<p>​   In this tab the digital embryos in a 3D coordinates system are displayed, and they are formed by registering and aligning multiple layers of slices.</p>
+<p>​   On the left is a accordion that contains some functions and configuration items.  On the middle are two 3D scatter with <strong><em>synchronized viewing angles</em></strong>, which show gene expression and cell-type annotation respectively. On the right is a <code>cell-type selector</code>.</p>
+<h3 id="accordion-on-the-left">Accordion on the left</h3>
+<ul>
+<li>Select data</li>
+</ul>
+<p>Use  <code>Select data</code> to choose embryo in your interested stage, and the <code>germ layer</code> could also be specified to show part of the embryo.</p>
+<p><img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203104406456.png" alt="image-20241203104406456" style="zoom:50%;" /></p>
+<ul>
+<li>Plot options</li>
+</ul>
+<p>There are 3 subtabs in the <code>Plot options</code>, they are <code>Settings</code>, <code>Single</code> and <code>Multiple</code> respectively.</p>
+<ul>
+<li>
+<p>settings</p>
+<p>In <code>settings</code> you could configure the drawing options, which may be useful for generating the image you want.</p>
+</li>
+</ul>
+<p>​                                   <img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203104750979.png" alt="image-20241203104750979" style="zoom:50%;" /><img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203105322955.png" alt="image-20241203105322955" style="zoom:50%;" /></p>
+<ul>
+<li>
+<p>Single</p>
+<p>In <code>Single</code> you could choose your interested gene to plot on the 3D scatter. By clicking the color dot on the right, you could specify drawing color of the gene.</p>
+<p>​                              <img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203105550325.png" alt="image-20241203105550325" style="zoom:50%;" /><img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203110027051.png" alt="image-20241203110027051" style="zoom:50%;" /></p>
+</li>
+<li>
+<p>Multiple</p>
+<p>In <code>Multiple</code>, several genes can be displayed together on one 3D scatter. Color of each cell is assigned by mixing the specified color of selected gene, based on the expressing proportion in the cell.</p>
+</li>
+</ul>
+<p><img src="C:\Users\慎司\AppData\Roaming\Typora\typora-user-images\image-20241203110813714.png" alt="image-20241203110813714" style="zoom:50%;" /></p>
+<ul>
+<li>Slicer</li>
+</ul>
+<p>​ <code>Slicer</code> is used to subset part of the embryo. Check the <code>Preview</code> switch will show a black box  covering the range that cells in which will be preserved.</p>
+<p><img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203121435141.png" alt="image-20241203121435141" style="zoom:50%;" /></p>
+<ul>
+<li>Compute SVG (Moran)</li>
+</ul>
+<p>It's an analysis tool to find spatially variable genes in current cells ( filtered by <code>germ layer</code>, <code>Slicer</code> and <code>cell-type selector</code>). Results will be preserved in a drawer, and can be checked again by pressing <code>Result</code> button.</p>
+<p><img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203121932141.png" alt="image-20241203121932141" style="zoom:50%;" /></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
