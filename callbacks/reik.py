@@ -11,24 +11,39 @@ import re
 background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/reik/cache"))
 
 # 数据路径
-h5ad_path = get_file_path('anndata.h5ad')
+# h5ad_path = get_file_path('anndata.h5ad')
+# pickle_root = get_file_path('pickle/')
+# marker_pkl_path = get_file_path('marker/')
+# umap_path = get_file_path('all_combine_umap.csv')
+# scenic_root = get_file_path('scenic/')
+# color_path = get_file_path('celltype_color.csv')
+
+# stage_list = ['E7.5','E7.75','E8.0','E8.5','E8.75']
+
+# 加载数据
+# exp_data = load_exp_data(h5ad_path, pickle_root)
+# umap = load_umap_data(umap_path, stage_list)
+# regulon_geneset, auc_data = load_regulon_geneset_and_auc_data(pickle_root, scenic_root, stage_list, exp_data)
+# celltype_colors = set_color(color_path)
+# num_stages = set_num_stages(stage_list)
+# marker = calculateMarker(h5ad_path, marker_pkl_path, stage_list)
+# df = get_marker_tableData(marker_pkl_path, stage_list, marker)
+
+h5ad_path = '/data1/share/omics-viewer/reik/backedModeData/reik.h5ad'
+
 pickle_root = get_file_path('pickle/')
 marker_pkl_path = get_file_path('marker/')
 umap_path = get_file_path('all_combine_umap.csv')
 scenic_root = get_file_path('scenic/')
 color_path = get_file_path('celltype_color.csv')
 
-# 发育阶段
-stage_list = ['E7.5','E7.75','E8.0','E8.5','E8.75']
-
-# 加载数据
-exp_data = load_exp_data(h5ad_path, pickle_root, stage_list)
+exp_data = load_exp_data(h5ad_path)
+stage_list = exp_data.obs['stage'].unique().tolist()
 umap = load_umap_data(umap_path, stage_list)
-regulon_geneset, auc_data = load_regulon_geneset_and_auc_data(pickle_root, scenic_root, stage_list, exp_data)
+regulon_geneset, auc_data = load_regulon_geneset_and_auc_data(pickle_root, scenic_root, stage_list)
 celltype_colors = set_color(color_path)
 num_stages = set_num_stages(stage_list)
-marker = calculateMarker(h5ad_path, marker_pkl_path, stage_list)
-df = get_marker_tableData(marker, stage_list, marker_pkl_path)
+df = get_marker_tableData(marker_pkl_path, stage_list)
 
 # plot feature
 @callback(
@@ -40,7 +55,7 @@ def update_dropdown_options_gene(stage, search):
   if not stage:
     raise PreventUpdate
   stage = formatStage(stage)
-  vars = exp_data[stage].var_names
+  vars = exp_data.var_names
   return vars[vars.str.lower().str.startswith(search.lower() if search else "")].sort_values()
 
 @callback(
@@ -68,7 +83,8 @@ def update_celltypeGraph(stage):
   if not stage:
     raise PreventUpdate
   stage = formatStage(stage)
-  return show_celltype_umap(adata=exp_data[stage], embedding=umap[stage], cmap=celltype_colors, sort=True)
+  df = exp_data[exp_data.obs['stage']==stage].obs
+  return show_celltype_umap(df = df, embedding=umap[stage], cmap=celltype_colors, sort=True)
 
 @callback(
   Output('reik_plotFeature_geneGraph','figure'),
@@ -79,7 +95,8 @@ def update_geneGraph(stage, gene):
   if not stage or not gene:
     raise PreventUpdate
   stage = formatStage(stage)
-  return show_feature_umap(adata=exp_data[stage], feature=gene, embedding=umap[stage], sort=True)
+  adata = getStageAdata(exp_data, stage, gene)
+  return show_feature_umap(adata=adata, feature=gene, embedding=umap[stage], sort=True)
 
 @callback(
   Output('reik_plotFeature_regulonGraph','figure'),
@@ -90,7 +107,7 @@ def update_regulonGraph(stage, regulon):
   if not stage or not regulon:
     raise PreventUpdate
   stage = formatStage(stage)
-  return show_feature_umap(adata=auc_data[stage], feature=regulon, embedding=umap[stage], sort=True)
+  return show_feature_umap(adata=auc_data[stage][:, regulon], feature=regulon, embedding=umap[stage], sort=True)
 
 @callback(
   Output('reik_plotFeature_regulonTargetGene', 'data'),
@@ -153,11 +170,11 @@ def update_reik_plotFeature_graphSeries_pattern(featureType, pattern, click, sta
 
   if click:
     if featureType == 'Gene':
-      adata = exp_data[stage]
+      adata = exp_data
     elif featureType == 'Regulon':
-      adata = auc_data[stage]
+      adata = auc_data
 
-    img = show_features_series_matplotlib( adata, pattern=pattern, embedding = umap[stage], n_cols=4)
+    img = show_features_series_matplotlib(adata, stage, pattern=pattern, embedding = umap[stage], n_cols=4)
     return img
   else:
     raise PreventUpdate
@@ -195,7 +212,7 @@ def update_reik_plotFeature_graphSeries_list(featureType, names, click, stage):
     names = list(set(tmp))
 
     if featureType == 'Gene':
-      adata = exp_data[stage]
+      adata = exp_data
     elif featureType == 'Regulon':
       adata = auc_data[stage]
 
@@ -214,8 +231,9 @@ def update_reik_plotFeature_graphSeries_list(featureType, names, click, stage):
 
     names = list(set(names) - set(names_out))
     names.sort(key=tmp.index)
-
-    img = show_features_series_matplotlib(adata, features=names, embedding = umap[stage], n_cols=4)
+    if featureType == 'Regulon':
+      adata = auc_data
+    img = show_features_series_matplotlib(adata, stage, features=names, embedding = umap[stage], n_cols=4)
     return img, note
   else:
     raise PreventUpdate
@@ -225,7 +243,8 @@ def update_reik_plotFeature_graphSeries_list(featureType, names, click, stage):
   Input('reik_dropdown_stage_series', 'value'),
 )
 def update_reik_plotFeatureSeries_ctpGraph(stage):
-  fig = show_celltype_umap_series(exp_data[stage], embedding = umap[stage], cmap=celltype_colors, sort=True)
+  df = exp_data[exp_data.obs['stage']==stage].obs
+  fig = show_celltype_umap_series(df=df, embedding = umap[stage], cmap=celltype_colors, sort=True)
   return fig
 
 @callback( # update series-gene's number
@@ -235,8 +254,10 @@ def update_reik_plotFeatureSeries_ctpGraph(stage):
   Input('reik_input_featureName_series', 'value'),
 )
 def update_spatial_text_seriesGeneNumber_series(featureType, stage, pattern):
+  if not pattern:
+    raise PreventUpdate
   if featureType == 'Gene':
-    adata = exp_data[stage]
+    adata = exp_data
   elif featureType == 'Regulon':
     adata = auc_data[stage]
   
@@ -269,7 +290,7 @@ def update_marker_markerGraph(activate_cell, data, stage):
       raise PreventUpdate
    stage = formatStage(stage)
    name = data[int(activate_cell['row'])]['Name']
-   return show_marker_violin(marker, stage, name, celltype_colors, 1225, 560)
+   return show_marker_violin(stage, name, celltype_colors, 1225, 560)
 
 
 @callback(
@@ -286,7 +307,8 @@ def update_marker_geneGraph(activate_cell, data, stage):
       raise PreventUpdate
    stage = formatStage(stage)
    name = data[int(activate_cell['row'])]['Name']
-   return show_feature_umap(adata=marker[stage], feature=name, embedding=umap[stage], sort=True, figwidth=510, figheight=300) #1020, 600
+   ad = getStageAdata(exp_data, stage, name)
+   return show_feature_umap(adata=ad, feature=name, embedding=umap[stage], sort=True, figwidth=510, figheight=300) #1020, 600
 
 @callback(
     Output('reik_showMarker_markerGenes', 'data'),
@@ -330,6 +352,7 @@ def update_showMarker_dropdown_celltype(stage):
   if not stage:
     raise PreventUpdate
   stage = formatStage(stage)
-  celltype = marker[stage].obs['celltype'].unique().sort_values()
+  celltype = list(df[stage].keys())
+  celltype.sort()
   cell = celltype[0]
   return celltype, cell

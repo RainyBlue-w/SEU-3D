@@ -23,6 +23,11 @@ color_map = [
 cmap_exp = LinearSegmentedColormap.from_list('custom_exp', color_map)
 cmap_auc = LinearSegmentedColormap.from_list('custom_auc', color_map)
 
+def getStageAdata(adata, stage, gene=None):
+      if gene:
+        return adata[adata.obs['stage']==stage, gene]
+      return adata[adata.obs['stage']==stage].to_memory().copy()
+
 def formatStage(stage):
   """
     根据滑动条数值格式化stage
@@ -72,7 +77,7 @@ def get_file_path(file_folder_name):
   root = '/data1/share/omics-viewer/reik/'
   return root+file_folder_name
 
-def load_exp_data(path, pickle_root, stage_list):
+def load_exp_data(path, pickle_root=None):
   """
     对h5ad数据做处理，并将结果序列化存储，下次可直接读取
 
@@ -83,8 +88,10 @@ def load_exp_data(path, pickle_root, stage_list):
 
     return exp_data(dict): key->stage; value->anadata;
   """
+  if not pickle_root:
+      return sc.read_h5ad(path, backed='r')
   picklePath = pickle_root+os.path.basename(path)+".pickle"
-  if(os.path.exists(picklePath)):
+  if pickle_root and os.path.exists(picklePath):
     with open(picklePath, "rb") as f:
       return pickle.load(f)
   else:
@@ -93,7 +100,7 @@ def load_exp_data(path, pickle_root, stage_list):
     sc.pp.normalize_total(exp_data, target_sum=1e4)
     sc.pp.log1p(exp_data)
     tmp = {}
-    for stage in stage_list:
+    for stage in exp_data.obs['stage'].unique():
       tmp[stage] = exp_data[exp_data.obs['stage'] == stage]
     exp_data = tmp.copy()
     del(tmp)
@@ -113,7 +120,7 @@ def load_umap_data(umap_path, stage_list):
   del(tmp)
   return umap
 
-def load_regulon_geneset_and_auc_data(pickle_root, scenic_root, stage_list, exp_data):
+def load_regulon_geneset_and_auc_data(pickle_root, scenic_root, stage_list, exp_data=None):
   """
     加载/序列化regulon_geneset和auc_data
     params:
@@ -159,7 +166,7 @@ def show_feature_umap(adata, feature, embedding, cmap = None, sort=False, ascend
     if cmap is None:
         cmap = color_map
     embedding.columns = ['umap_1', 'umap_2']
-    pdf = pd.concat([embedding, adata[:,feature].to_df()], axis=1)
+    pdf = pd.concat([embedding, adata.to_df()], axis=1)
     if sort is True:
       pdf = pdf.sort_values(by=feature, ascending=ascending)
     plot = px.scatter(
@@ -189,12 +196,13 @@ def show_feature_umap(adata, feature, embedding, cmap = None, sort=False, ascend
     plot.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1],font_size = 20)) 
     return plot
 
-def show_celltype_umap(adata, embedding, cmap, sort=False, figwidth=1150, figheight=300, **kws):
+def show_celltype_umap(df, embedding, cmap, sort=False, figwidth=1150, figheight=300, **kws):
   """
     绘制细胞umap
   """
   embedding.columns = ['umap_1', 'umap_2']
-  pdf = pd.concat([embedding, adata.obs[['celltype']]], axis=1)
+  df = df[['celltype']]
+  pdf = pd.concat([embedding, df], axis=1)
   if sort:
     pdf = pdf.sort_values(by='celltype')
   plot = px.scatter(
@@ -224,9 +232,10 @@ def show_celltype_umap(adata, embedding, cmap, sort=False, figwidth=1150, fighei
   plot.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1],font_size = 20)) 
   return plot
 
-def show_celltype_umap_series(adata, embedding, cmap, sort=False, **kws):
+def show_celltype_umap_series(df, embedding, cmap, sort=False, **kws):
   embedding.columns = ['umap_1', 'umap_2']
-  pdf = pd.concat([embedding, adata.obs[['celltype']]], axis=1)
+  df = df[['celltype']]
+  pdf = pd.concat([embedding, df], axis=1)
   if sort:
     pdf = pdf.sort_values(by='celltype')
   plot = px.scatter(
@@ -291,7 +300,7 @@ def calculateMarker(h5ad_path, pkl_path, stage_list):
                     pickle.dump(marker[st], f)
     return marker
 
-def get_marker_tableData(marker, stage_list, pkl_path):
+def get_marker_tableData(pkl_path, stage_list, marker=None):
     """
         获取不同阶段对应细胞类型的marker基因tabledata格式
 
@@ -333,26 +342,35 @@ def sort_cell_by_score(marker, stage, gene):
 
         return ranked_cell_list (SortedSet): 按照marker gene得分从大到小排序后的cell结果 
     """
-    cell_list = marker[stage].obs.celltype.unique()
+    if type(marker)==dict:
+          marker = marker[stage]
+    cell_list = marker.obs.celltype.unique()
     ranked_cell_list = SortedSet(key=lambda elem : -elem[1])
     for cell in cell_list:
-        gene_list = marker[stage].uns['rank_genes_groups']['names'][cell]
-        score_list = marker[stage].uns['rank_genes_groups']['scores'][cell]
+        gene_list = marker.uns['rank_genes_groups']['names'][cell]
+        score_list = marker.uns['rank_genes_groups']['scores'][cell]
         gene_index = np.where(gene_list == gene)
         score = score_list[gene_index] 
         ranked_cell_list.add((cell, score[0]))
     return ranked_cell_list
 
-def show_features_series_matplotlib(adata, embedding, features=None, pattern=None, sort=True, ascending=True, 
+def show_features_series_matplotlib(adata, stage, embedding=None, features=None, pattern=None, sort=True, ascending=True, 
                                           figsize=(6.4,4.8), n_cols=1, dot_size=4, cmap=cmap_exp, **kws):
-  
-  embedding = embedding.loc[adata.obs_names,]
-  
+  mark = False
+  if type(adata)==dict:
+    adata = adata[stage]
+    mark = True
+
   if not features and pattern:
     features = [i  for i in adata.var_names if re.match(pattern, i)]
     features.sort()
-    
-  exp_df = adata[:,features].to_df()
+  if mark:
+    exp_df = adata[:,features].to_df()
+  else:
+    exp_df = adata[adata.obs['stage']==stage, features].to_df()
+    adata = adata[adata.obs['stage']==stage]
+
+  embedding = embedding.loc[adata.obs_names,]
   
   n_rows = int(np.ceil(len(features) / n_cols))
   figsize = (figsize[0]*n_cols, figsize[1]*n_rows)
@@ -419,7 +437,7 @@ def darken_color(hex_color, factor=0.8):
 
     return dark_hex_color
 
-def show_marker_violin(marker, stage, gene, celltype_colors, w=1200, h=600):
+def show_marker_violin(stage, gene, celltype_colors, w=1200, h=600):
     """
         绘制marker gene小提琴图
 
@@ -431,11 +449,15 @@ def show_marker_violin(marker, stage, gene, celltype_colors, w=1200, h=600):
         return fig (graph_objects): marker gene小提琴图 
         
     """
+    with open(get_file_path('marker/'+stage), 'rb') as f:
+       marker = pickle.load(f)
     ranked_cell_list = sort_cell_by_score(marker, stage, gene)
+    if type(marker)==dict:
+          marker = marker[stage]
     fig = go.Figure()
     for cell in ranked_cell_list:
         cell_type = cell[0]
-        df = marker[stage][marker[stage].obs.celltype==cell_type, gene].to_df()
+        df = marker[marker.obs.celltype==cell_type, gene].to_df()
         fig.add_trace(go.Violin(
             y=df[gene],
             name=cell_type,

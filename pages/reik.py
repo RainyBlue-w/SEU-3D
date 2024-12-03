@@ -60,7 +60,7 @@ reik_dropdown_plotFeature_gene = html.Div(
   [
     dbc.Label("Gene to Display"),
     dcc.Dropdown(
-      exp_data['E7.5'].var_names,
+      getStageAdata(exp_data, 'E7.5').var_names,
       'Hand1',
       id="reik_dropdown_plotFeature_gene",
       clearable=True,
