@@ -42,6 +42,7 @@ header = dbc.NavbarSimple(
             in_navbar=True,
             label="Dataset",
         ),
+        dbc.NavLink("Help", href="https://seu-3d.readthedocs.io/en/latest/"),
     ],
     brand="Omics-Viewer",
     color="dark",
@@ -65,5 +66,4 @@ if __name__ == "__main__":
     proxy=None,
     debug=False,
     use_reloader=False
-    # jupyter_mode='external'
   )
