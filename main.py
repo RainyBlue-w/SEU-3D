@@ -42,7 +42,7 @@ header = dbc.NavbarSimple(
             in_navbar=True,
             label="Dataset",
         ),
-        dbc.NavLink("Help", href="https://seu-3d.readthedocs.io/en/latest/"),
+        dbc.NavLink("Help", href="https://rainyblue-w.github.io/SEU-3D/"),
     ],
     brand="Omics-Viewer",
     color="dark",
