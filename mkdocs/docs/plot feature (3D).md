@@ -36,7 +36,7 @@
 
     In `Multiple`, several genes can be displayed together on one 3D scatter. Color of each cell is assigned by mixing the specified color of selected gene, based on the expressing proportion in the cell.
 
-<img src="C:\Users\慎司\AppData\Roaming\Typora\typora-user-images\image-20241203110813714.png" alt="image-20241203110813714" style="zoom:50%;" />
+<img src="https://pic-md-1259550128.cos.ap-nanjing.myqcloud.com/image-20241203110813714.png" alt="image-20241203110813714" style="zoom:50%;" />
 
 - Slicer
 
