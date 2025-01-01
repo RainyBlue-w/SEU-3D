@@ -39,12 +39,12 @@ from utils import obj_mtl_to_mesh3d
 
 exp_data = {
   'E7.5': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400_Ann_HC0.5.h5ad"),
-  # 'E7.75': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
-  # 'E8.0': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
-  # 'E7.5_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
-  # 'E7.75_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
-  # 'E7.75_ext_gut3': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
-  # 'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
+  'E7.75': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
+  'E8.0': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
+  'E7.5_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
+  'E7.75_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
+  'E7.75_ext_gut3': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
+  'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
 }
 
 coord_data = {}
