@@ -84,12 +84,12 @@ atlasall_marker_gene_dropdown = html.Div(
     dbc.Label("Marker Gene"),
     dmc.Grid(
       [
-          dmc.Col(dcc.Dropdown(
+          dmc.GridCol(dcc.Dropdown(
             id="atlasall_marker_gene_dropdown",
             clearable=False,
             searchable=True,
           ), span=9),
-          dmc.Col(dbc.Button('Get', id='atlasall_marker_gene_button', n_clicks=0, color='primary'), span=3),
+          dmc.GridCol(dbc.Button('Get', id='atlasall_marker_gene_button', n_clicks=0, color='primary'), span=3),
       ], gutter=3
     )
   ], className="mb-4",
@@ -102,9 +102,9 @@ atlasall_featureName_series_input = html.Div(
       [
         dmc.Grid(
           children=[
-            dmc.Col(dbc.Input(id="atlasall_featureName_series_input"), span=9),
-            dmc.Col(dbc.Button('Plot', id='atlasall_featureName_series_inputButton', n_clicks=0, color='primary'), span=3),
-            dmc.Col(dmc.Text(id='atlasall_geneNumber_series_text', color='gray'), span=12),
+            dmc.GridCol(dbc.Input(id="atlasall_featureName_series_input"), span=9),
+            dmc.GridCol(dbc.Button('Plot', id='atlasall_featureName_series_inputButton', n_clicks=0, color='primary'), span=3),
+            dmc.GridCol(dmc.Text(id='atlasall_geneNumber_series_text', c='gray'), span=12),
           ], gutter=3
         )
       ]
@@ -117,8 +117,8 @@ atlasall_featureList_series_textarea = html.Div(
     html.Div(
       dmc.Grid(
         [
-          dmc.Col(dbc.Label("Name List"), span=9),
-          dmc.Col(dbc.Button('Plot', id='atlasall_featureList_series_inputButton', n_clicks=0, color='primary'), span=3)
+          dmc.GridCol(dbc.Label("Name List"), span=9),
+          dmc.GridCol(dbc.Button('Plot', id='atlasall_featureList_series_inputButton', n_clicks=0, color='primary'), span=3)
         ], gutter=3
       ), className="mb-2"
     ),

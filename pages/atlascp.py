@@ -512,11 +512,11 @@ atlas_input_featureName_series = html.Div(
           [
             dmc.Grid(
               children=[
-                dmc.Col(dbc.Input(id="atlas_input_featureName_series"), span=9),
-                dmc.Col(dbc.Button('Plot', id='atlas_inputButton_featureName_series_plot', 
+                dmc.GridCol(dbc.Input(id="atlas_input_featureName_series"), span=9),
+                dmc.GridCol(dbc.Button('Plot', id='atlas_inputButton_featureName_series_plot', 
                                    n_clicks=0, color='primary'),
                         span=3),
-                dmc.Col(dmc.Text(id='atlas_text_seriesGeneNumber_series', color='gray'),
+                dmc.GridCol(dmc.Text(id='atlas_text_seriesGeneNumber_series', c='gray'),
                         span=12),
               ], gutter=3
             )

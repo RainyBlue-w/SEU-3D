@@ -39,12 +39,12 @@ from utils import obj_mtl_to_mesh3d
 
 exp_data = {
   'E7.5': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400_Ann_HC0.5.h5ad"),
-  'E7.75': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
-  'E8.0': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
-  'E7.5_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
-  'E7.75_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
-  'E7.75_ext_gut3': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
-  'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
+  # 'E7.75': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.h5ad"),
+  # 'E8.0': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400_Ann_HC0.5.h5ad"),
+  # 'E7.5_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_2-2-E7.5_min400.extended_cttrace.h5ad"),
+  # 'E7.75_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
+  # 'E7.75_ext_gut3': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
+  # 'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
 }
 
 coord_data = {}
@@ -708,8 +708,8 @@ def drawerContent_ctpColorPicker(celltypes: List[str], cmap: Dict, swatches=colo
       dmc.Grid(
         gutter = 2,
         children=[
-          dmc.Col(dmc.Text(ctp), span=10),
-          dmc.Col(
+          dmc.GridCol(dmc.Text(ctp), span=10),
+          dmc.GridCol(
             iconHover_colorPicker(
               id = {
                 'dmc_ActionIcon': {'type': 'ACTIONICON_colorCtp_3D', 'id': ctp},
@@ -749,10 +749,10 @@ spatial_input_featureName_series = html.Div(
           [
             dmc.Grid(
               children=[
-                dmc.Col(dbc.Input(id="spatial_input_featureName_series"), span=9),
-                dmc.Col(dbc.Button('Plot', id='spatial_inputButton_featureName_series_plot', n_clicks=0, color='primary'),
+                dmc.GridCol(dbc.Input(id="spatial_input_featureName_series"), span=9),
+                dmc.GridCol(dbc.Button('Plot', id='spatial_inputButton_featureName_series_plot', n_clicks=0, color='primary'),
                         span=3),
-                dmc.Col(dmc.Text(id='spatial_text_seriesGeneNumber_series', color='gray'),
+                dmc.GridCol(dmc.Text(id='spatial_text_seriesGeneNumber_series', c='gray'),
                         span=12),
               ], gutter=3
             )
@@ -835,15 +835,15 @@ spatial_controller_similarPattern = html.Div(
 spatial_panel_similarPattern = html.Div(
   dmc.Grid(
     [
-      dmc.Col(
+      dmc.GridCol(
         [dcc.Graph(figure={}, id='FIGURE_celltype_similar', style={'height': '40vh'})],
         span=40
       ),
-      dmc.Col(
+      dmc.GridCol(
         [dcc.Graph(figure={}, id='FIGURE_geneSelected_similar', style={'height': '40vh'})],
         span=30
       ),
-      dmc.Col(
+      dmc.GridCol(
         [dcc.Graph(figure={}, id='FIGURE_geneOther_similar', style={'height': '40vh'})],
         span=30
       ),
@@ -883,7 +883,7 @@ spatial_tab_plotFeature = dbc.Tab(
 spatial_tab_plotFeature3D = dbc.Tab(
   [dmc.Grid([
     # options
-    dmc.Col([
+    dmc.GridCol([
       fuc.FefferySticky([
         fac.AntdSpace(
           size=0,
@@ -899,7 +899,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
               title = dmc.Text('Select data', className='dmc-Text-sidebar-title'),
               children = [
                 dmc.Grid([
-                  dmc.Col([
+                  dmc.GridCol([
                     dbc.Label("Feature type"),
                     dcc.Dropdown(
                       # ['Gene', 'Regulon'],
@@ -910,7 +910,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                       searchable=True,
                     ),
                   ], span=6),
-                  dmc.Col([
+                  dmc.GridCol([
                     dbc.Label("Stage"),
                     dcc.Dropdown(
                       list(exp_data.keys()),
@@ -920,7 +920,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                       searchable=True,
                     ),
                   ], span=6),
-                  dmc.Col(dmc.Text(id='TEXT_dataSummary_3D', color='gray'), span=12),
+                  dmc.GridCol(dmc.Text(id='TEXT_dataSummary_3D', c='gray'), span=12),
                   fac.AntdCollapse(
                     title = 'germ layer', className='fac-AntdCollapse-inline',
                     forceRender=True, isOpen=False, ghost=True,
@@ -934,7 +934,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         ],
                         value = ['ectoderm', 'mesoderm', 'endoderm'],
                         id = 'CHIPGROUP_germLayer_3D',
-                        multiple = True, spacing=3,
+                        multiple = True,
                       )
                     ]
                   ),
@@ -952,9 +952,9 @@ spatial_tab_plotFeature3D = dbc.Tab(
                 dmc.Tabs(
                   [
                     dmc.TabsList([
-                      dmc.Tab('Settings', value='settings'),
-                      dmc.Tab('Single', value='single'),
-                      dmc.Tab('Multiple', value='multi'),
+                      dmc.TabsTab('Settings', value='settings'),
+                      dmc.TabsTab('Single', value='single'),
+                      dmc.TabsTab('Multiple', value='multi'),
                     ], grow=True),
                     # settings
                     dmc.TabsPanel(
@@ -962,8 +962,8 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         dmc.Tabs(
                           [
                             dmc.TabsList([
-                              dmc.Tab('Scatter-3D', value='Scatter-3D'),
-                              dmc.Tab('Violin', value='Violin')
+                              dmc.TabsTab('Scatter-3D', value='Scatter-3D'),
+                              dmc.TabsTab('Violin', value='Violin')
                             ], grow=False),
                             # scatter-3d
                             dmc.TabsPanel(
@@ -971,9 +971,9 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                 
                                 dmc.Divider(label = 'Points', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.Grid([
-                                  dmc.Col(dmc.Text('Point size:', className='dmc-Text-label'), span=5),
-                                  dmc.Col(dmc.NumberInput(
-                                    value=3, step=0.5, min=0.1, id='NUMBERINPUT_scatter3dPointsize_3D', precision=1,
+                                  dmc.GridCol(dmc.Text('Point size:', className='dmc-Text-label'), span=5),
+                                  dmc.GridCol(dmc.NumberInput(
+                                    value=3, step=0.5, min=0.1, id='NUMBERINPUT_scatter3dPointsize_3D', decimalScale=1,
                                     persistence = True, persistence_type = 'local'
                                   ), span=7),
                                 ], justify='center', gutter=3, className='dmc-Grid-center'),
@@ -1005,12 +1005,12 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                 dmc.Divider(label='Download', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.Text('tip: replot to take effect', className='dmc-Text-sidebar-tips'),
                                 dmc.Grid([
-                                  dmc.Col(dmc.Select( label = 'type', id='NUMBERINPUT_scatter3dFigtype_3D',
+                                  dmc.GridCol(dmc.Select( label = 'type', id='NUMBERINPUT_scatter3dFigtype_3D',
                                     value='png', data = ['svg', 'png', 'jpeg', 'webp'],
                                     persistence = True, persistence_type = 'local', 
                                   ), span=6),
-                                  dmc.Col(dmc.NumberInput( label = 'scale(resolution)', id='NUMBERINPUT_scatter3dFigscale_3D',
-                                    value=3, step=1, min=1, icon=DashIconify(icon='uim:multiply', width=16),
+                                  dmc.GridCol(dmc.NumberInput( label = 'scale(resolution)', id='NUMBERINPUT_scatter3dFigscale_3D',
+                                    value=3, step=1, min=1, rightSection=DashIconify(icon='uim:multiply', width=16),
                                     persistence = True, persistence_type = 'local', 
                                   ), span=6),
                                 ], justify='center', gutter=3, className='dmc-Grid-center'),
@@ -1033,14 +1033,14 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                 ),
                                 dmc.Grid(
                                   [
-                                    dmc.Col(dmc.NumberInput(label='position', value=0, step=0.1, min=-2, max=2, 
-                                                    id='NUMBERINPUT_violinPointpos_3D', precision=2,
+                                    dmc.GridCol(dmc.NumberInput(label='position', value=0, step=0.1, min=-2, max=2, 
+                                                    id='NUMBERINPUT_violinPointpos_3D', decimalScale=2,
                                                     persistence = True, persistence_type = 'local',), span=4),
-                                    dmc.Col(dmc.NumberInput(label='size', value=2.5, step=0.5, min=0, max=10,
-                                                    id='NUMBERINPUT_violinPointsize_3D', precision=1,
+                                    dmc.GridCol(dmc.NumberInput(label='size', value=2.5, step=0.5, min=0, max=10,
+                                                    id='NUMBERINPUT_violinPointsize_3D', decimalScale=1,
                                                     persistence = True, persistence_type = 'local',), span=4),
-                                    dmc.Col(dmc.NumberInput(label='jitter', value=0.15, step=0.05, min=0, max=1,
-                                                    id='NUMBERINPUT_violinPointjitter_3D', precision=2,
+                                    dmc.GridCol(dmc.NumberInput(label='jitter', value=0.15, step=0.05, min=0, max=1,
+                                                    id='NUMBERINPUT_violinPointjitter_3D', decimalScale=2,
                                                     persistence = True, persistence_type = 'local',), span=4),
                                   ],
                                 ),
@@ -1057,18 +1057,18 @@ spatial_tab_plotFeature3D = dbc.Tab(
                                   persistence = True, persistence_type = 'local',
                                 ),
                                 dmc.NumberInput(label='Box width', value=0.5, step=0.1, min=0, max=1,
-                                                id='NUMBERINPUT_violinBoxwidth_3D', precision=1,
+                                                id='NUMBERINPUT_violinBoxwidth_3D', decimalScale=1,
                                                 persistence = True, persistence_type = 'local',),
                                 
                                 dmc.Divider(label='Download', labelPosition='center', variant='dashed', className='dmc-divider-sidebar-inline'),
                                 dmc.Text('tip: replot to take effect', className='dmc-Text-sidebar-tips'),
                                 dmc.Grid([
-                                  dmc.Col(dmc.Select( label = 'type', id='NUMBERINPUT_violinFigtype_3D',
+                                  dmc.GridCol(dmc.Select( label = 'type', id='NUMBERINPUT_violinFigtype_3D',
                                     value='png', data = ['svg', 'png', 'jpeg', 'webp'],
                                     persistence = True, persistence_type = 'local', 
                                   ), span=6),
-                                  dmc.Col(dmc.NumberInput( label = 'scale(resolution)', id='NUMBERINPUT_violinFigscale_3D',
-                                    value=3, step=1, min=1, icon=DashIconify(icon='uim:multiply', width=16),
+                                  dmc.GridCol(dmc.NumberInput( label = 'scale(resolution)', id='NUMBERINPUT_violinFigscale_3D',
+                                    value=3, step=1, min=1, rightSection=DashIconify(icon='uim:multiply', width=16),
                                     persistence = True, persistence_type = 'local', 
                                   ), span=6),
                                 ], justify='center', gutter=3, className='dmc-Grid-center'),
@@ -1087,7 +1087,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                     dmc.TabsPanel(
                       [
                         dmc.Grid([
-                          dmc.Col([
+                          dmc.GridCol([
                             dcc.Dropdown(
                               options = exp_data['E7.5'].var_names,
                               value = 'Cdx1',
@@ -1095,7 +1095,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
                               clearable=False
                             ),
                           ], span=10),
-                          dmc.Col([
+                          dmc.GridCol([
                             iconHover_colorPicker(
                               id={
                                 'dmc_ActionIcon': 'ACTIONICON_colorSingle_3D', 
@@ -1105,9 +1105,9 @@ spatial_tab_plotFeature3D = dbc.Tab(
                               init_color='#225ea8', swatches=colorPicker_swatches,
                             )
                           ], span=2),
-                          dmc.Col([
+                          dmc.GridCol([
                             dmc.Button('Plot', id='BUTTON_singlePlot_3D', color='dark', fullWidth=True,
-                                      leftIcon=DashIconify(icon="gis:cube-3d", width=24)),
+                                      leftSection=DashIconify(icon="gis:cube-3d", width=24)),
                           ], span=12),
                         ], gutter='xs')  
                       ],
@@ -1120,8 +1120,8 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         html.Div(
                           [
                             dmc.Grid([
-                              dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 0}), span=10),
-                              dmc.Col(
+                              dmc.GridCol(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 0}), span=10),
+                              dmc.GridCol(
                                 iconHover_colorPicker(
                                   id={
                                     'dmc_ActionIcon': {'type':'ACTIONICON_colorMulti_3D', 'index': 0}, 
@@ -1134,8 +1134,8 @@ spatial_tab_plotFeature3D = dbc.Tab(
                               ),
                             ]),
                             dmc.Grid([
-                              dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 1}), span=10),
-                              dmc.Col(
+                              dmc.GridCol(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': 1}), span=10),
+                              dmc.GridCol(
                                 iconHover_colorPicker(
                                   id={
                                     'dmc_ActionIcon': {'type':'ACTIONICON_colorMulti_3D', 'index': 1}, 
@@ -1154,17 +1154,17 @@ spatial_tab_plotFeature3D = dbc.Tab(
                         # buttons
                         dmc.Grid(
                           [
-                            dmc.Col(dmc.Button(
+                            dmc.GridCol(dmc.Button(
                               'Add', id='BUTTON_addFeature_3D', color='teal', fullWidth=True,
-                              leftIcon=DashIconify(icon="fluent:add-square-20-regular", width=20)
+                              leftSection=DashIconify(icon="fluent:add-square-20-regular", width=20)
                             ), span=23),
-                            dmc.Col(dmc.Button(
+                            dmc.GridCol(dmc.Button(
                               'Delete', id='BUTTON_deleteFeature_3D', color='red', fullWidth=True,
-                              leftIcon=DashIconify(icon="fluent:subtract-square-20-regular", width=20)
+                              leftSection=DashIconify(icon="fluent:subtract-square-20-regular", width=20)
                             ), span=27),
-                            dmc.Col(dmc.Button(
+                            dmc.GridCol(dmc.Button(
                               'Plot', id='BUTTON_multiPlot_3D', color='dark', fullWidth=True,
-                              leftIcon=DashIconify(icon="gis:cube-3d", width=24),
+                              leftSection=DashIconify(icon="gis:cube-3d", width=24),
                             ), span=50),
                           ],
                           columns=50,
@@ -1190,45 +1190,45 @@ spatial_tab_plotFeature3D = dbc.Tab(
               title = dmc.Text('Slicer', className='dmc-Text-sidebar-title'),
               children = [
                 dmc.Grid([
-                  dmc.Col(dmc.Text('x', className='.dmc-Text-label-center'), span=2),
-                  dmc.Col(
+                  dmc.GridCol(dmc.Text('x', className='.dmc-Text-label-center'), span=2),
+                  dmc.GridCol(
                     dcc.RangeSlider(
                       step=10, id='SLIDER_Xrange_3D',
                       marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
                     ),
                     span=10
                   ),
-                  dmc.Col(dmc.Text('y', className='.dmc-Text-label-center'), span=2),
-                  dmc.Col(
+                  dmc.GridCol(dmc.Text('y', className='.dmc-Text-label-center'), span=2),
+                  dmc.GridCol(
                     dcc.RangeSlider(
                       step=10, id='SLIDER_Yrange_3D',
                       marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
                     ),
                     span=10
                   ),
-                  dmc.Col(dmc.Text('z', className='.dmc-Text-label-center'), span=2),
-                  dmc.Col(
+                  dmc.GridCol(dmc.Text('z', className='.dmc-Text-label-center'), span=2),
+                  dmc.GridCol(
                     dcc.RangeSlider(
                       step=10, id='SLIDER_Zrange_3D',
                       marks=None, tooltip={'placement': 'bottom', 'always_visible': True}
                     ),
                     span=10
                   ),
-                  dmc.Col(
+                  dmc.GridCol(
                     dmc.Switch(size='md', id='SWITCH_previewBox_3D', label='Preview', checked=False),
                     span=12
                   ),
-                  dmc.Col(
+                  dmc.GridCol(
                     dmc.Button(
                       'Slice', color='red', id='BUTTON_slice_3D', fullWidth=True, 
-                      leftIcon=DashIconify(icon='fluent:screen-cut-20-regular', width=20),
+                      leftSection=DashIconify(icon='fluent:screen-cut-20-regular', width=20),
                     ),
                     span=6
                   ),
-                  dmc.Col(
+                  dmc.GridCol(
                     dmc.Button(
                       'Recover', color='teal', id='BUTTON_recover_3D', fullWidth=True, 
-                      leftIcon=DashIconify(icon='fluent:arrow-sync-circle-20-regular', width=20),
+                      leftSection=DashIconify(icon='fluent:arrow-sync-circle-20-regular', width=20),
                     ),
                     span=6
                   )
@@ -1245,14 +1245,14 @@ spatial_tab_plotFeature3D = dbc.Tab(
               title = dmc.Text('Compute SVG(moran)', className='dmc-Text-sidebar-title'),
               children = [
                 dmc.Grid([
-                  dmc.Col(
+                  dmc.GridCol(
                     dmc.Button('Compute', id='BUTTON_calMoran_3D', color='dark', fullWidth=True,
-                        leftIcon = DashIconify(icon='fluent:clipboard-math-formula-20-regular', width=20) ),
+                        leftSection = DashIconify(icon='fluent:clipboard-math-formula-20-regular', width=20) ),
                     span=6,
                   ),
-                  dmc.Col(
+                  dmc.GridCol(
                     dmc.Button('Result', id='BUTTON_showMoran_3D', fullWidth=True,
-                        leftIcon = DashIconify(icon='fluent:clipboard-checkmark-20-regular', width=20) ),
+                        leftSection = DashIconify(icon='fluent:clipboard-checkmark-20-regular', width=20) ),
                     span=6,
                   ),
                   dmc.Text('Using current cells to compute SVGs', className='dmc-Text-sidebar-tips'),
@@ -1276,40 +1276,40 @@ spatial_tab_plotFeature3D = dbc.Tab(
       ], top=10),
     ], span=9),
     # viewer
-    dmc.Col([
+    dmc.GridCol([
       SET_STORE_JSONtoPlot_3D,
       # scatter3d
       dmc.Grid([
-        dmc.Col([
+        dmc.GridCol([
           dcc.Graph(figure={}, id="FIGURE_3Dexpression", 
                     className='dcc-Graph-scatter3d', config=config_scatter3d),
         ], span=20),
-        dmc.Col([
+        dmc.GridCol([
           dcc.Graph(figure={}, id="FIGURE_3Dcelltype",
                     className='dcc-Graph-scatter3d', config=config_scatter3d),
         ], span=20),
-        dmc.Col([
+        dmc.GridCol([
           # DIY-legend
           dmc.Grid([
             # set colors
-            dmc.Col(dmc.Button(
+            dmc.GridCol(dmc.Button(
               'Setting Colors', variant="gradient", gradient={"from": "grape", "to": "pink", "deg": 35},
               id='BUTTON_setColors_3D', fullWidth=True,
-              leftIcon=DashIconify(icon='fluent:color-20-regular', width=20)
+              leftSection=DashIconify(icon='fluent:color-20-regular', width=20)
             ), span=12),
             # invert selection
-            dmc.Col(
+            dmc.GridCol(
               dmc.Button(
                 DashIconify(icon='system-uicons:reverse', width=21), variant='light', color='gray',
                 id='BUTTON_invertSelectionCtp_3D', fullWidth=True,),
               span=4),
             # clear selection
-            dmc.Col(dmc.Button(
+            dmc.GridCol(dmc.Button(
               DashIconify(icon='fluent:border-none-20-regular', width=20), variant="light", color='gray',
               id='BUTTON_clearSelectionCtp_3D', fullWidth=True,
             ), span=4),
             # all selection
-            dmc.Col(dmc.Button(
+            dmc.GridCol(dmc.Button(
               DashIconify(icon='fluent:checkbox-indeterminate-20-regular', width=20), variant="light", color='gray',
               id='BUTTON_allSelectionCtp_3D', fullWidth=True,
             ), span=4),
@@ -1321,9 +1321,12 @@ spatial_tab_plotFeature3D = dbc.Tab(
               for i in ['invert', 'clear', 'all']
             ],
           ),
-          dmc.ChipGroup(
-            children=[], value=[], multiple=True, align='center', spacing=1, 
-            id = 'CHIPGROUP_celltype_3D', className='dmc-ChipGroup-legend'
+          html.Div(
+            dmc.ChipGroup(
+              children=[], value=[], multiple=True,
+              id = 'CHIPGROUP_celltype_3D', 
+            ),
+            className='dmc-ChipGroup-legend'
           ),
           dcc.Store(id='STORE_allCelltypes_3D'),
           fac.AntdDrawer(
@@ -1331,7 +1334,7 @@ spatial_tab_plotFeature3D = dbc.Tab(
             title=dmc.Stack([
               dmc.Text('Setting colors', className='dmc-Text-drawerTitle'),
               dmc.Text("tip: colors will be saved locally", className='dmc-Text-drawerSubTitle')
-            ], spacing=1),
+            ], gap=1),
             width=300,
           )
         ], span=10)
@@ -1449,7 +1452,7 @@ spatial_tab_similarPattern = dbc.Tab(
   children = [
     dmc.Grid(
       [
-        dmc.Col(
+        dmc.GridCol(
           dbc.Card(
             spatial_controller_similarPattern,
             body=True,
@@ -1457,7 +1460,7 @@ spatial_tab_similarPattern = dbc.Tab(
           ),
           span=2
         ),
-        dmc.Col(
+        dmc.GridCol(
           spatial_panel_similarPattern, 
           span=10
         ),
@@ -1474,7 +1477,7 @@ spatial_tab_3dModel = dbc.Tab(
     className = 'div-spatial-tab-3dModal',
     children=[
       dmc.Grid([
-        dmc.Col(
+        dmc.GridCol(
           children = [
             dcc.Location(id='URL_tab_3dModel'),
             fac.AntdSelect(
@@ -1484,7 +1487,7 @@ spatial_tab_3dModel = dbc.Tab(
           ],
           span=4,
         ),
-        dmc.Col(
+        dmc.GridCol(
           dcc.Graph(id='FIGURE_3dModel_spatial', className='dcc-graph-3dModal-spatial'),
           span=8
         )
@@ -1810,8 +1813,8 @@ def add_components_multiName_3D(add, delete, curNumber, featureType, stage):
   if 'BUTTON_addFeature_3D' in id:
     patch_children.append(
       dmc.Grid([
-        dmc.Col(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': nextIndex}), span=10),
-        dmc.Col(
+        dmc.GridCol(dcc.Dropdown(options = [], id={'type': 'DROPDOWN_multiName_3D', 'index': nextIndex}), span=10),
+        dmc.GridCol(
           iconHover_colorPicker(
             id={
               'dmc_ActionIcon': {'type':'ACTIONICON_colorMulti_3D', 'index': nextIndex}, 
@@ -2066,17 +2069,16 @@ def update_chipGroupCelltype_3D(obsFilter, expFilter, stage, cmap):
   
   chips = [
     dmc.Chip(
-      children=ctp, value=ctp, size='xs', color='gray', variant='filled', type='radio',
-      styles = {
-        'label': {
-          'color': cmap[ctp],
-          'font-size': 12,
-          'font-weight': 'bold'
-        },
-        'checkIcon': {
-          'color': cmap[ctp],
-        }
-      },
+      children=ctp, value=ctp, size='xs', variant='filled', type='radio',
+      color=cmap[ctp], autoContrast=True,
+      # styles = {
+      #   'label': {
+      #     'font-size': '12px',
+      #     'font-weight': 600,
+      #     'text-wrap': 'balance',
+      #     'line-height': 0.8,
+      #   },
+      # },
       id = {'type': 'CHIP_ctpColorLegend_3D', 'id': ctp}
     ) 
     for ctp in celltypes
@@ -2746,12 +2748,6 @@ def choose_sparkx_plotOptions(stage, featureType):
              if i != 'gene' else
              {"name": i, "id": i, "deletable": False} 
              for i in df.columns if i != 'id'],
-          # {'data': df.to_dict('records'),
-          # 'columns': [{"name": i, "id": i, "deletable": False, 'type': 'numeric', 
-          #               'format':Format(precision=2, scheme=Scheme.exponent)} 
-          #            if i != 'gene' else
-          #              {"name": i, "id": i, "deletable": False} 
-          #            for i in df.columns if i != 'id']},
           )
 
 @callback(

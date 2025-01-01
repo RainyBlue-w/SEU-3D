@@ -144,3 +144,10 @@
   height: 600px;
   width: 600px;
 }
+
+.dmc-legend-chip-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-wrap: balance;
+    line-height: 0.8;
+}
