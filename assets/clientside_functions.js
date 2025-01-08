@@ -242,7 +242,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             console.log(id)
             if (id.includes('BUTTON_slice_3D.n_clicks') || id.includes('BUTTON_slice_seqFISH.n_clicks')){
                 return previewRange
-            } else {BUTTON_slice_seqFISH.n_clicks
+            } else {
                 return maxRange
             }
         },
