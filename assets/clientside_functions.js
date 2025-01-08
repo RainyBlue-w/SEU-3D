@@ -239,9 +239,10 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
 
         store_sliceRange: function(slice, recover, maxRange, previewRange ){
             let id = dash_clientside.callback_context.triggered.map(t => t.prop_id)
-            if(id.includes('BUTTON_slice_3D.n_clicks')){
+            console.log(id)
+            if (id.includes('BUTTON_slice_3D.n_clicks') || id.includes('BUTTON_slice_seqFISH.n_clicks')){
                 return previewRange
-            } else {
+            } else {BUTTON_slice_seqFISH.n_clicks
                 return maxRange
             }
         },

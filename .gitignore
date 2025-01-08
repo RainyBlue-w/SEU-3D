@@ -5,3 +5,4 @@ dashapps.code-workspace
 .ipynb_checkpoints/
 resources/
 site/
+tmp/

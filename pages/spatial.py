@@ -8,7 +8,7 @@ dash.register_page(__name__, path='/')
 import math
 from functools import reduce
 from dash import Dash, dcc, html, dash_table, no_update, State, Patch, DiskcacheManager, clientside_callback, ctx, ClientsideFunction
-from dash import ALL, MATCH, ALLSMALLER
+from dash import ALL, MATCH, ALLSMALLER, set_props
 from dash.dash_table.Format import Format, Group, Scheme, Symbol
 from dash.exceptions import PreventUpdate
 import dash_mantine_components as dmc
@@ -45,6 +45,8 @@ exp_data = {
   'E7.75_ext': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace.h5ad"),
   'E7.75_ext_gut3': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.extended_cttrace_Gut3celltype.h5ad"),
   'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
+  'E7.75_JCF-PM': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.JCF_PM.SEU-3D.h5ad"),
+  'E8.0_JCF-PM-CM': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400.JCF_PM_CM.SEU-3D.h5ad"),
 }
 
 coord_data = {}
@@ -1271,6 +1273,24 @@ spatial_tab_plotFeature3D = dbc.Tab(
                 ),
               ],
             ),
+            # tmp-Angle
+            fac.AntdCollapse(
+              isOpen=False,
+              forceRender=True,
+              ghost=True,
+              title = dmc.Text('Camera Angle', className='dmc-Text-sidebar-title'),
+              children = dmc.Stack(
+                [
+                  dmc.Group([
+                    dmc.Button('Get angle', id='BUTTON_get_angle_3D'),
+                    dmc.Button('Set angle', id='BUTTON_set_angle_3D'),
+                  ]),
+                  dmc.Group([
+                    html.Pre(id = 'PRE_camera_angle_3D'),
+                  ]),
+                ]
+              )
+            )
           ],
         ),
       ], top=10),
@@ -2287,16 +2307,16 @@ def update_figureCtpCmap_3D(cmap, curCtps):
     patch_fig['data'][i]['marker']['color'] =  cmap[curCtps[i]]
   return patch_fig, patch_fig
 
-@callback(
-  Output({'type': 'CHIP_ctpColorLegend_3D', 'id': MATCH}, 'styles'),
-  Input({'type': 'TEXT_colorCtp_3D', 'id': MATCH}, 'value'),
-  prevent_initial_call=True
-)
-def update_chipColor_3D(color):
-  patch = Patch()
-  patch['label']['color'] = color
-  patch['checkIcon']['color'] = color
-  return patch
+# @callback(
+#   Output({'type': 'CHIP_ctpColorLegend_3D', 'id': MATCH}, 'styles'),
+#   Input({'type': 'TEXT_colorCtp_3D', 'id': MATCH}, 'value'),
+#   prevent_initial_call=True
+# )
+# def update_chipColor_3D(color):
+#   patch = Patch()
+#   patch['label']['color'] = color
+#   patch['checkIcon']['color'] = color
+#   return patch
 
 # plot_3Dfigure_ctp
 clientside_callback(
@@ -2585,6 +2605,39 @@ def cal_moranRes(click, cells, stage, featureType):
             for i in df.columns
           ]
         )
+
+@callback(
+  Input('DATATABLE_moranRes_3D', 'active_cell'),
+  State('DATATABLE_moranRes_3D', 'data'),
+  State('BUTTON_singlePlot_3D', 'n_clicks')
+)
+def update_geneName_by_table_cell_clicking(active_cell, data, n_clicks):
+  if not data or not active_cell:
+    raise PreventUpdate
+  name = data[int(active_cell['row'])]['Feature']
+  set_props(
+    'DROPDOWN_singleName_3D', {'value': name}
+  )
+  if n_clicks:
+    set_props('BUTTON_singlePlot_3D', {'n_clicks': n_clicks+1})
+  else:
+    set_props('BUTTON_singlePlot_3D', {'n_clicks': 1})
+
+# camera angle adjust
+@callback(
+  Output('PRE_camera_angle_3D', 'children'),
+  Input('BUTTON_get_angle_3D', 'n_clicks'),
+  State('FIGURE_3Dcelltype_3D', 'figure'),
+)
+def get_camera_angle_and_display(click, figure):
+  if click:
+    angle_json = figure['layout']['scene']['camera']
+    return json.dumps(
+        angle_json,
+        indent=2,
+        ensure_ascii=False,
+    )
+  raise PreventUpdate
 
 # In[] callbacks/series :
 
