@@ -56,6 +56,7 @@ header = dbc.Navbar(
             dbc.DropdownMenuItem("atlas-cp", href='/atlascp'),
             dbc.DropdownMenuItem("atlas-endoderm", href='/atlased'),
             dbc.DropdownMenuItem("reik", href='/reik'),
+            dbc.DropdownMenuItem("seqFISH", href='/seqfish'),
         ],
         nav=True,
         in_navbar=True,
@@ -77,9 +78,16 @@ app.layout = dmc.MantineProvider(
 
 #run server
 if __name__ == "__main__":
+  import argparse
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--port', type=int, default=8050)
+  parser.add_argument('--debug', action='store_true')
+  args = parser.parse_args()
   app.run(
     host='::',
-    port='8059',
+    port=args.port,
     threaded=True,
     proxy=None,
+    debug = args.debug,
+    use_reloader = False
   )

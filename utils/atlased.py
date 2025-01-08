@@ -266,7 +266,7 @@ def getCellTypeColor(adata, pkl_path=None):
         if pkl_path:
             dumpPkl(data, pkl_path)
         return data
-    
+
 def getStageDict(adata, pkl_path=None):
     """
         根据adata获取stage
@@ -365,7 +365,7 @@ def loadPkl(pkl_path):
     """
     with open(pkl_path, 'rb') as file:
             return pickle.load(file)
-    
+
 def dumpPkl(data, pkl_path):
      """
         写入pkl序列化数据
