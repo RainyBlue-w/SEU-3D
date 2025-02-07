@@ -39,28 +39,15 @@ background_callback_manager = DiskcacheManager(diskcache.Cache(data_dir+"cache")
 
 
 # color palette
-celltype = ["ExE endoderm", "Epiblast", "ExE ectoderm", "Parietal endoderm", 
-  "Intermediate mesoderm", "Gut", "Caudal epiblast", "Haematoendothelial progenitors", 
-  "Visceral endoderm", "PGC", "Somitic mesoderm", "Def. endoderm", "Mesenchyme", 
-  "Blood progenitors 2", "Nascent mesoderm", "Paraxial mesoderm", "Notochord", 
-  "Mixed mesoderm", "Blood progenitors 1", "Rostral neurectoderm", 
-  "Anterior Primitive Streak", "Surface ectoderm", "Primitive Streak", "ExE mesoderm", 
-  "Forebrain Midbrain Hindbrain", "Pharyngeal mesoderm", "Erythroid1", "Cardiomyocytes",
-   "Caudal Mesoderm", "Endothelium", "Caudal neurectoderm", "Spinal cord", "NMP",
-    "Erythroid3", "Erythroid2", "Allantois", "Neural crest"]
-celltype_color = ["#7f6874", "#635547", "#989898", "#1a1a1a", "#139992", "#ef5a9d",
-  "#9e6762", "#fbbe92", "#f6bfcb", "#facb12", "#005579", "#f397c0", "#cc7818", "#c9a997",
-  "#c594bf", "#8db5ce", "#0f4a9c", "#dfcde4", "#f9decf", "#65a83e", "#c19f70", "#f7f79e",
-  "#dabe99", "#8870ad", "#647a4f", "#c9ebfb", "#c72228", "#b51d8d", "#3f84aa", "#ff891c",
-  "#354e23", "#cde088", "#8ec792", "#ef4e22", "#f79083", "#532c8a", "#c3c388"]
+ctp_cmap = pd.read_csv("/data1/share/omics-viewer/spatial/celltype_cmap.csv")
+color_palette = dict(zip(ctp_cmap['celltype'], ctp_cmap['color']))
+
 timepoint = ["E6.5", "E6.75" ,"E7.0", "E7.25", "E7.5", "E7.75", "E8.0",
   "E8.25", "E8.5", "mixed_gastrulation", "E8.75"]
 timepoint_color = ["#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#ffffbf", 
   "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#a9a9a9", "#B53588"]
 
-color_palette = dict(zip(celltype, celltype_color))
 color_palette.update(dict(zip(timepoint, timepoint_color)))
-
 
 from matplotlib.colors import LinearSegmentedColormap
 color_exp = [
