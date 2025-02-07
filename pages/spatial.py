@@ -47,6 +47,8 @@ exp_data = {
   'E8.0_min300': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min300_endoderm_Ann_Smooth.h5ad"),
   'E7.75_JCF-PM': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400.JCF_PM.SEU-3D.h5ad"),
   'E8.0_JCF-PM-CM': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400.JCF_PM_CM.SEU-3D.h5ad"),
+  'E7.75-fig6': sc.read_h5ad('/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.for_Figure6.h5ad'),
+  'E7.75-fig6-smooth': sc.read_h5ad('/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.for_Figure6_smooth.h5ad'),
 }
 
 coord_data = {}
@@ -82,7 +84,7 @@ genes_all_pval.columns = ['ecto p.adj', 'meso p.adj', 'endo p.adj', 'all p.adj']
 genes_all_pval = genes_all_pval.groupby(level=0, group_keys=False
                                                ).apply(lambda x: x.sort_values(by='all p.adj'))
 ctp_cmap = pd.read_csv("/data1/share/omics-viewer/spatial/celltype_cmap.csv")
-ctp_cmap = dict(zip(ctp_cmap['celltype'], ctp_cmap['Epiblast']))
+ctp_cmap = dict(zip(ctp_cmap['celltype'], ctp_cmap['color']))
 
 
 # In[] functions
@@ -661,7 +663,7 @@ SET_STORE_JSONtoPlot_3D = html.Div(
     dcc.Store(data={}, id='STORE_multiExp_3D'),
     dcc.Store(data={}, id='STORE_mixedColor_3D'),
     dcc.Store(data=False, id='STORE_ifmulti_3D'),
-    dcc.Store(data=ctp_cmap, id='STORE_ctpCmap_3D', storage_type='local'),
+    dcc.Store(data=ctp_cmap, id='STORE_ctpCmap_3D'),
     dcc.Store(id='STORE_cellsCtpFilter_3D'),
     dcc.Store(id='STORE_cellsIntersection_3D'),
     dcc.Store(id='test'),
