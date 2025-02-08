@@ -3,6 +3,7 @@ from utils.atlased import *
 from dash.exceptions import PreventUpdate
 import re
 import dash
+from utils.ctp_colormap import ctp_cmap
 from dash import callback, Output, Input, State, DiskcacheManager, dcc
 
 background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/atlas-Endoderm/cache"))
@@ -42,7 +43,7 @@ background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omi
 h5ad_path = '/data1/share/omics-viewer/atlas-Endoderm/backedModeData/endodermCombined.h5ad'
 endodermData = loadData(h5ad_path)
 geneIndexDict = getGeneIndexDict(endodermData)
-cellColor = getCellTypeColor(endodermData)
+cellColor = ctp_cmap
 geneList = getGeneList(endodermData)
 stageDict = getStageDict(endodermData)
 stageValues = list(stageDict.values())

@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 import matplotlib.colors as mcolors
+from utils.ctp_colormap import ctp_cmap
 matplotlib.use('agg')
 
 data_dir = "/data1/share/omics-viewer/atlas-CP/"
@@ -39,8 +40,7 @@ background_callback_manager = DiskcacheManager(diskcache.Cache(data_dir+"cache")
 
 
 # color palette
-ctp_cmap = pd.read_csv("/data1/share/omics-viewer/spatial/celltype_cmap.csv")
-color_palette = dict(zip(ctp_cmap['celltype'], ctp_cmap['color']))
+color_palette = ctp_cmap
 
 timepoint = ["E6.5", "E6.75" ,"E7.0", "E7.25", "E7.5", "E7.75", "E8.0",
   "E8.25", "E8.5", "mixed_gastrulation", "E8.75"]
