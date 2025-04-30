@@ -6,6 +6,7 @@ from plotnine import *
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import diskcache
+from utils.ctp_colormap import ctp_cmap_reik
 import dash
 import re
 background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/reik/cache"))
@@ -35,13 +36,13 @@ pickle_root = get_file_path('pickle/')
 marker_pkl_path = get_file_path('marker/')
 umap_path = get_file_path('all_combine_umap.csv')
 scenic_root = get_file_path('scenic/')
-color_path = get_file_path('celltype_color.csv')
+# color_path = get_file_path('celltype_color.csv')
 
 exp_data = load_exp_data(h5ad_path)
 stage_list = exp_data.obs['stage'].unique().tolist()
 umap = load_umap_data(umap_path, stage_list)
 regulon_geneset, auc_data = load_regulon_geneset_and_auc_data(pickle_root, scenic_root, stage_list)
-celltype_colors = set_color(color_path)
+celltype_colors = ctp_cmap_reik
 num_stages = set_num_stages(stage_list)
 df = get_marker_tableData(marker_pkl_path, stage_list)
 

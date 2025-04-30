@@ -2,6 +2,7 @@ import diskcache
 from utils.atlasall import *
 from dash.exceptions import PreventUpdate
 import re
+from utils.ctp_colormap import ctp_cmap
 from dash import callback, Output, Input, State, DiskcacheManager, dcc
 
 background_callback_manager = DiskcacheManager(diskcache.Cache("/data1/share/omics-viewer/atlas-CP/cache"))
@@ -42,7 +43,7 @@ h5ad_path = '/data1/share/omics-viewer/atlas-ALL/backedModeData/atlasAll.h5ad'
 # 加载数据
 atlasAllData = loadAtlasAllData(h5ad_path)
 geneIndexDict = getGeneIndexDict(atlasAllData)
-cellColor = getCellTypeColor(atlasAllData)
+cellColor = ctp_cmap
 geneList = getGeneList(atlasAllData)
 stageDict = getStageDict(atlasAllData)
 stageValues = list(stageDict.values())
