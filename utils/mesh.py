@@ -1,6 +1,3 @@
-import meshio
-import numpy as np
-from numpy import sin, cos, pi
 import plotly.graph_objects as go
 from typing import List, Dict
 from dash_obj_in_3dmesh import geometry_tools

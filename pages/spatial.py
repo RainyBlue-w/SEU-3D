@@ -49,6 +49,8 @@ exp_data = {
   'E8.0_JCF-PM-CM': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400.JCF_PM_CM.SEU-3D.h5ad"),
   'E7.75-fig6': sc.read_h5ad('/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.for_Figure6.h5ad'),
   'E7.75-fig6-smooth': sc.read_h5ad('/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.for_Figure6_smooth.h5ad'),
+  'diffusion-gby': sc.read_h5ad('/data1/gby/result_diffusion.h5ad'),
+  'tangram-gby': sc.read_h5ad('/data1/gby/result_tangram.h5ad'),
 }
 
 coord_data = {}
@@ -2329,7 +2331,6 @@ def generate_drawerLegendContent_3D(curAllCtps, cmap):
 )
 def syncAndReturn_colorValue_3D(text, picker):
 
-
   tid = ctx.triggered_id
   celltype = tid['id']
   
@@ -3048,20 +3049,6 @@ def update_geneOtherFigure_similar(active_cell, stage, germ_layer):
   return fig
 
 # In[] callback/3D model
-
-@callback(
-  Output('SELECT_3dModel_spatial', 'options'),
-  Input('URL_tab_3dModel', 'pathname'),
-)
-def update_3dmodel_options(pathname):
-  options = [
-    {
-      'label': filename.split('.')[0],
-      'value': filename.split('.')[0]
-    } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
-    if filename.endswith('.obj')
-  ]
-  return options
 
 @callback(
   Output('CHIPGROUP_celltype_model', 'value'),
