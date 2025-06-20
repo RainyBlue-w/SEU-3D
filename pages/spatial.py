@@ -49,6 +49,8 @@ exp_data = {
   'E8.0_JCF-PM-CM': sc.read_h5ad("/data1/share/omics-viewer/spatial/matrix_data/embryo_3-2-E8.0_min400.JCF_PM_CM.SEU-3D.h5ad"),
   'E7.75-fig6': sc.read_h5ad('/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.for_Figure6.h5ad'),
   'E7.75-fig6-smooth': sc.read_h5ad('/data1/share/omics-viewer/spatial/matrix_data/embryo_1-2-E7.75_min400_Ann_HC0.5.for_Figure6_smooth.h5ad'),
+  'diffusion-gby': sc.read_h5ad('/data1/gby/result_diffusion.h5ad'),
+  'tangram-gby': sc.read_h5ad('/data1/gby/result_tangram.h5ad'),
 }
 
 coord_data = {}
@@ -1494,6 +1496,14 @@ spatial_tab_similarPattern = dbc.Tab(
   tab_id = 'spatial_tab_similarPattern'
 )
 
+model_celltypes = [  
+    fname.strip('.obj')
+    for fname in os.listdir('/data1/share/omics-viewer/3D_model_ctps') 
+    if fname.endswith('.obj')
+]
+
+model_celltypes.sort()
+
 spatial_tab_3dModel = dbc.Tab(
   children = html.Div(
     className = 'div-spatial-tab-3dModal',
@@ -1502,18 +1512,78 @@ spatial_tab_3dModel = dbc.Tab(
         dmc.GridCol(
           children = [
             dcc.Location(id='URL_tab_3dModel'),
-            fac.AntdSelect(
-              id='SELECT_3dModel_spatial',
-              className='fac-select-3dModal-spatial',
-            ),
+            # fac.AntdSelect(
+            #   id='SELECT_3dModel_spatial',
+            #   className='fac-select-3dModal-spatial',
+            # ),
+            html.H2('3D model of embryo-E8.5')
           ],
-          span=4,
+          span=12,
         ),
         dmc.GridCol(
-          dcc.Graph(id='FIGURE_3dModel_spatial', className='dcc-graph-3dModal-spatial'),
+          dcc.Graph(
+            figure = obj_mtl_to_mesh3d(
+              model_names = model_celltypes,
+              path = '/data1/share/omics-viewer/3D_model_ctps',
+            ),
+            id='FIGURE_3dModel_spatial', 
+            className='dcc-graph-3dModal-spatial'
+          ),
           span=8
-        )
-      ]),
+        ),
+        # DIY-legend
+        dmc.GridCol([
+          dmc.Grid([
+                # invert selection
+                dmc.GridCol(
+                    dmc.Button(
+                        DashIconify(icon='system-uicons:reverse', width=21), variant='light', color='gray',
+                        id='BUTTON_invertSelectionCtp_model', fullWidth=True,),
+                    span=4),
+                # clear selection
+                dmc.GridCol(dmc.Button(
+                    DashIconify(icon='fluent:border-none-20-regular', width=20), variant="light",     color='gray',
+                    id='BUTTON_clearSelectionCtp_model', fullWidth=True,
+                ), span=4),
+                # all selection
+                dmc.GridCol(dmc.Button(
+                    DashIconify(icon='fluent:checkbox-indeterminate-20-regular', width=20), variant="light",  color='gray',
+                    id='BUTTON_allSelectionCtp_model', fullWidth=True,
+                ), span=4),
+            ], gutter=2),
+            # tooltips for buttons
+            html.Div(
+                [
+                    dbc.Tooltip( i.capitalize(), target=f'BUTTON_{i}SelectionCtp_model', placement='top')
+                    for i in ['invert', 'clear', 'all']
+                ],
+            ),
+            html.Div(
+                dmc.ChipGroup(
+                    children=[
+                        dmc.Chip(
+                        children=ctp, value=ctp, size='xs', variant='filled', type='radio',
+                        color=ctp_cmap[ctp], autoContrast=True,
+                        # styles = {
+                        #   'label': {
+                        #     'font-size': '12px',
+                        #     'font-weight': 600,
+                        #     'text-wrap': 'balance',
+                        #     'line-height': 0.8,
+                        #   },
+                        # },
+                        id = {'type': 'CHIP_ctpColorLegend_model', 'id': ctp}
+                        ) 
+                        for ctp in model_celltypes
+                    ], 
+                    value=model_celltypes, 
+                    multiple=True,
+                    id = 'CHIPGROUP_celltype_model', 
+                ),
+                className='dmc-ChipGroup-legend'
+            )
+          ], span=4),
+      ])
     ]
   ),
   label = '3D model',
@@ -2151,7 +2221,7 @@ def store_ctpInfo_forJSONtoPlot_3D(selectedCtps, stage):
   series = series[series.isin(selectedCtps)]
   
   return series.index.to_list()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+                       
 # plot_3Dfigure_exp
 clientside_callback(
   ClientsideFunction(
@@ -2260,7 +2330,6 @@ def generate_drawerLegendContent_3D(curAllCtps, cmap):
   prevent_initial_call=True,
 )
 def syncAndReturn_colorValue_3D(text, picker):
-
 
   tid = ctx.triggered_id
   celltype = tid['id']
@@ -2982,29 +3051,49 @@ def update_geneOtherFigure_similar(active_cell, stage, germ_layer):
 # In[] callback/3D model
 
 @callback(
-  Output('SELECT_3dModel_spatial', 'options'),
-  Input('URL_tab_3dModel', 'pathname'),
+  Output('CHIPGROUP_celltype_model', 'value'),
+  Input('BUTTON_invertSelectionCtp_model', 'n_clicks'),
+  State('CHIPGROUP_celltype_model', 'value'),
+  prevent_initial_call=True,
 )
-def update_3dmodel_options(pathname):
-  options = [
-    {
-      'label': filename.split('.')[0],
-      'value': filename.split('.')[0]
-    } for filename in os.listdir('/data1/share/omics-viewer/3D_model')
-    if filename.endswith('.obj')
-  ]
-  return options
+def invertSelection_celltypesButton_model(click, curValue):
+  return list(set(model_celltypes) - set(curValue))
+
+@callback(
+  Output('CHIPGROUP_celltype_model', 'value'),
+  Input('BUTTON_clearSelectionCtp_model', 'n_clicks'),
+  prevent_initial_call=True
+)
+def clearSelection_celltypesButton_model(click):
+  return []
+
+@callback(
+  Output('CHIPGROUP_celltype_model', 'value'),
+  Input('BUTTON_allSelectionCtp_model', 'n_clicks'),
+  State('CHIPGROUP_celltype_model', 'value'),
+  prevent_initial_call=True
+)
+def allSelection_celltypesButton_model(click, curValue):
+  if set(curValue) == set(model_celltypes):
+    return no_update
+  else:
+    return list(set(model_celltypes))
 
 @callback(
   Output('FIGURE_3dModel_spatial', 'figure'),
-  Input('SELECT_3dModel_spatial', 'value'),
+  Input('CHIPGROUP_celltype_model', 'value'),
   prevent_initial_call=True,
 )
-def render_3dModel(filename):
-  return obj_mtl_to_mesh3d(
-    model_name = filename,
-    path = '/data1/share/omics-viewer/3D_model',
-  )
+def render_3dModel(model_names):
+  patch = Patch()
+  indexes = [ model_celltypes.index(name) for name in model_names ]
+  for i in range(len(model_celltypes)):
+    if i in indexes:
+      patch['data'][i]['opacity'] = 1
+    else:
+      patch['data'][i]['opacity'] = 0
+  
+  return patch
 
 # In[] app/run:
 
